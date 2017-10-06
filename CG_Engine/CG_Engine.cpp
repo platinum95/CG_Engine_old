@@ -42,9 +42,7 @@ namespace GL_Engine{
 	}
 
 	bool CG_Engine::CG_StartGlad(Properties::GLADproperties * _GladProperties){
-		//glewExperimental = GL_TRUE;
 		_GladProperties->success = gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
-		glEnable(GL_DEPTH_TEST);
 		return _GladProperties->success;
 	}
 

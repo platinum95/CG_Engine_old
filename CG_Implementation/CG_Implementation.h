@@ -51,6 +51,7 @@ private:
 	Shader basicShader;
 	CG_Engine engine;
 	CG_Data::VBO *testVBO;
+	CG_Data::VBO *testVBO2;
 	CG_Data::VAO *testVAO;
 }; 
 

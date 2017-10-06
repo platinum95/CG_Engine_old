@@ -10,7 +10,7 @@ CG_Implementation::CG_Implementation(){
 int CG_Implementation::run(){
 	
 	initialise();
-	
+	glEnable(GL_PROGRAM_POINT_SIZE);
 	while (!glfwWindowShouldClose(windowProperties.window)){
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
@@ -18,7 +18,9 @@ int CG_Implementation::run(){
 		glBindVertexArray(testVAO->GetID());
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glfwSwapBuffers(windowProperties.window);
-	//	glfwPollEvents();
+		glfwPollEvents();
+		testVBO2->BindVBO();
+
 	}
 	return 0;
 }
@@ -28,11 +30,15 @@ void CG_Implementation::initialise(){
 	if (!engine.CG_CreateWindow(&windowProperties)){
 		throw std::runtime_error("Error initialising GLFW!");
 	}
+	
 	Properties::GLADproperties gladProps;
 	if (!engine.CG_StartGlad(&gladProps)){
 		throw std::runtime_error("Error initialising GLAD!");
 	}
-	
+
+
+//	basicShader.shader_test();
+//	glBindAttribLocation(basicShader.GetShaderID(), 0, "vPosition");
 	basicShader.AddShaderStageFromFile(vertexLoc, GL_VERTEX_SHADER);
 	basicShader.AddShaderStageFromFile(fragLoc, GL_FRAGMENT_SHADER);
 	basicShader.CompileShader();
@@ -47,9 +53,15 @@ void CG_Implementation::initialise(){
 	testVBO->SetVBOData(vertices, sizeof(vertices), GL_STATIC_DRAW);
 	//float *ar = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
 
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(0);
 
+	testVBO2 = new CG_Data::VBO();
+	testVBO2->BindVBO();
+	const GLuint vboID2 = testVBO->GetID();
+	testVBO2->SetVBOData(NULL, sizeof(vertices), GL_DYNAMIC_DRAW);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
@@ -78,4 +90,6 @@ void CG_Implementation::initialise(){
 
 CG_Implementation::~CG_Implementation(){
 	glfwTerminate();
+	delete testVBO;
+	delete testVAO;
 }

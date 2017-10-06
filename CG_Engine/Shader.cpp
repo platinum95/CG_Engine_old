@@ -89,5 +89,47 @@ namespace GL_Engine{
 		return ShaderID;
 	}
 
+	void Shader::shader_test(){
+		GLuint shaderProgramID = glCreateProgram();
+		if (shaderProgramID == 0) {
+			fprintf(stderr, "Error creating shader program\n");
+			exit(1);
+		}
+
+		// Create two shader objects, one for the vertex, and one for the fragment shader
+		AddShaderStageFromFile("v.glsl", GL_VERTEX_SHADER);
+		glAttachShader(shaderProgramID, this->shaderStageIDs[0]);
+		AddShaderStageFromFile("f.glsl", GL_FRAGMENT_SHADER);
+		glAttachShader(shaderProgramID, this->shaderStageIDs[1]);
+
+		GLint Success = 0;
+		GLchar ErrorLog[1024] = { 0 };
+
+
+		// After compiling all shader objects and attaching them to the program, we can finally link it
+		glLinkProgram(shaderProgramID);
+		// check for program related errors using glGetProgramiv
+		glGetProgramiv(shaderProgramID, GL_LINK_STATUS, &Success);
+		if (Success == 0) {
+			glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), NULL, ErrorLog);
+			fprintf(stderr, "Error linking shader program: '%s'\n", ErrorLog);
+			exit(1);
+		}
+
+		// program has been successfully linked but needs to be validated to check whether the program can execute given the current pipeline state
+		glValidateProgram(shaderProgramID);
+		// check for program related errors using glGetProgramiv
+		glGetProgramiv(shaderProgramID, GL_VALIDATE_STATUS, &Success);
+		if (!Success) {
+			glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), NULL, ErrorLog);
+			fprintf(stderr, "Invalid shader program: '%s'\n", ErrorLog);
+			exit(1);
+		}
+		// Finally, use the linked shader program
+		// Note: this program will stay in effect for all draw calls until you replace it with another or explicitly disable its use
+		glUseProgram(shaderProgramID);
+		this->ShaderID = shaderProgramID;
+	}
+
 
 }

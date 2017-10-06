@@ -1,0 +1,9 @@
+﻿  Shader.cpp
+  File_IO.cpp
+c:\projects\college\cg_engine\cg_engine\file_io.cpp(28): warning C4244: 'argument': conversion from 'std::streamoff' to 'const unsigned int', possible loss of data
+  CG_Engine.cpp
+  CG_Data.cpp
+c:\projects\college\cg_engine\cg_engine\cg_data.cpp(30): warning C4244: 'argument': conversion from 'uint64_t' to 'GLsizeiptr', possible loss of data
+  Generating Code...
+  glad.c
+  CG_Engine.vcxproj -> C:\Projects\college\CG_Engine\CG_Engine\../libs/CG_Engined_x86.lib

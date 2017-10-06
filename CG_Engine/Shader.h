@@ -22,6 +22,8 @@ namespace GL_Engine{
 		//Compile a shader stage from a source text file. Returns Shader ID
 		const uint8_t CompileShader();
 
+		void shader_test();
+
 	private:
 		std::vector<GLuint> shaderStageIDs;
 		GLuint ShaderID;
