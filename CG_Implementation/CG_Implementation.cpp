@@ -18,7 +18,7 @@ int CG_Implementation::run(){
 		glBindVertexArray(testVAO->GetID());
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glfwSwapBuffers(windowProperties.window);
-		glfwPollEvents();
+	//	glfwPollEvents();
 	}
 	return 0;
 }
