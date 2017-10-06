@@ -1,0 +1,23 @@
+﻿Build started 05/10/2017 15:54:20.
+     1>Project "X:\CG\CG_Engine\CG_Engine\CG_Engine.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /IX:\CG\CG_Engine\libs /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TP /analyze- /errorReport:prompt CG_Data.cpp CG_Engine.cpp Shader.cpp
+         CG_Data.cpp
+     1>CG_Data.cpp(30): warning C4244: 'argument' : conversion from 'uint64_t' to 'GLsizeiptr', possible loss of data
+         CG_Engine.cpp
+     1>CG_Engine.cpp(40): warning C4800: 'int' : forcing value to bool 'true' or 'false' (performance warning)
+         Shader.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\CL.exe /c /IX:\CG\CG_Engine\libs /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc120.pdb" /Gd /TC /analyze- /errorReport:prompt glad.c
+         glad.c
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\Lib.exe /OUT:"../libs/CG_Engine_x86.lib" "GLFW-3.2.1_x86.lib" /LIBPATH:X:\CG\CG_Engine\libs /NOLOGO /LTCG Release\CG_Data.obj
+         Release\CG_Engine.obj
+         Release\File_IO.obj
+         Release\glad.obj
+         Release\Shader.obj
+         CG_Engine.vcxproj -> X:\CG\CG_Engine\CG_Engine\../libs/CG_Engine_x86.lib
+     1>Done Building Project "X:\CG\CG_Engine\CG_Engine\CG_Engine.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:04.39

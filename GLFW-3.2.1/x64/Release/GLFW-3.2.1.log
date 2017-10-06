@@ -1,0 +1,48 @@
+﻿Build started 03/10/2017 15:27:33.
+     1>Project "X:\CG\CG_Engine\GLFW-3.2.1\GLFW-3.2.1.vcxproj" on node 2 (Build target(s)).
+     1>C:\Program Files (x86)\MSBuild\Microsoft.Cpp\v4.0\V120\Microsoft.CppBuild.targets(364,5): warning MSB8004: Output Directory does not end with a trailing slash.  This build instance will add the slash as it is required to allow proper evaluation of the Output Directory.
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /IX:\CG\CG_Engine\include /Zi /nologo /W3 /WX- /O2 /Oi /GL /D _GLFW_WIN32 /D NDEBUG /D _LIB /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Release\\" /Fd"x64\Release\vc120.pdb" /Gd /TC /errorReport:prompt src\context.c src\egl_context.c src\init.c src\input.c src\monitor.c src\vulkan.c src\wgl_context.c src\win32_init.c src\win32_joystick.c src\win32_monitor.c src\win32_time.c src\win32_tls.c src\win32_window.c src\window.c src\xkb_unicode.c
+         context.c
+     1>src\context.c(380): warning C4996: 'sscanf': This function or variable may be unsafe. Consider using sscanf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\stdio.h(304) : see declaration of 'sscanf'
+         egl_context.c
+         init.c
+     1>src\init.c(100): warning C4996: 'vsnprintf': This function or variable may be unsafe. Consider using vsnprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+                 C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\include\stdio.h(337) : see declaration of 'vsnprintf'
+         input.c
+         monitor.c
+         vulkan.c
+         wgl_context.c
+         win32_init.c
+         win32_joystick.c
+         win32_monitor.c
+     1>src\win32_monitor.c(68): warning C4996: 'wcscpy': This function or variable may be unsafe. Consider using wcscpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+     1>src\win32_monitor.c(77): warning C4996: 'wcscpy': This function or variable may be unsafe. Consider using wcscpy_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+         win32_time.c
+         win32_tls.c
+         win32_window.c
+         window.c
+         xkb_unicode.c
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\Lib.exe /OUT:"X:\CG\CG_Engine\libs\GLFW-3.2.1_x64.lib" /NOLOGO /MACHINE:X64 /LTCG x64\Release\context.obj
+         x64\Release\egl_context.obj
+         x64\Release\init.obj
+         x64\Release\input.obj
+         x64\Release\monitor.obj
+         x64\Release\vulkan.obj
+         x64\Release\wgl_context.obj
+         x64\Release\win32_init.obj
+         x64\Release\win32_joystick.obj
+         x64\Release\win32_monitor.obj
+         x64\Release\win32_time.obj
+         x64\Release\win32_tls.obj
+         x64\Release\win32_window.obj
+         x64\Release\window.obj
+         x64\Release\xkb_unicode.obj
+         GLFW-3.2.1.vcxproj -> X:\CG\CG_Engine\libs\GLFW-3.2.1_x64.lib
+     1>Done Building Project "X:\CG\CG_Engine\GLFW-3.2.1\GLFW-3.2.1.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:05.24
