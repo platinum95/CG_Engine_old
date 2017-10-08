@@ -3,7 +3,7 @@
 #include "CG_Engine.h"
 #include "Shader.h"
 #include "CG_Data.h"
-
+#include "Camera.h"
 static GL_Engine::Properties::GLFWproperties windowProperties = {
 	800,			//Width
 	600,			//Height
@@ -34,6 +34,13 @@ static GLfloat colors[] = {
 	1.0f, 1.0f, 0.0f, 1.0f,	//YELLOW
 };
 
+static GLfloat translate[] = {
+	1, 0, 0, 0,
+	0, 1, 0, 0,
+	0, 0, 1, 0,
+	0, 0, 0, 1
+};
+
 static const char* vertexLoc = "v.glsl";
 static const char* fragLoc = "f.glsl";
 
@@ -50,8 +57,9 @@ private:
 	void initialise();
 	Shader basicShader;
 	CG_Engine engine;
-	CG_Data::VBO *testVBO;
-	CG_Data::VBO *testVBO2;
-	CG_Data::VAO *testVAO;
+	CG_Data::VBO *vertexVBO, *colourVBO;
+	CG_Data::VAO *VAO;
+	CG_Data::Uniform *time_ubo, *translate_ubo, *view_ubo, *projection_ubo;
+	Camera camera;
 }; 
 

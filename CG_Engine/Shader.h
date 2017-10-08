@@ -2,7 +2,7 @@
 
 #include <vector>
 #include "Common.h"
-
+#include "CG_Data.h"
 namespace GL_Engine{
 	class Shader
 	{
@@ -10,23 +10,48 @@ namespace GL_Engine{
 
 		Shader();
 		~Shader();
-
+		
 		const GLuint GetShaderID() const;
-
-		//Compile a shader stage from a source text file. Returns 0 if successful
-		uint8_t AddShaderStageFromFile(const char *_FilePath, GLenum _StageType);
-
-		//Compile a shader stage from a source text string. Returns 0 if successful
-		uint8_t AddShaderStage(const char * _ShaderSource, GLenum _StageType);
 
 		//Compile a shader stage from a source text file. Returns Shader ID
 		const uint8_t CompileShader();
 
-		void shader_test();
+		//Register a shader file to the pipeline
+		bool RegisterShaderStageFromFile(const char *_FilePath, GLenum _StageType);
+
+		//Register a shader source to the pipeline
+		void RegisterShaderStage(const char* _ShaderSource, GLenum _StageType);
+
+		//Register a shader attribute, to be bound at _Location
+		void RegisterAttribute(const char* _AttributeName, GLuint _Location);
+
+		//Register a Uniform.
+		//Returns pointer to UBO (Object finalised after call to compile)
+		CG_Data::Uniform* RegisterUniform(const char* _UniformName);
+
 
 	private:
-		std::vector<GLuint> shaderStageIDs;
+		struct ShaderStage {
+			const char* Source;
+			GLenum Type;
+			GLuint ID;
+		};
+		struct Attribute {
+			const char* AttributeName;
+			GLuint Location;
+		};
+		struct UniformStruct{
+			const char *Name;
+			CG_Data::Uniform *UniformObject;
+		};
+		std::vector<ShaderStage*> shaderStages;
+		std::vector<Attribute*> Attributes;
+		std::vector<UniformStruct*> UBOs;
+
 		GLuint ShaderID;
+		bool initialised{ false };
+		const GLuint CompileShaderStage(ShaderStage *stage);
+
 
 
 

@@ -7,15 +7,19 @@ namespace GL_Engine{
 #pragma region VBO
 		VBO::VBO(){
 			glGenBuffers(1, &this->VBOId);
-
+			initialised = true;
 		}
 		VBO::VBO(void* _Data, uint64_t _DataSize, GLenum _Usage){
 			glGenBuffers(1, &this->VBOId);
 			SetVBOData(_Data, _DataSize, _Usage);
+			initialised = true;
 		}
 
 		VBO::~VBO(){
-			glDeleteBuffers(1, &this->VBOId);
+			if (initialised) {
+				glDeleteBuffers(1, &this->VBOId);
+				initialised = false;
+			}
 		}
 
 		const GLuint VBO::GetID() const{
@@ -34,10 +38,14 @@ namespace GL_Engine{
 
 		VAO::VAO(){
 			glGenVertexArrays(1, &this->VAOId);
+			initialised = true;
 		}
 
 		VAO::~VAO(){
-			glDeleteVertexArrays(1, &this->VAOId);
+			if (initialised) {
+				glDeleteVertexArrays(1, &this->VAOId);
+				initialised = false;
+			}
 		}
 
 		const GLuint VAO::GetID() const{
@@ -46,6 +54,32 @@ namespace GL_Engine{
 
 		void VAO::BindVAO() const{
 			glBindVertexArray(this->VAOId);
+		}
+
+#pragma region Uniform
+		Uniform::Uniform(size_t _DataSize) {
+	
+		}
+		Uniform::Uniform() {
+
+		}
+		Uniform::~Uniform() {
+
+		}
+		const GLuint Uniform::GetID() const {
+			return this->ID;
+		}
+		void Uniform::BindUniform() const {
+			
+		}
+
+		void Uniform::SetID(GLint _ID) {
+			this->ID = _ID;
+		}
+
+		void Uniform::setData(void* _Data) {
+			this->NeedsUpdating = true;
+			this->Data = _Data;
 		}
 
 	}

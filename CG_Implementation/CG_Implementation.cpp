@@ -1,5 +1,6 @@
 #include "CG_Implementation.h"
-
+#include <glm/gtc/type_ptr.hpp>
+#include <time.h>
 
 using namespace GL_Engine;
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
@@ -15,11 +16,20 @@ int CG_Implementation::run(){
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
 		glUseProgram(basicShader.GetShaderID());
-		glBindVertexArray(testVAO->GetID());
+		float time = (float)clock() / (float)CLOCKS_PER_SEC;
+		glUniform1f(time_ubo->GetID(), (GLfloat) time);
+		translate[14] = 0;
+		glUniformMatrix4fv(translate_ubo->GetID(), 1, GL_FALSE, translate);
+		camera.SetCameraPosition(glm::vec4(sin(time), 0, -1 + sin(time), 1));
+		float* viewAr = (float*)glm::value_ptr(camera.GetViewMatrix());
+		const float* projAr = (const float*)glm::value_ptr(camera.GetProjectionMatrix());
+		//viewAr[14] = -1 + sin(time);
+		glUniformMatrix4fv(view_ubo->GetID(), 1, GL_FALSE, viewAr);
+		glUniformMatrix4fv(projection_ubo->GetID(), 1, GL_FALSE, projAr);
+		glBindVertexArray(VAO->GetID());
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glfwSwapBuffers(windowProperties.window);
 		glfwPollEvents();
-		testVBO2->BindVBO();
 
 	}
 	return 0;
@@ -37,59 +47,46 @@ void CG_Implementation::initialise(){
 	}
 
 
-//	basicShader.shader_test();
-//	glBindAttribLocation(basicShader.GetShaderID(), 0, "vPosition");
-	basicShader.AddShaderStageFromFile(vertexLoc, GL_VERTEX_SHADER);
-	basicShader.AddShaderStageFromFile(fragLoc, GL_FRAGMENT_SHADER);
+
+	basicShader.RegisterShaderStageFromFile(vertexLoc, GL_VERTEX_SHADER);
+	basicShader.RegisterShaderStageFromFile(fragLoc, GL_FRAGMENT_SHADER);
+	basicShader.RegisterAttribute("vPosition", 0);
+	basicShader.RegisterAttribute("fColor", 1);
+	time_ubo = basicShader.RegisterUniform("time");
+	translate_ubo = basicShader.RegisterUniform("model");
+	view_ubo = basicShader.RegisterUniform("view");
+	projection_ubo = basicShader.RegisterUniform("projection");
 	basicShader.CompileShader();
 
+	VAO = new CG_Data::VAO();
+	VAO->BindVAO();
 
-	testVAO = new CG_Data::VAO();
-	testVAO->BindVAO();
-
-	testVBO = new CG_Data::VBO();
-	testVBO->BindVBO();
-	const GLuint vboID = testVBO->GetID();
-	testVBO->SetVBOData(vertices, sizeof(vertices), GL_STATIC_DRAW);
-	//float *ar = (float*)glMapBuffer(GL_ARRAY_BUFFER, GL_READ_WRITE);
-
+	vertexVBO = new CG_Data::VBO();
+	vertexVBO->BindVBO();
+	vertexVBO->SetVBOData(vertices, sizeof(vertices), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(0);
 
-	testVBO2 = new CG_Data::VBO();
-	testVBO2->BindVBO();
-	const GLuint vboID2 = testVBO->GetID();
-	testVBO2->SetVBOData(NULL, sizeof(vertices), GL_DYNAMIC_DRAW);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	colourVBO = new CG_Data::VBO();
+	colourVBO->BindVBO();
+	colourVBO->SetVBOData(colors, sizeof(colors), GL_STATIC_DRAW);
+	glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-	
-	//GLuint positionID = glGetAttribLocation(basicShader.GetShaderID(), "vPosition");
-	//GLuint colorID = glGetAttribLocation(basicShader.GetShaderID(), "fColor");
-	//// Have to enable this
-	//glEnableVertexAttribArray(positionID);
-	//// Tell it where to find the position data in the currently active buffer (at index positionID)
-	//glVertexAttribPointer(positionID, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	//// Similarly, for the color data.
-	//glEnableVertexAttribArray(colorID);
-	//glVertexAttribPointer(colorID, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(6 * 3 * sizeof(GLfloat)));
 
-
-	//	glBindAttribLocation(basicShader.GetShaderID(), 0, "vPosition");
-	//	glBindAttribLocation(basicShader.GetShaderID(), 1, "fColor");
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, 0);
-	//glEnableVertexAttribArray(1);
-	//glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, 0, BUFFER_OFFSET(6 * 3 * sizeof(GL_FLOAT)));
+	camera.SetCameraPosition(glm::vec4(0, 0, 0, 1.0));
+	camera.SetProjectionMatrix(0.01, 100.0, 70, 800.0 / 600.0);
 
 
 }
 
 
 CG_Implementation::~CG_Implementation(){
+	delete vertexVBO;
+	delete colourVBO;
+	delete VAO;
+	basicShader.~Shader();
 	glfwTerminate();
-	delete testVBO;
-	delete testVAO;
 }

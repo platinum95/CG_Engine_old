@@ -9,46 +9,14 @@ namespace GL_Engine{
 
 
 	Shader::~Shader(){
-		glDeleteProgram(this->ShaderID);
+		if (initialised) {
+			glDeleteProgram(this->ShaderID);
+			initialised = false;
+		}
 	}
 
 	const GLuint Shader::GetShaderID() const {
 		return ShaderID;
-	}
-
-
-	uint8_t Shader::AddShaderStageFromFile(const char *_FilePath, GLenum _StageType){
-		uint8_t FileLoadResult;
-		const char* ShaderText = File_IO::LoadTextFile(_FilePath, &FileLoadResult);
-		if (FileLoadResult || ShaderText == nullptr){
-			throw std::runtime_error("Error loading shader file " + std::string(_FilePath));
-		}
-
-		return AddShaderStage(ShaderText, _StageType);
-	}
-
-	uint8_t Shader::AddShaderStage(const char * _ShaderSource, GLenum _StageType){
-		GLuint StageID = glCreateShader(_StageType);
-
-		if (StageID == 0) {
-			throw std::runtime_error("Error creating shader stage!");
-			return 1;
-		}
-		//Bind the source to the Stage, and compile
-		glShaderSource(StageID, 1, (const GLchar**)&_ShaderSource, NULL);
-		glCompileShader(StageID);
-		GLint Result;
-		// check for shader related errors using glGetShaderiv
-		glGetShaderiv(StageID, GL_COMPILE_STATUS, &Result);
-		if (!Result) {
-			GLchar ErrorBuffer[1024];
-			glGetShaderInfoLog(StageID, 1024, NULL, ErrorBuffer);
-			throw std::runtime_error("Error compiling shader!\n" + std::string(ErrorBuffer));
-			return 1;
-		}
-
-		this->shaderStageIDs.push_back(StageID);
-		return 0;
 	}
 
 	const uint8_t Shader::CompileShader(){
@@ -58,9 +26,16 @@ namespace GL_Engine{
 			return 0;
 		}
 
+		for (auto Attrib : this->Attributes) {
+			glBindAttribLocation(ShaderID, Attrib->Location, Attrib->AttributeName);
+			delete Attrib;
+		}
+		Attributes.clear();
+
 		// Attach each compiled stage to the Shader Program
-		for (auto StageID : this->shaderStageIDs){
-			glAttachShader(ShaderID, StageID);
+		for (auto Stage : this->shaderStages){
+			CompileShaderStage(Stage);
+			glAttachShader(ShaderID, Stage->ID);
 		}
 
 		glLinkProgram(ShaderID);
@@ -73,9 +48,8 @@ namespace GL_Engine{
 			return 0;
 		}
 
-		// program has been successfully linked but needs to be validated to check whether the program can execute given the current pipeline state
 		glValidateProgram(ShaderID);
-		// check for program related errors using glGetProgramiv
+		
 		glGetProgramiv(ShaderID, GL_VALIDATE_STATUS, &Result);
 		if (!Result) {
 			glGetProgramInfoLog(ShaderID, sizeof(ErrorBuffer), NULL, ErrorBuffer);
@@ -83,53 +57,79 @@ namespace GL_Engine{
 			return 0;
 		}
 
-		for (auto StageID : this->shaderStageIDs){
-			glDeleteShader(StageID);	//Stages no longer needed, so clean them up
+		for (auto uni : UBOs) {
+			uni->UniformObject->SetID(glGetUniformLocation(ShaderID, uni->Name));
+			delete uni;
 		}
+		UBOs.clear();
+		
+
+		for (auto Stage : this->shaderStages){
+			glDeleteShader(Stage->ID);	//Stages no longer needed, so clean them up
+			delete Stage;
+		}
+		shaderStages.clear();
+		initialised = true;
 		return ShaderID;
 	}
 
-	void Shader::shader_test(){
-		GLuint shaderProgramID = glCreateProgram();
-		if (shaderProgramID == 0) {
-			fprintf(stderr, "Error creating shader program\n");
-			exit(1);
+	bool Shader::RegisterShaderStageFromFile(const char * _FilePath, GLenum _StageType){
+		uint8_t FileLoadResult;
+		const char* ShaderText = File_IO::LoadTextFile(_FilePath, &FileLoadResult);
+		if (FileLoadResult || ShaderText == nullptr) {
+			throw std::runtime_error("Error loading shader file " + std::string(_FilePath));
 		}
 
-		// Create two shader objects, one for the vertex, and one for the fragment shader
-		AddShaderStageFromFile("v.glsl", GL_VERTEX_SHADER);
-		glAttachShader(shaderProgramID, this->shaderStageIDs[0]);
-		AddShaderStageFromFile("f.glsl", GL_FRAGMENT_SHADER);
-		glAttachShader(shaderProgramID, this->shaderStageIDs[1]);
-
-		GLint Success = 0;
-		GLchar ErrorLog[1024] = { 0 };
-
-
-		// After compiling all shader objects and attaching them to the program, we can finally link it
-		glLinkProgram(shaderProgramID);
-		// check for program related errors using glGetProgramiv
-		glGetProgramiv(shaderProgramID, GL_LINK_STATUS, &Success);
-		if (Success == 0) {
-			glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), NULL, ErrorLog);
-			fprintf(stderr, "Error linking shader program: '%s'\n", ErrorLog);
-			exit(1);
-		}
-
-		// program has been successfully linked but needs to be validated to check whether the program can execute given the current pipeline state
-		glValidateProgram(shaderProgramID);
-		// check for program related errors using glGetProgramiv
-		glGetProgramiv(shaderProgramID, GL_VALIDATE_STATUS, &Success);
-		if (!Success) {
-			glGetProgramInfoLog(shaderProgramID, sizeof(ErrorLog), NULL, ErrorLog);
-			fprintf(stderr, "Invalid shader program: '%s'\n", ErrorLog);
-			exit(1);
-		}
-		// Finally, use the linked shader program
-		// Note: this program will stay in effect for all draw calls until you replace it with another or explicitly disable its use
-		glUseProgram(shaderProgramID);
-		this->ShaderID = shaderProgramID;
+		RegisterShaderStage(ShaderText, _StageType);
+		return true;
 	}
+	void Shader::RegisterShaderStage(const char* _ShaderSource, GLenum _StageType) {
+		ShaderStage *stage = new ShaderStage;
+		stage->Source = _ShaderSource;
+		stage->Type = _StageType;
+		this->shaderStages.push_back(stage);
+		return;
+	}
+
+	void Shader::RegisterAttribute(const char * _AttributeName, GLuint _Location){
+		Attribute *attrib = new Attribute;
+		attrib->AttributeName = _AttributeName;
+		attrib->Location = _Location;
+		Attributes.push_back(attrib);
+		return;
+	}
+
+	CG_Data::Uniform * Shader::RegisterUniform(const char * _UniformName){
+		UniformStruct *uniform = new UniformStruct;
+		uniform->UniformObject = new CG_Data::Uniform();
+		uniform->Name = _UniformName;
+		this->UBOs.push_back(uniform);
+		return uniform->UniformObject;
+	}
+
+	const GLuint Shader::CompileShaderStage(ShaderStage * stage){
+		stage->ID = glCreateShader(stage->Type);
+
+		if (stage->ID == 0) {
+			throw std::runtime_error("Error creating shader stage!");
+			return -1;
+		}
+		//Bind the source to the Stage, and compile
+		glShaderSource(stage->ID, 1, (const GLchar**)&stage->Source, NULL);
+		glCompileShader(stage->ID);
+		GLint Result;
+		// check for shader related errors using glGetShaderiv
+		glGetShaderiv(stage->ID, GL_COMPILE_STATUS, &Result);
+		if (!Result) {
+			GLchar ErrorBuffer[1024];
+			glGetShaderInfoLog(stage->ID, 1024, NULL, ErrorBuffer);
+			throw std::runtime_error("Error compiling shader!\n" + std::string(ErrorBuffer));
+			return -1;
+		}
+		return stage->ID;
+	}
+
+	
 
 
 }

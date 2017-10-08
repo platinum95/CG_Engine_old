@@ -16,6 +16,7 @@ namespace GL_Engine{
 			void SetVBOData(void* _Data, uint64_t _DataSize, GLenum _Usage) const;
 		private:
 			GLuint VBOId;
+			bool initialised{ false };
 		};
 
 		class VAO{
@@ -28,10 +29,22 @@ namespace GL_Engine{
 		private:
 			GLuint VAOId;
 			std::vector<VBO*> VBOList;
-
+			bool initialised{ false };
 		};
 
 		class Uniform{
+		public:
+			Uniform(size_t _DataSize);
+			Uniform();
+			~Uniform();
+			const GLuint GetID() const;
+			void BindUniform() const;
+			void setData(void* _Data);
+			void SetID(GLint _ID);
+		private:
+			bool NeedsUpdating{ false };
+			void *Data;
+			GLint ID;
 
 		};
 	

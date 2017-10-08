@@ -9,11 +9,23 @@
 //== SHADER COMPILE STATUS = TRUE
 #version 330
 
-layout (location = 0) in vec3 vPosition;
+in vec3 vPosition;
+in vec4 fColor;
+uniform float time;
+uniform mat4 model;
+uniform mat4 view;
+uniform mat4 projection;
+out vec4 PassColour;
+#define SCALE_FACTOR 0.5
+mat4 scale = mat4(  SCALE_FACTOR, 0, 0, 0,
+					0, SCALE_FACTOR, 0 , 0,
+					0, 0, SCALE_FACTOR, 0,
+					0, 0, 0, 1   );
 
 void main(){
-	gl_PointSize = 100.0f;
-    gl_Position = vec4(0, 0, 0, 1);//vec4(vPosition.x, vPosition.y, vPosition.z, 1.0);
+	float c = (1.0 + cos(time)) / 2.0;
+	PassColour = vec4(fColor.r, fColor.g * c, fColor.b * c, 1.0);
+    gl_Position =  projection * view * model * scale * vec4(vPosition, 1.0);
 }
 //======================================================
 //   Fragment Shader 3 
@@ -22,6 +34,20 @@ void main(){
 //== SHADER COMPILE STATUS = TRUE
 #version 330                                                                        
 out vec4 FragColor;
+in vec4 PassColour;
+
+float CONV(int a){
+	int mod = a%360;
+	float ratio = 3.14/180.0;
+
+	return mod * ratio;
+}
+
+float normalise(float val){
+	return (val +1.0)/ 2.0;
+}
 void main(){
-	FragColor = vec4(1.0, 1.0, 1.0, 1.0);
+	float x = CONV(int(gl_FragCoord.x));
+	float y = CONV(int(gl_FragCoord.y));
+	FragColor = PassColour;//vec4(normalise(sin(x)), normalise(sin(x)), normalise(sin(x)), 1.0);//PassColour;
 }

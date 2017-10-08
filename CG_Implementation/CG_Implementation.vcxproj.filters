@@ -31,8 +31,10 @@
     <None Include="v.glsl">
       <Filter>Resource Files</Filter>
     </None>
-    <None Include="f.glsl">
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="f.glsl">
       <Filter>Resource Files</Filter>
-    </None>
+    </Text>
   </ItemGroup>
 </Project>

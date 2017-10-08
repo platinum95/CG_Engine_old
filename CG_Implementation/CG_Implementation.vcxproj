@@ -159,7 +159,9 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="f.glsl" />
+    <Text Include="f.glsl">
+      <FileType>Document</FileType>
+    </Text>
     <None Include="v.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

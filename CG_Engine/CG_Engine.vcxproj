@@ -172,6 +172,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="Camera.h" />
     <ClInclude Include="CG_Data.h" />
     <ClInclude Include="CG_Engine.h" />
     <ClInclude Include="Common.h" />
@@ -180,6 +181,7 @@
     <ClInclude Include="Shader.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CG_Data.cpp" />
     <ClCompile Include="CG_Engine.cpp" />
     <ClCompile Include="File_IO.cpp" />
