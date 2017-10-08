@@ -4,6 +4,7 @@
 #include "Shader.h"
 #include "CG_Data.h"
 #include "Camera.h"
+#include "InputHandler.h"
 static GL_Engine::Properties::GLFWproperties windowProperties = {
 	800,			//Width
 	600,			//Height
@@ -61,5 +62,6 @@ private:
 	CG_Data::VAO *VAO;
 	CG_Data::Uniform *time_ubo, *translate_ubo, *view_ubo, *projection_ubo;
 	Camera camera;
+	KeyHandler keyHandler;
 }; 
 

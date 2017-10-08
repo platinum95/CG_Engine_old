@@ -34,6 +34,13 @@ namespace GL_Engine{
 
 		class Uniform{
 		public:
+			enum UniformDataStructure {
+				GL_ARRAY, GL_SINGULAR
+			};
+			Uniform(GLint _Location, GLuint _DataType, UniformDataStructure _DataStructure, void* data);
+			Uniform(GLint _Location, GLuint _DataType, UniformDataStructure _DataStructure, uint16_t count, void* data);
+			Uniform(GLint _Location, GLuint _DataType, UniformDataStructure _DataStructure, GLboolean _Transpose, void* data);
+			Uniform(GLint _Location, GLuint _DataType, UniformDataStructure _DataStructure, GLboolean _Transpose, uint16_t count, void* data);
 			Uniform(size_t _DataSize);
 			Uniform();
 			~Uniform();

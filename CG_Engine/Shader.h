@@ -25,6 +25,9 @@ namespace GL_Engine{
 		//Register a shader attribute, to be bound at _Location
 		void RegisterAttribute(const char* _AttributeName, GLuint _Location);
 
+		//Activate the program
+		void UseShader() const;
+
 		//Register a Uniform.
 		//Returns pointer to UBO (Object finalised after call to compile)
 		CG_Data::Uniform* RegisterUniform(const char* _UniformName);

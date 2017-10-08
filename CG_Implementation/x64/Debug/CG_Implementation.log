@@ -1,2 +1,5 @@
-﻿  CG_Implementation.vcxproj -> C:\Projects\college\CG_Engine\x64\Debug\CG_Implementation.exe
-  CG_Implementation.vcxproj -> C:\Projects\college\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)
+﻿  CG_Implementation.cpp
+c:\projects\programming\c++\cg_engine\cg_implementation\cg_implementation.cpp(35): warning C4244: 'argument': conversion from 'GLfloat' to 'GLint', possible loss of data
+c:\projects\programming\c++\cg_engine\cg_implementation\cg_implementation.cpp(90): warning C4305: 'argument': truncation from 'double' to 'float'
+  CG_Implementation.vcxproj -> C:\Projects\programming\c++\CG_Engine\x64\Debug\CG_Implementation.exe
+  CG_Implementation.vcxproj -> C:\Projects\programming\c++\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)

@@ -5,32 +5,43 @@
 using namespace GL_Engine;
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
+void CameraKeyEvent(GLuint Key, void* Parameter) {
+	Camera *camera = static_cast<Camera*>(Parameter);
+	float dX = Key == GLFW_KEY_A ? -0.1f : Key == GLFW_KEY_D ? 0.1f : 0;
+	float dY = Key == GLFW_KEY_LEFT_SHIFT ? 0.1f : Key == GLFW_KEY_LEFT_CONTROL ? -0.1f : 0;
+	float dZ = Key == GLFW_KEY_W ? -0.1f : Key == GLFW_KEY_S ? 0.1f : 0;
+	camera->TranslateCamera(glm::vec4(dX, dY, dZ, 1.0));
+
+	float yaw = Key == GLFW_KEY_Q ? 0.5f : Key == GLFW_KEY_E ? -0.5f : 0;
+	camera->YawBy(yaw);
+
+	float pitch = Key == GLFW_KEY_Z ? 0.5f : Key == GLFW_KEY_X ? -0.5f : 0;
+	camera->PitchBy(pitch);
+}
+
 CG_Implementation::CG_Implementation(){
 }
 
 int CG_Implementation::run(){
 	
 	initialise();
-	glEnable(GL_PROGRAM_POINT_SIZE);
+
 	while (!glfwWindowShouldClose(windowProperties.window)){
+		keyHandler.Update(windowProperties.window);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT);
-		glUseProgram(basicShader.GetShaderID());
+		basicShader.UseShader();
 		float time = (float)clock() / (float)CLOCKS_PER_SEC;
 		glUniform1f(time_ubo->GetID(), (GLfloat) time);
-		translate[14] = 0;
 		glUniformMatrix4fv(translate_ubo->GetID(), 1, GL_FALSE, translate);
-		camera.SetCameraPosition(glm::vec4(sin(time), 0, -1 + sin(time), 1));
 		float* viewAr = (float*)glm::value_ptr(camera.GetViewMatrix());
 		const float* projAr = (const float*)glm::value_ptr(camera.GetProjectionMatrix());
-		//viewAr[14] = -1 + sin(time);
 		glUniformMatrix4fv(view_ubo->GetID(), 1, GL_FALSE, viewAr);
 		glUniformMatrix4fv(projection_ubo->GetID(), 1, GL_FALSE, projAr);
 		glBindVertexArray(VAO->GetID());
 		glDrawArrays(GL_TRIANGLES, 0, 6);
 		glfwSwapBuffers(windowProperties.window);
 		glfwPollEvents();
-
 	}
 	return 0;
 }
@@ -45,8 +56,6 @@ void CG_Implementation::initialise(){
 	if (!engine.CG_StartGlad(&gladProps)){
 		throw std::runtime_error("Error initialising GLAD!");
 	}
-
-
 
 	basicShader.RegisterShaderStageFromFile(vertexLoc, GL_VERTEX_SHADER);
 	basicShader.RegisterShaderStageFromFile(fragLoc, GL_FRAGMENT_SHADER);
@@ -79,7 +88,19 @@ void CG_Implementation::initialise(){
 	camera.SetCameraPosition(glm::vec4(0, 0, 0, 1.0));
 	camera.SetProjectionMatrix(0.01, 100.0, 70, 800.0 / 600.0);
 
+	keyHandler.AddKeyEvent(GLFW_KEY_W, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*) &camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_A, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_S, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_D, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_LEFT_SHIFT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_LEFT_CONTROL, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_Q, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_E, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_Z, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_X, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
 
+	projection_ubo->setData((void*)glm::value_ptr(camera.GetProjectionMatrix()));
+	view_ubo->setData((void*)glm::value_ptr(camera.GetViewMatrix()));
 }
 
 
@@ -88,5 +109,8 @@ CG_Implementation::~CG_Implementation(){
 	delete colourVBO;
 	delete VAO;
 	basicShader.~Shader();
+	keyHandler.~KeyHandler();
 	glfwTerminate();
 }
+
+

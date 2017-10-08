@@ -99,6 +99,10 @@ namespace GL_Engine{
 		return;
 	}
 
+	void Shader::UseShader() const {
+		glUseProgram(this->ShaderID);
+	}
+
 	CG_Data::Uniform * Shader::RegisterUniform(const char * _UniformName){
 		UniformStruct *uniform = new UniformStruct;
 		uniform->UniformObject = new CG_Data::Uniform();
