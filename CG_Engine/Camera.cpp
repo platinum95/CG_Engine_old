@@ -28,8 +28,8 @@ namespace GL_Engine {
 		float ConstructMatrix[] = {
 			Sx, 0, 0, 0,
 			0, Sy, 0, 0,
-			0, 0, Sz, Pz,
-			0, 0, -1, 0
+			0, 0, Sz, -1,
+			0, 0, Pz, 0
 		};
 		this->ProjectionMatrix = glm::make_mat4(ConstructMatrix);
 		return this->ProjectionMatrix;

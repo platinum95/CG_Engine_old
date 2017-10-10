@@ -176,6 +176,7 @@
     <ClInclude Include="CG_Data.h" />
     <ClInclude Include="CG_Engine.h" />
     <ClInclude Include="Common.h" />
+    <ClInclude Include="Entity.h" />
     <ClInclude Include="File_IO.h" />
     <ClInclude Include="InputHandler.h" />
     <ClInclude Include="Properties.h" />
@@ -185,6 +186,7 @@
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="CG_Data.cpp" />
     <ClCompile Include="CG_Engine.cpp" />
+    <ClCompile Include="Entity.cpp" />
     <ClCompile Include="File_IO.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="InputHandler.cpp" />

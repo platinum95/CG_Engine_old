@@ -16,5 +16,5 @@ mat4 scale = mat4(  SCALE_FACTOR, 0, 0, 0,
 void main(){
 	float c = (1.0 + cos(time)) / 2.0;
 	PassColour = vec4(fColor.r, fColor.g * c, fColor.b * c, 1.0);
-    gl_Position =  projection * view * model * scale * vec4(vPosition, 1.0);
+    gl_Position =  projection * view * model * vec4(vPosition, 1.0);
 }

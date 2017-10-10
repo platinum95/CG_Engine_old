@@ -19,6 +19,69 @@ void CameraKeyEvent(GLuint Key, void* Parameter) {
 	camera->PitchBy(pitch);
 }
 
+void CubeKeyEvent(GLuint Key, void* Parameter) {
+	static bool entA{ true };
+	if (GLFW_KEY_KP_5 == Key) {
+		entA = !entA;
+		return;
+	}
+	Entity *entity = static_cast<Entity*>(Parameter);
+	entity = entA ? &entity[0] : &entity[1];
+	switch (Key) {
+	case GLFW_KEY_LEFT:
+		entity->Translate(glm::vec4(0.1f, 0, 0, 1.0));
+		break;
+	case GLFW_KEY_RIGHT:
+		entity->Translate(glm::vec4(-0.1f, 0, 0, 1.0));
+		break;
+	case GLFW_KEY_UP:
+		entity->Translate(glm::vec4(0, 0.1f, 0, 1.0));
+		break;
+	case GLFW_KEY_DOWN:
+		entity->Translate(glm::vec4(0, -0.1f, 0, 1.0));
+		break;
+	case GLFW_KEY_INSERT:
+		entity->Translate(glm::vec4(0, 0, 0.1f, 1.0));
+		break;
+	case GLFW_KEY_DELETE:
+		entity->Translate(glm::vec4(0, 0, -0.1f, 1.0));
+		break;
+
+	case GLFW_KEY_O:
+		entity->YawBy(0.5f);
+		break;
+	case GLFW_KEY_P:
+		entity->YawBy(-0.5f);
+		break;
+	case GLFW_KEY_K:
+		entity->PitchBy(0.5f);
+		break;
+	case GLFW_KEY_L:
+		entity->PitchBy(-0.5f);
+		break;
+	case GLFW_KEY_M:
+		entity->RollBy(0.5f);
+		break;
+	case GLFW_KEY_COMMA:
+		entity->RollBy(-0.5f);
+		break;
+
+	case GLFW_KEY_KP_7:
+		entity->ScaleBy(glm::vec3(0.9));
+		break;
+	case GLFW_KEY_KP_9:
+		entity->ScaleBy(glm::vec3(1.1));
+		break;
+	case GLFW_KEY_KP_8:
+		entity->ScaleBy(glm::vec3(0.9, 1.0, 1.0));
+		break;
+	case GLFW_KEY_KP_2:
+		entity->ScaleBy(glm::vec3(1.1, 1.0, 1.0));
+		break;
+
+	}
+}
+
 CG_Implementation::CG_Implementation(){
 }
 
@@ -29,17 +92,23 @@ int CG_Implementation::run(){
 	while (!glfwWindowShouldClose(windowProperties.window)){
 		keyHandler.Update(windowProperties.window);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		basicShader.UseShader();
 		float time = (float)clock() / (float)CLOCKS_PER_SEC;
 		glUniform1f(time_ubo->GetID(), (GLfloat) time);
-		glUniformMatrix4fv(translate_ubo->GetID(), 1, GL_FALSE, translate);
+		float* transformAr = (float*)glm::value_ptr(entityList[0].GetTransformMatrix());
+		glUniformMatrix4fv(translate_ubo->GetID(), 1, GL_FALSE, transformAr);
 		float* viewAr = (float*)glm::value_ptr(camera.GetViewMatrix());
 		const float* projAr = (const float*)glm::value_ptr(camera.GetProjectionMatrix());
 		glUniformMatrix4fv(view_ubo->GetID(), 1, GL_FALSE, viewAr);
 		glUniformMatrix4fv(projection_ubo->GetID(), 1, GL_FALSE, projAr);
 		glBindVertexArray(VAO->GetID());
-		glDrawArrays(GL_TRIANGLES, 0, 6);
+		glDrawArrays(GL_TRIANGLES, 0, 24);
+
+		transformAr = (float*)glm::value_ptr(entityList[1].GetTransformMatrix());
+		glUniformMatrix4fv(translate_ubo->GetID(), 1, GL_FALSE, transformAr);
+		glDrawArrays(GL_TRIANGLES, 0, 24);
+
 		glfwSwapBuffers(windowProperties.window);
 		glfwPollEvents();
 	}
@@ -56,6 +125,8 @@ void CG_Implementation::initialise(){
 	if (!engine.CG_StartGlad(&gladProps)){
 		throw std::runtime_error("Error initialising GLAD!");
 	}
+
+//	glEnable(GL_DEPTH_TEST);
 
 	basicShader.RegisterShaderStageFromFile(vertexLoc, GL_VERTEX_SHADER);
 	basicShader.RegisterShaderStageFromFile(fragLoc, GL_FRAGMENT_SHADER);
@@ -99,8 +170,30 @@ void CG_Implementation::initialise(){
 	keyHandler.AddKeyEvent(GLFW_KEY_Z, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
 	keyHandler.AddKeyEvent(GLFW_KEY_X, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
 
+	keyHandler.AddKeyEvent(GLFW_KEY_UP, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_DOWN, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_LEFT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_RIGHT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_INSERT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_DELETE, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_O, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_P, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_K, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_L, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_M, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_COMMA, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_KP_7, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_KP_9, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_KP_8, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_KP_2, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_KP_5, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
+
 	projection_ubo->setData((void*)glm::value_ptr(camera.GetProjectionMatrix()));
 	view_ubo->setData((void*)glm::value_ptr(camera.GetViewMatrix()));
+
+	entityList[1].Translate(glm::vec3(0, 0, 5));
+
+	glEnable(GL_DEPTH_TEST);
 }
 
 
