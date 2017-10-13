@@ -1,2 +1,25 @@
-﻿  Entity.cpp
-  CG_Engine.vcxproj -> U:\CG\CG_Engine\CG_Engine\../libs/CG_Engined_x64.lib
+﻿Build started 13/10/2017 13:52:34.
+     1>Project "X:\CG\CG_Engine\CG_Engine\CG_Engine.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /IX:\CG\CG_Engine\libs /Zi /nologo /W3 /WX- /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug\\" /Fd"x64\Debug\vc120.pdb" /Gd /TP /errorReport:prompt CG_Data.cpp Entity.cpp Shader.cpp
+         CG_Data.cpp
+         Generating Code...
+         Compiling...
+         Shader.cpp
+         Entity.cpp
+         Generating Code...
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\Lib.exe /OUT:"../libs/CG_Engined_x64.lib" /LIBPATH:X:\CG\CG_Engine\libs /NOLOGO /MACHINE:X64 x64\Debug\Camera.obj
+         x64\Debug\CG_Data.obj
+         x64\Debug\CG_Engine.obj
+         x64\Debug\Entity.obj
+         x64\Debug\File_IO.obj
+         x64\Debug\glad.obj
+         x64\Debug\InputHandler.obj
+         x64\Debug\Shader.obj
+         CG_Engine.vcxproj -> X:\CG\CG_Engine\CG_Engine\../libs/CG_Engined_x64.lib
+     1>Done Building Project "X:\CG\CG_Engine\CG_Engine\CG_Engine.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:06.04

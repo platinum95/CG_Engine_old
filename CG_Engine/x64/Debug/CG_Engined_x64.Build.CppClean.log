@@ -1,6 +1,13 @@
 x:\cg\cg_engine\cg_engine\x64\debug\vc120.pdb
 x:\cg\cg_engine\cg_engine\x64\debug\vc120.idb
+x:\cg\cg_engine\cg_engine\x64\debug\camera.obj
+x:\cg\cg_engine\cg_engine\x64\debug\cg_data.obj
 x:\cg\cg_engine\cg_engine\x64\debug\cg_engine.obj
+x:\cg\cg_engine\cg_engine\x64\debug\entity.obj
+x:\cg\cg_engine\cg_engine\x64\debug\file_io.obj
+x:\cg\cg_engine\cg_engine\x64\debug\inputhandler.obj
+x:\cg\cg_engine\cg_engine\x64\debug\shader.obj
+x:\cg\cg_engine\cg_engine\x64\debug\glad.obj
 x:\cg\cg_engine\libs\cg_engined_x64.lib
 x:\cg\cg_engine\cg_engine\../libs/cg_engined_x64.lib
 x:\cg\cg_engine\cg_engine\x64\debug\cg_engine.tlog\cl.command.1.tlog

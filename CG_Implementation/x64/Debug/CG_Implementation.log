@@ -1,6 +1,18 @@
-﻿  CG_Implementation.cpp
-u:\cg\cg_engine\cg_implementation\cg_implementation.cpp(70): warning C4305: 'argument': truncation from 'double' to 'float'
-u:\cg\cg_engine\cg_implementation\cg_implementation.cpp(73): warning C4305: 'argument': truncation from 'double' to 'float'
-u:\cg\cg_engine\cg_implementation\cg_implementation.cpp(160): warning C4305: 'argument': truncation from 'double' to 'float'
-  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.exe
-  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)
+﻿Build started 13/10/2017 13:52:58.
+     1>Project "X:\CG\CG_Engine\CG_Implementation\CG_Implementation.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /IX:\CG\CG_Engine\CG_Engine /IX:\CG\CG_Engine\include /Zi /nologo /W3 /WX- /Od /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug\\" /Fd"x64\Debug\vc120.pdb" /Gd /TP /errorReport:prompt CG_Implementation.cpp
+         CG_Implementation.cpp
+     1>CG_Implementation.cpp(161): warning C4305: 'argument' : truncation from 'double' to 'float'
+     1>x:\cg\cg_engine\cg_engine\CG_Data.h(104): error C2893: Failed to specialize function template 'unknown-type apply(F &&,T &&)'
+                 With the following template arguments:
+                 'F=std::function<void (GLint,GLint,GLboolean,GLfloat *)> *'
+                 'T=std::tuple<GLint,GLboolean,GLfloat *> &'
+                 x:\cg\cg_engine\cg_engine\CG_Data.h(103) : while compiling class template member function 'void GL_Engine::CG_Data::UniformUpdater<GLint,GLboolean,GLfloat *>::Update(void)'
+                 x:\cg\cg_engine\cg_engine\CG_Data.h(69) : see reference to class template instantiation 'GL_Engine::CG_Data::UniformUpdater<GLint,GLboolean,GLfloat *>' being compiled
+                 CG_Implementation.cpp(201) : see reference to function template instantiation 'void GL_Engine::CG_Data::Uniform::GenerateUpdater<GLint,GLboolean,GLfloat*>(std::function<void (GLint,GLint,GLboolean,GLfloat *)>,GLint,GLint,GLboolean,GLfloat *)' being compiled
+     1>Done Building Project "X:\CG\CG_Engine\CG_Implementation\CG_Implementation.vcxproj" (Build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:01.51

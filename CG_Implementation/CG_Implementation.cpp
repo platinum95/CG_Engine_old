@@ -67,16 +67,16 @@ void CubeKeyEvent(GLuint Key, void* Parameter) {
 		break;
 
 	case GLFW_KEY_KP_7:
-		entity->ScaleBy(glm::vec3(0.9));
+		entity->ScaleBy(glm::vec3(0.9f));
 		break;
 	case GLFW_KEY_KP_9:
-		entity->ScaleBy(glm::vec3(1.1));
+		entity->ScaleBy(glm::vec3(1.1f));
 		break;
 	case GLFW_KEY_KP_8:
-		entity->ScaleBy(glm::vec3(0.9, 1.0, 1.0));
+		entity->ScaleBy(glm::vec3(0.9f, 1.0f, 1.0f));
 		break;
 	case GLFW_KEY_KP_2:
-		entity->ScaleBy(glm::vec3(1.1, 1.0, 1.0));
+		entity->ScaleBy(glm::vec3(1.1f, 1.0f, 1.0f));
 		break;
 
 	}
@@ -97,7 +97,8 @@ int CG_Implementation::run(){
 		float time = (float)clock() / (float)CLOCKS_PER_SEC;
 		glUniform1f(time_ubo->GetID(), (GLfloat) time);
 		float* transformAr = (float*)glm::value_ptr(entityList[0].GetTransformMatrix());
-		glUniformMatrix4fv(translate_ubo->GetID(), 1, GL_FALSE, transformAr);
+		//glUniformMatrix4fv(translate_ubo->GetID(), 1, GL_FALSE, transformAr);
+		translate_ubo->Update();
 		float* viewAr = (float*)glm::value_ptr(camera.GetViewMatrix());
 		const float* projAr = (const float*)glm::value_ptr(camera.GetProjectionMatrix());
 		glUniformMatrix4fv(view_ubo->GetID(), 1, GL_FALSE, viewAr);
@@ -191,13 +192,23 @@ void CG_Implementation::initialise(){
 	projection_ubo->setData((void*)glm::value_ptr(camera.GetProjectionMatrix()));
 	view_ubo->setData((void*)glm::value_ptr(camera.GetViewMatrix()));
 
+//	view_ubo->GenerateUpdater<GLfloat>((std::function<void(GLint, GLfloat)>)glUniform1f, (GLint) 1, (GLfloat) 2);
+
 	entityList[1].Translate(glm::vec3(0, 0, 5));
+
+	float* transformAr = (float*)glm::value_ptr(entityList[0].GetTransformMatrix());
+	translate_ubo->GenerateUpdater<GLint, GLboolean, GLfloat*>
+		((std::function<void(GLint, GLint, GLboolean, GLfloat*)>)glUniformMatrix4fv, translate_ubo->GetID(), 1, GL_FALSE, transformAr);
 
 	glEnable(GL_DEPTH_TEST);
 }
 
+void tes(std::function<void(int)> f) {
+
+}
 
 CG_Implementation::~CG_Implementation(){
+
 	delete vertexVBO;
 	delete colourVBO;
 	delete VAO;

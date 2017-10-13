@@ -1,7 +1,11 @@
 #pragma once
 #include "Common.h"
 #include <vector>
-
+#include <functional>
+#include <iostream>
+#include <tuple>
+#include "TupleUtil.h"
+#include <memory>
 namespace GL_Engine{
 	namespace CG_Data{
 
@@ -32,6 +36,16 @@ namespace GL_Engine{
 			bool initialised{ false };
 		};
 
+		struct Interfacee
+		{
+		public:
+			Interfacee() {}
+			virtual ~Interfacee(){}
+
+			virtual void Update() = 0;
+		};
+
+
 		class Uniform{
 		public:
 			enum UniformDataStructure {
@@ -44,16 +58,60 @@ namespace GL_Engine{
 			Uniform(size_t _DataSize);
 			Uniform();
 			~Uniform();
+
+			void Update() {
+				myClass->Update();
+			}
+
+			template<typename ...A>
+			void GenerateUpdater(std::function<void(GLint, A...)> f, GLint Id, A ...a) {
+				
+				UniformUpdater<A...> *updater = new UniformUpdater < A... > ;
+				myClass.reset(updater);
+
+			}
+
 			const GLuint GetID() const;
 			void BindUniform() const;
 			void setData(void* _Data);
 			void SetID(GLint _ID);
+
+			std::unique_ptr<Interfacee> myClass;
 		private:
 			bool NeedsUpdating{ false };
 			void *Data;
 			GLint ID;
+		};
+
+		
+		
+
+		template<typename ...A>
+		class UniformUpdater : public Interfacee {
+		public:
+			GLint ID;
+			std::function<void(GLint, A...)> funct;
+			std::tuple<A...> ParPack;
+
+			void GetUpdateFunction(std::function<void(GLint, A...)> f, GLint Id, A... a) {
+				this->funct = f;
+				this->ID = Id;
+				this->ParPack = std::tuple<A...>(a...);
+				return Update;
+			}
+
+			virtual void Update() override {
+				apply(&funct, ParPack);
+			}
+
+		private:
+			template<typename T, typename... Args>
+			struct argy {
+				std::tuple<Args...> args;
+				T gen() { return gen_impl(std::index_sequence_for<Args...>()); }
+
+			};
 
 		};
-	
 	}
 }

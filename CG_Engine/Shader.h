@@ -54,10 +54,6 @@ namespace GL_Engine{
 		GLuint ShaderID;
 		bool initialised{ false };
 		const GLuint CompileShaderStage(ShaderStage *stage);
-
-
-
-
 	};
 
 }
