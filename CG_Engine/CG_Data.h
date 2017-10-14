@@ -6,6 +6,7 @@
 #include <tuple>
 #include "TupleUtil.h"
 #include <memory>
+
 namespace GL_Engine{
 	namespace CG_Data{
 
@@ -41,11 +42,28 @@ namespace GL_Engine{
 		public:
 			Interfacee() {}
 			virtual ~Interfacee(){}
-
 			virtual void Update() = 0;
+
 		};
 
 
+		template<typename ...A>
+		class UT{
+		public:
+			GLint ID;
+			std::function<void(GLint, A...)> funct;
+			std::tuple<A...> ParPack;
+
+			void GetUpdateFunction(std::function<void(GLint, A...)> f, A... a) {
+				this->funct = f;
+				this->ParPack = std::tuple<A...>(a...);
+				return;
+			}
+
+			
+
+		};
+			
 		class Uniform{
 		public:
 			enum UniformDataStructure {
@@ -59,59 +77,73 @@ namespace GL_Engine{
 			Uniform();
 			~Uniform();
 
-			void Update() {
+			template<typename ...A>
+			void GenerateUpdater(std::function<void(GLint, A...)> f, A ...a) {
+				UniformUpdater<GLint, A...> *updater = new UniformUpdater<GLint, A...>();
+				updater->GetUpdateFunction(f, this->ID, a...);
+				myClass.reset(updater);
+			}
+			
+			void Update() const {
 				myClass->Update();
 			}
-
-			template<typename ...A>
-			void GenerateUpdater(std::function<void(GLint, A...)> f, GLint Id, A ...a) {
-				
-				UniformUpdater<A...> *updater = new UniformUpdater < A... > ;
-				myClass.reset(updater);
-
+			void UpdateT() const{
+				callback(*this);
 			}
+			void set_callback(std::function<void(const CG_Data::Uniform &u)> _callback){
+				this->callback = _callback;
+			}
+
+			std::auto_ptr<Interfacee> myClass;
 
 			const GLuint GetID() const;
 			void BindUniform() const;
 			void setData(void* _Data);
 			void SetID(GLint _ID);
+			void* GetData() const { return this->Data; };
 
-			std::unique_ptr<Interfacee> myClass;
+			std::function<void(const CG_Data::Uniform &u)> callback;
+
 		private:
 			bool NeedsUpdating{ false };
 			void *Data;
 			GLint ID;
 		};
 
-		
-		
-
 		template<typename ...A>
 		class UniformUpdater : public Interfacee {
 		public:
 			GLint ID;
-			std::function<void(GLint, A...)> funct;
+			std::function<void(A...)> funct;
 			std::tuple<A...> ParPack;
 
-			void GetUpdateFunction(std::function<void(GLint, A...)> f, GLint Id, A... a) {
+			void GetUpdateFunction(std::function<void(A...)> f, A... a) {
 				this->funct = f;
-				this->ID = Id;
 				this->ParPack = std::tuple<A...>(a...);
-				return Update;
+				return;
 			}
 
-			virtual void Update() override {
-				apply(&funct, ParPack);
-			}
+			template<int ...>
+			struct seq {};
 
-		private:
-			template<typename T, typename... Args>
-			struct argy {
-				std::tuple<Args...> args;
-				T gen() { return gen_impl(std::index_sequence_for<Args...>()); }
+			template<int N, int ...S>
+			struct gens : gens<N - 1, N - 1, S...> {};
 
+			template<int ...S>
+			struct gens<0, S...> {
+				typedef seq<S...> type;
 			};
 
+			void Update() override {
+				callFunc(typename gens<sizeof...(A)>::type());
+			}
+
+			template<int ...S>
+			void callFunc(seq<S...>) {
+				funct(std::get<S>(ParPack) ...);
+			}
+
 		};
+		
 	}
 }

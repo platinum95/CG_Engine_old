@@ -119,6 +119,7 @@ private:
 	CG_Data::Uniform *time_ubo, *translate_ubo, *view_ubo, *projection_ubo;
 	Camera camera;
 	KeyHandler keyHandler;
+	float time{0};
 
 	Entity entityList[2];
 }; 

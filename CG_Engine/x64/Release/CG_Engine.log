@@ -1,6 +1,4 @@
 ﻿  CG_Data.cpp
-  CG_Engine.cpp
-  File_IO.cpp
+  Entity.cpp
   Shader.cpp
-  glad.c
-  CG_Engine.vcxproj -> C:\Projects\college\CG_Engine\CG_Engine\../libs/CG_Engine_x64.lib
+  CG_Engine.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\CG_Engine\../libs/CG_Engine_x64.lib

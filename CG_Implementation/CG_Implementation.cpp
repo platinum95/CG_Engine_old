@@ -94,20 +94,19 @@ int CG_Implementation::run(){
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		basicShader.UseShader();
-		float time = (float)clock() / (float)CLOCKS_PER_SEC;
-		glUniform1f(time_ubo->GetID(), (GLfloat) time);
-		float* transformAr = (float*)glm::value_ptr(entityList[0].GetTransformMatrix());
-		//glUniformMatrix4fv(translate_ubo->GetID(), 1, GL_FALSE, transformAr);
-		translate_ubo->Update();
-		float* viewAr = (float*)glm::value_ptr(camera.GetViewMatrix());
-		const float* projAr = (const float*)glm::value_ptr(camera.GetProjectionMatrix());
-		glUniformMatrix4fv(view_ubo->GetID(), 1, GL_FALSE, viewAr);
-		glUniformMatrix4fv(projection_ubo->GetID(), 1, GL_FALSE, projAr);
+		time = (float)clock() / (float)CLOCKS_PER_SEC;
+		time_ubo->UpdateT();
+
+		translate_ubo->setData((void*)glm::value_ptr(entityList[0].GetTransformMatrix()));
+		translate_ubo->UpdateT();
+		view_ubo->UpdateT();
+		projection_ubo->UpdateT();
+
 		glBindVertexArray(VAO->GetID());
 		glDrawArrays(GL_TRIANGLES, 0, 24);
 
-		transformAr = (float*)glm::value_ptr(entityList[1].GetTransformMatrix());
-		glUniformMatrix4fv(translate_ubo->GetID(), 1, GL_FALSE, transformAr);
+		translate_ubo->setData((void*)glm::value_ptr(entityList[1].GetTransformMatrix()));
+		translate_ubo->UpdateT();
 		glDrawArrays(GL_TRIANGLES, 0, 24);
 
 		glfwSwapBuffers(windowProperties.window);
@@ -127,7 +126,6 @@ void CG_Implementation::initialise(){
 		throw std::runtime_error("Error initialising GLAD!");
 	}
 
-//	glEnable(GL_DEPTH_TEST);
 
 	basicShader.RegisterShaderStageFromFile(vertexLoc, GL_VERTEX_SHADER);
 	basicShader.RegisterShaderStageFromFile(fragLoc, GL_FRAGMENT_SHADER);
@@ -189,22 +187,25 @@ void CG_Implementation::initialise(){
 	keyHandler.AddKeyEvent(GLFW_KEY_KP_2, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
 	keyHandler.AddKeyEvent(GLFW_KEY_KP_5, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
 
+	entityList[1].Translate(glm::vec3(0, 0, 0));
+	entityList[0].Translate(glm::vec3(0, 0, 5));
+
+	time_ubo->set_callback([](const CG_Data::Uniform &u) {glUniform1fv(u.GetID(), 1, static_cast<GLfloat*>(u.GetData())); });
+	time_ubo->setData(static_cast<void*>(&time));
+
+	auto MatrixLambda = [](const CG_Data::Uniform &u) {glUniformMatrix4fv(u.GetID(), 1, GL_FALSE, static_cast<GLfloat*>(u.GetData())); };
+	translate_ubo->set_callback(MatrixLambda);
+	translate_ubo->setData((void*)glm::value_ptr(entityList[0].GetTransformMatrix()));
+
+	view_ubo->set_callback([](const CG_Data::Uniform &u) 
+			{glUniformMatrix4fv(u.GetID(), 1, GL_FALSE, glm::value_ptr(static_cast<Camera*>(u.GetData())->GetViewMatrix()) );});
+	view_ubo->setData(static_cast<void*>(&camera));
+
+	projection_ubo->set_callback(MatrixLambda);
 	projection_ubo->setData((void*)glm::value_ptr(camera.GetProjectionMatrix()));
-	view_ubo->setData((void*)glm::value_ptr(camera.GetViewMatrix()));
 
-//	view_ubo->GenerateUpdater<GLfloat>((std::function<void(GLint, GLfloat)>)glUniform1f, (GLint) 1, (GLfloat) 2);
-
-	entityList[1].Translate(glm::vec3(0, 0, 5));
-
-	float* transformAr = (float*)glm::value_ptr(entityList[0].GetTransformMatrix());
-	translate_ubo->GenerateUpdater<GLint, GLboolean, GLfloat*>
-		((std::function<void(GLint, GLint, GLboolean, GLfloat*)>)glUniformMatrix4fv, translate_ubo->GetID(), 1, GL_FALSE, transformAr);
 
 	glEnable(GL_DEPTH_TEST);
-}
-
-void tes(std::function<void(int)> f) {
-
 }
 
 CG_Implementation::~CG_Implementation(){
