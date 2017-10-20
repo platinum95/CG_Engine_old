@@ -1,14 +1,2 @@
-﻿  CG_Data.cpp
-u:\cg\cg_engine\cg_engine\cg_data.h(82): error C2853: 'fc': a non-static data member cannot have a type that contains 'auto'
-  u:\cg\cg_engine\cg_engine\cg_data.h(94): note: see reference to class template instantiation 'GL_Engine::CG_Data::UniformUpdater<A...>' being compiled
-  Generating Code...
-  Compiling...
-  Entity.cpp
-u:\cg\cg_engine\cg_engine\cg_data.h(82): error C2853: 'fc': a non-static data member cannot have a type that contains 'auto'
-  u:\cg\cg_engine\cg_engine\cg_data.h(94): note: see reference to class template instantiation 'GL_Engine::CG_Data::UniformUpdater<A...>' being compiled
-  Generating Code...
-  Compiling...
-  Shader.cpp
-u:\cg\cg_engine\cg_engine\cg_data.h(82): error C2853: 'fc': a non-static data member cannot have a type that contains 'auto'
-  u:\cg\cg_engine\cg_engine\cg_data.h(94): note: see reference to class template instantiation 'GL_Engine::CG_Data::UniformUpdater<A...>' being compiled
-  Generating Code...
+﻿  Entity.cpp
+  CG_Engine.vcxproj -> U:\CG\CG_Engine\CG_Engine\../libs/CG_Engined_x64.lib

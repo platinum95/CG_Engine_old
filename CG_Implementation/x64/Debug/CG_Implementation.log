@@ -1,4 +1,2 @@
-﻿  CG_Implementation.cpp
-d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(160): warning C4305: 'argument': truncation from 'double' to 'float'
-  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Debug\CG_Implementation.exe
-  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)
+﻿  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.exe
+  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)

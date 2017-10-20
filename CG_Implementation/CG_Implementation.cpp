@@ -1,10 +1,12 @@
 #include "CG_Implementation.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <time.h>
+//#include "teapot.h"
 
 using namespace GL_Engine;
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
+//Callbacks for key events
 void CameraKeyEvent(GLuint Key, void* Parameter) {
 	Camera *camera = static_cast<Camera*>(Parameter);
 	float dX = Key == GLFW_KEY_A ? -0.1f : Key == GLFW_KEY_D ? 0.1f : 0;
@@ -91,32 +93,48 @@ int CG_Implementation::run(){
 
 	while (!glfwWindowShouldClose(windowProperties.window)){
 		keyHandler.Update(windowProperties.window);
+		//Clear screen
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+		//Use the shader
 		basicShader.UseShader();
-		time = (float)clock() / (float)CLOCKS_PER_SEC;
-		time_ubo->UpdateT();
 
-		translate_ubo->setData((void*)glm::value_ptr(entityList[0].GetTransformMatrix()));
-		translate_ubo->UpdateT();
-		view_ubo->UpdateT();
-		projection_ubo->UpdateT();
+		//Update the camera view matrix
+		view_ubo->Update();
+		//Update the projection matrix (not needed every loop)
+		projection_ubo->Update();
 
+		//Just a test uniform
+		time = 0;// (float)clock() / (float)CLOCKS_PER_SEC;
+		time_ubo->Update();
+
+		//Set the translate uniform with the model matrix of entity 1
+		translate_ubo->SetData(static_cast<const void*>(glm::value_ptr(entityList[0].GetTransformMatrix())));
+		translate_ubo->Update();
+		
+		//Draw the first entity
 		glBindVertexArray(VAO->GetID());
 		glDrawArrays(GL_TRIANGLES, 0, 24);
 
-		translate_ubo->setData((void*)glm::value_ptr(entityList[1].GetTransformMatrix()));
-		translate_ubo->UpdateT();
+		//Set the translate uniform with the model matrix of entity 2
+		translate_ubo->SetData(static_cast<const void*>(glm::value_ptr(entityList[1].GetTransformMatrix())));
+		translate_ubo->Update();
+
+		//Draw the second entity
 		glDrawArrays(GL_TRIANGLES, 0, 24);
 
+		//Swap buffers
 		glfwSwapBuffers(windowProperties.window);
 		glfwPollEvents();
+		
 	}
 	return 0;
 }
 
 void CG_Implementation::initialise(){
 	
+	//Initialise window and Glad
 	if (!engine.CG_CreateWindow(&windowProperties)){
 		throw std::runtime_error("Error initialising GLFW!");
 	}
@@ -126,7 +144,7 @@ void CG_Implementation::initialise(){
 		throw std::runtime_error("Error initialising GLAD!");
 	}
 
-
+	//Set up shader using a Shader object
 	basicShader.RegisterShaderStageFromFile(vertexLoc, GL_VERTEX_SHADER);
 	basicShader.RegisterShaderStageFromFile(fragLoc, GL_FRAGMENT_SHADER);
 	basicShader.RegisterAttribute("vPosition", 0);
@@ -137,6 +155,8 @@ void CG_Implementation::initialise(){
 	projection_ubo = basicShader.RegisterUniform("projection");
 	basicShader.CompileShader();
 
+
+	//Set up vertex data
 	VAO = new CG_Data::VAO();
 	VAO->BindVAO();
 
@@ -154,10 +174,12 @@ void CG_Implementation::initialise(){
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
-
+	
+	//Initialise camera
 	camera.SetCameraPosition(glm::vec4(0, 0, 0, 1.0));
-	camera.SetProjectionMatrix(0.01, 100.0, 70, 800.0 / 600.0);
+	camera.SetProjectionMatrix(0.01f, 100.0f, 70.0f, 800.0f / 600.0f);
 
+	//Register key events
 	keyHandler.AddKeyEvent(GLFW_KEY_W, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*) &camera);
 	keyHandler.AddKeyEvent(GLFW_KEY_A, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
 	keyHandler.AddKeyEvent(GLFW_KEY_S, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
@@ -187,34 +209,33 @@ void CG_Implementation::initialise(){
 	keyHandler.AddKeyEvent(GLFW_KEY_KP_2, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
 	keyHandler.AddKeyEvent(GLFW_KEY_KP_5, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
 
+	//Initialise entities
 	entityList[1].Translate(glm::vec3(0, 0, 0));
 	entityList[0].Translate(glm::vec3(0, 0, 5));
 
-	time_ubo->set_callback([](const CG_Data::Uniform &u) {glUniform1fv(u.GetID(), 1, static_cast<GLfloat*>(u.GetData())); });
-	time_ubo->setData(static_cast<void*>(&time));
+	//Set the update callbacks for the various uniforms using Lambda functions
+	time_ubo->SetUpdateCallback([](const CG_Data::Uniform &u) {glUniform1fv(u.GetID(), 1, static_cast<const GLfloat*>(u.GetData())); });
+	time_ubo->SetData(static_cast<void*>(&time));
 
-	auto MatrixLambda = [](const CG_Data::Uniform &u) {glUniformMatrix4fv(u.GetID(), 1, GL_FALSE, static_cast<GLfloat*>(u.GetData())); };
-	translate_ubo->set_callback(MatrixLambda);
-	translate_ubo->setData((void*)glm::value_ptr(entityList[0].GetTransformMatrix()));
+	auto MatrixLambda = [](const CG_Data::Uniform &u) {glUniformMatrix4fv(u.GetID(), 1, GL_FALSE, static_cast<const GLfloat*>(u.GetData())); };
+	translate_ubo->SetUpdateCallback(MatrixLambda);
+	translate_ubo->SetData((void*)glm::value_ptr(entityList[0].GetTransformMatrix()));
 
-	view_ubo->set_callback([](const CG_Data::Uniform &u) 
-			{glUniformMatrix4fv(u.GetID(), 1, GL_FALSE, glm::value_ptr(static_cast<Camera*>(u.GetData())->GetViewMatrix()) );});
-	view_ubo->setData(static_cast<void*>(&camera));
+	view_ubo->SetUpdateCallback([](const CG_Data::Uniform &u) 
+			{glUniformMatrix4fv(u.GetID(), 1, GL_FALSE, glm::value_ptr(((Camera*)u.GetData())->GetViewMatrix()) );});
+	view_ubo->SetData(static_cast<void*>(&camera));
 
-	projection_ubo->set_callback(MatrixLambda);
-	projection_ubo->setData((void*)glm::value_ptr(camera.GetProjectionMatrix()));
-
-
+	projection_ubo->SetUpdateCallback(MatrixLambda);
+	projection_ubo->SetData((void*)glm::value_ptr(camera.GetProjectionMatrix()));
 	glEnable(GL_DEPTH_TEST);
 }
 
+//Cleanup
 CG_Implementation::~CG_Implementation(){
-
 	delete vertexVBO;
 	delete colourVBO;
 	delete VAO;
 	basicShader.~Shader();
-	keyHandler.~KeyHandler();
 	glfwTerminate();
 }
 
