@@ -1,1 +1,6 @@
 .vs/
+.log
+x64/*/CG_Implementation.exe
+x64/*/CG_Implementation.ilk
+x64/*/CG_Implementation.pdb
+CG_Implementation/x64/
