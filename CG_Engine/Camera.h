@@ -11,6 +11,7 @@ namespace GL_Engine {
 		~Camera();
 
 		const glm::mat4 &SetProjectionMatrix(float _NearPlane, float _FarPlane, float _FOV, float _AspectRatio);
+		void			 SetProjectionMatrix(glm::mat4 &_Projection);
 		const glm::vec4 &SetCameraPosition(const glm::vec4 &_Position);
 		const glm::vec4 &TranslateCamera(const glm::vec4 &_Translation);
 

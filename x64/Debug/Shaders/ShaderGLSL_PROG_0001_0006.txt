@@ -13,21 +13,15 @@ Validation successful.
 #version 330
 
 in vec3 vPosition;
-in vec4 fColor;
-uniform float time;
+in vec3 fColor;
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
 out vec4 PassColour;
-#define SCALE_FACTOR 0.5
-mat4 scale = mat4(  SCALE_FACTOR, 0, 0, 0,
-					0, SCALE_FACTOR, 0 , 0,
-					0, 0, SCALE_FACTOR, 0,
-					0, 0, 0, 1   );
+
 
 void main(){
-	float c = (1.0 + cos(time)) / 2.0;
-	PassColour = vec4(fColor.r, fColor.g * c, fColor.b * c, 1.0);
+	PassColour = vec4(fColor, 1.0);
     gl_Position =  projection * view * model * vec4(vPosition, 1.0);
 }
 //======================================================
@@ -39,18 +33,6 @@ void main(){
 out vec4 FragColor;
 in vec4 PassColour;
 
-float CONV(int a){
-	int mod = a%360;
-	float ratio = 3.14/180.0;
-
-	return mod * ratio;
-}
-
-float normalise(float val){
-	return (val +1.0)/ 2.0;
-}
 void main(){
-	float x = CONV(int(gl_FragCoord.x));
-	float y = CONV(int(gl_FragCoord.y));
-	FragColor = PassColour;//vec4(normalise(sin(x)), normalise(sin(x)), normalise(sin(x)), 1.0);//PassColour;
+	FragColor = (PassColour + 1.0) / 2.0;
 }

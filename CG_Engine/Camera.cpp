@@ -34,6 +34,9 @@ namespace GL_Engine {
 		this->ProjectionMatrix = glm::make_mat4(ConstructMatrix);
 		return this->ProjectionMatrix;
 	}
+	void Camera::SetProjectionMatrix(glm::mat4 &_Projection) {
+		this->ProjectionMatrix = _Projection;
+	}
 	const glm::vec4 &Camera::SetCameraPosition(const glm::vec4 &_Position) {
 		this->CameraPosition = _Position;
 		this->ViewMatrix[3] = this->CameraPosition;

@@ -117,10 +117,10 @@ private:
 	CG_Data::VBO *vertexVBO, *colourVBO;
 	CG_Data::VAO *VAO;
 	CG_Data::Uniform *time_ubo, *translate_ubo, *view_ubo, *projection_ubo;
-	Camera camera;
+	Camera camera[4];
 	KeyHandler keyHandler;
 	float time{0};
 
-	Entity entityList[2];
+	Entity entityList[4];
 }; 
 
