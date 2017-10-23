@@ -59,9 +59,9 @@ namespace GL_Engine{
 
 		for (auto uni : UBOs) {
 			uni->UniformObject->SetID(glGetUniformLocation(ShaderID, uni->Name));
-			delete uni;
+			//delete uni;
 		}
-		UBOs.clear();
+		//UBOs.clear();
 		
 
 		for (auto Stage : this->shaderStages){

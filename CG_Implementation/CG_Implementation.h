@@ -6,6 +6,7 @@
 #include "Camera.h"
 #include "InputHandler.h"
 #include "Entity.h"
+#include "Renderer.h"
 
 static GL_Engine::Properties::GLFWproperties windowProperties = {
 	800,			//Width
@@ -115,12 +116,13 @@ private:
 	Shader basicShader;
 	CG_Engine engine;
 	CG_Data::VBO *vertexVBO, *colourVBO;
-	CG_Data::VAO *VAO;
+	std::shared_ptr<CG_Data::VAO> VAO;
 	CG_Data::Uniform *time_ubo, *translate_ubo, *view_ubo, *projection_ubo;
 	Camera camera[4];
 	KeyHandler keyHandler;
 	float time{0};
 
 	Entity entityList[4];
+	std::unique_ptr<Renderer> renderer;
 }; 
 

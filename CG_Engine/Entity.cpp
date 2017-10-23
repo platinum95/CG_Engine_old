@@ -69,6 +69,12 @@ namespace GL_Engine {
 		return this->Orientation;
 	}
 
+	void Entity::UpdateUniforms() const {
+//		for (const auto uniform : this->EntityUniforms) {
+//			uniform.Update();
+//		}
+	}
+
 
 
 	const glm::mat4 Entity::GetTransformMatrix() {

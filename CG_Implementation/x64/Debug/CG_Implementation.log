@@ -1,15 +1,2 @@
-﻿  CG_Implementation.cpp
-d:\projects\c++\vs2015\cg_engine\cg_implementation\teapot.h(2980): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
-d:\projects\c++\vs2015\cg_engine\cg_implementation\teapot.h(2980): warning C4305: 'initializing': truncation from 'double' to 'float'
-d:\projects\c++\vs2015\cg_engine\cg_implementation\teapot.h(5959): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
-d:\projects\c++\vs2015\cg_engine\cg_implementation\teapot.h(5959): warning C4305: 'initializing': truncation from 'double' to 'float'
-d:\projects\c++\vs2015\cg_engine\cg_implementation\teapot.h(8938): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
-d:\projects\c++\vs2015\cg_engine\cg_implementation\teapot.h(8938): warning C4305: 'initializing': truncation from 'double' to 'float'
-d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(131): warning C4244: 'argument': conversion from 'float' to 'GLsizei', possible loss of data
-d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(135): warning C4244: 'argument': conversion from 'float' to 'GLsizei', possible loss of data
-d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(139): warning C4244: 'argument': conversion from 'float' to 'GLsizei', possible loss of data
-d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(143): warning C4244: 'argument': conversion from 'float' to 'GLsizei', possible loss of data
-d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(215): warning C4838: conversion from 'double' to 'const float' requires a narrowing conversion
-d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(215): warning C4305: 'initializing': truncation from 'double' to 'const float'
-  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Debug\CG_Implementation.exe
-  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)
+﻿  CG_Implementation.vcxproj -> C:\Projects\programming\c++\CG_Engine\x64\Debug\CG_Implementation.exe
+  CG_Implementation.vcxproj -> C:\Projects\programming\c++\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)

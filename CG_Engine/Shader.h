@@ -32,6 +32,15 @@ namespace GL_Engine{
 		//Returns pointer to UBO (Object finalised after call to compile)
 		CG_Data::Uniform* RegisterUniform(const char* _UniformName);
 
+		CG_Data::Uniform* GetUniform(uint8_t index) const {
+			return UBOs[index]->UniformObject;
+		}
+
+		void UpdateUniforms() {
+			for (auto u : this->UBOs) {
+				u->UniformObject->Update();
+			}
+		}
 
 	private:
 		struct ShaderStage {

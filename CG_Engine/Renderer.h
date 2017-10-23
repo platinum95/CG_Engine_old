@@ -3,52 +3,45 @@
 #include "Entity.h"
 namespace GL_Engine {
 
-
 	struct BatchUnit{
-		std::shared_ptr<CG_Data::VAO> BatchVao;
-		std::shared_ptr<Entity> entity;
+		Entity* entity;
 		bool active{ true };
 	};
 
 	struct RenderPass {
-		std::shared_ptr<Shader> shader;
-		std::vector<BatchUnit> batchUnits;
+		Shader* shader;
+		std::vector<std::unique_ptr<BatchUnit>> batchUnits;
+		std::shared_ptr<CG_Data::VAO> BatchVao;
 		void* Data;
-		std::function<void(void*)> renderFunction;
+		std::function<void(RenderPass&, void*)> renderFunction;
+		std::function<void(void)> DrawFunction;
+		BatchUnit* AddBatchUnit(Entity* _Entity) {
+			auto batchUnit = std::make_unique<BatchUnit>();
+			batchUnit->entity = _Entity;
+			auto pOut = batchUnit.get();
+			batchUnits.push_back(std::move(batchUnit));
+			return pOut;
+		}
+
+		void SetDrawFunction(std::function<void(void)> _dFunc) {
+			DrawFunction = _dFunc;
+		}
 	};
+
+	
 
 	class Renderer {
 	public:
 		Renderer();
 		~Renderer();
 
-		RenderPass* AddRenderPass(std::shared_ptr<Shader> _Shader){
-			auto rPass{ std::make_unique<RenderPass>() };
-			rPass->renderFunction = DefaultRenderer;
-			rPass->Data = nullptr;
-			rPass->batchUnits = std::vector<BatchUnit>(10);
-			rPass->shader = _Shader;
-			this->renderPasses.push_back(rPass);
-			return rPass.get();
-		}
-		RenderPass* AddRenderPass(std::shared_ptr<Shader> _Shader, std::function<void(void*)> _RenderFunction, void* _Data) {
-			auto rPass{ std::make_unique<RenderPass>() };
-			rPass->renderFunction = _RenderFunction;
-			rPass->Data = _Data;
-			rPass->batchUnits = std::vector<BatchUnit>(10);
-			rPass->shader = _Shader;
-			this->renderPasses.push_back(std::move(rPass));
-			return rPass.get();
-		}
-		void Render() const{
-			for(auto&& pass : renderPasses){
-				pass->renderFunction(pass->Data);
-			}
-		}
+		RenderPass* AddRenderPass(Shader* _Shader);
+		RenderPass* AddRenderPass(Shader* _Shader, std::function<void(RenderPass&, void*)> _RenderFunction, void* _Data);
+		void Render() const;
 
 	private:
 		std::vector<std::unique_ptr<RenderPass>> renderPasses;
-		static void DefaultRenderer(void*);
+		static void DefaultRenderer(RenderPass&, void*);
 	};
 
 }

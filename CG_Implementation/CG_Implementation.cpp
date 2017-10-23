@@ -2,6 +2,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <time.h>
 #include "teapot.h"
+
 #include <thread>
 
 using namespace GL_Engine;
@@ -41,7 +42,7 @@ void CubeKeyEvent(GLuint Key, void* Parameter) {
 	case GLFW_KEY_4:
 		activeEnt = 3;
 		break;
-	case GLFW_KEY_LEFT:
+	case GLFW_KEY_LEFT :
 		entity->Translate(glm::vec4(0.1f, 0, 0, 1.0));
 		break;
 	case GLFW_KEY_RIGHT:
@@ -108,7 +109,9 @@ int CG_Implementation::run(){
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		renderer->Render();
 	
+		/*
 		//Use the shader
 		basicShader.UseShader();
 
@@ -141,7 +144,7 @@ int CG_Implementation::run(){
 		ubo_updater(3);
 		glViewport(0, height / 2, width / 2, height / 2);
 		glDrawArrays(GL_TRIANGLES, 0, teapot_vertex_count);
-
+		*/
 		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		//Swap buffers
 		glfwSwapBuffers(windowProperties.window);
@@ -163,6 +166,7 @@ void CG_Implementation::initialise(){
 		throw std::runtime_error("Error initialising GLAD!");
 	}
 
+	renderer = std::make_unique<Renderer>();
 	//Set up shader using a Shader object
 	basicShader.RegisterShaderStageFromFile(vertexLoc, GL_VERTEX_SHADER);
 	basicShader.RegisterShaderStageFromFile(fragLoc, GL_FRAGMENT_SHADER);
@@ -176,7 +180,7 @@ void CG_Implementation::initialise(){
 
 
 	//Set up vertex data
-	VAO = new CG_Data::VAO();
+	VAO = std::make_shared<CG_Data::VAO>();// new CG_Data::VAO();
 	VAO->BindVAO();
 
 	vertexVBO = new CG_Data::VBO();
@@ -267,6 +271,31 @@ void CG_Implementation::initialise(){
 			{glUniformMatrix4fv(u.GetID(), 1, GL_FALSE, glm::value_ptr(((Camera*)u.GetData())->GetViewMatrix()) );});
 
 	projection_ubo->SetUpdateCallback(MatrixLambda);
+
+	auto RenderFunct = [](RenderPass &_Pass, void* data) {
+		Camera *camera = static_cast<Camera*>(data);
+		_Pass.shader->UseShader();
+		_Pass.BatchVao->BindVAO();
+		int i = 0;
+		for (auto&& batch : _Pass.batchUnits) {
+			if (batch->active) {
+				_Pass.shader->GetUniform(2)->SetData(glm::value_ptr(camera[i].GetViewMatrix()));
+				_Pass.shader->GetUniform(3)->SetData(glm::value_ptr(camera[i].GetProjectionMatrix()));
+				_Pass.shader->GetUniform(1)->SetData(glm::value_ptr(batch->entity->GetTransformMatrix()));
+				_Pass.shader->UpdateUniforms();
+				_Pass.DrawFunction();
+			}
+		}
+
+	};
+
+	RenderPass *teapotPass = renderer->AddRenderPass(&basicShader, RenderFunct, camera);
+	teapotPass->SetDrawFunction ([](){glDrawArrays(GL_TRIANGLES, 0, teapot_vertex_count);});
+	teapotPass->BatchVao = VAO;
+	teapotPass->AddBatchUnit(&entityList[0]);
+	teapotPass->AddBatchUnit(&entityList[1]);
+	teapotPass->AddBatchUnit(&entityList[2]);
+	teapotPass->AddBatchUnit(&entityList[3]);
 	glEnable(GL_DEPTH_TEST);
 }
 
@@ -274,7 +303,6 @@ void CG_Implementation::initialise(){
 CG_Implementation::~CG_Implementation(){
 	delete vertexVBO;
 	delete colourVBO;
-	delete VAO;
 	basicShader.~Shader();
 	glfwTerminate();
 }

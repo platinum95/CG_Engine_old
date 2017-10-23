@@ -20,14 +20,14 @@ namespace GL_Engine {
 
 		const glm::mat4 GetTransformMatrix();
 		const glm::quat GetOrientation() const;
+
+		void UpdateUniforms() const;
 	private:
 		glm::vec4 Position{ 0, 0, 0, 1 };
 		glm::vec3 Forward{ 0, 0, 1 }, Up{ 0, 1, 0 }, Right{ 1, 0, 0 };
 		glm::vec3 Scale{ 1, 1, 1 };
 		glm::quat Orientation;
-		std::vector<CG_Data::VBO*> VBOList;
-		CG_Data::VAO* EntityVAO;
-
+		std::vector<CG_Data::Uniform*> EntityUniforms;
 		glm::mat4 TransformMatrix;
 		void UpdateMatrix();
 		bool MatrixNeedsUpdating{ true };
