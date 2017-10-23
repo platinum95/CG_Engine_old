@@ -4,11 +4,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
+#include <glm/gtc/type_ptr.hpp>
 
 namespace GL_Engine {
 	Entity::Entity() {
 		Orientation = glm::quatLookAt(glm::vec3(0, 0, 1), Up);
+		eData.push_back(glm::value_ptr(this->TransformMatrix));
 	}
 
 

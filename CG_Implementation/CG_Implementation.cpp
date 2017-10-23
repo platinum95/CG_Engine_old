@@ -13,12 +13,13 @@ static uint8_t activeEnt = 0;
 void CameraKeyEvent(GLuint Key, void* Parameter) {
 	Camera *camera = static_cast<Camera*>(Parameter);
 	camera = &camera[activeEnt];
-	float dX = Key == GLFW_KEY_A ? -0.1f : Key == GLFW_KEY_D ? 0.1f : 0;
-	float dY = Key == GLFW_KEY_LEFT_SHIFT ? 0.1f : Key == GLFW_KEY_LEFT_CONTROL ? -0.1f : 0;
-	float dZ = Key == GLFW_KEY_W ? -0.1f : Key == GLFW_KEY_S ? 0.1f : 0;
+	auto amount = 0.5f;
+	float dX = Key == GLFW_KEY_A ? -amount : Key == GLFW_KEY_D ? amount : 0;
+	float dY = Key == GLFW_KEY_LEFT_SHIFT ? amount : Key == GLFW_KEY_LEFT_CONTROL ? -amount : 0;
+	float dZ = Key == GLFW_KEY_W ? -amount : Key == GLFW_KEY_S ? amount : 0;
 	camera->TranslateCamera(glm::vec4(dX, dY, dZ, 1.0));
 
-	float yaw = Key == GLFW_KEY_Q ? 0.1f : Key == GLFW_KEY_E ? -0.1f : 0;
+	float yaw = Key == GLFW_KEY_Q ? amount : Key == GLFW_KEY_E ? -amount : 0;
 	camera->YawBy(yaw);
 
 	float pitch = Key == GLFW_KEY_Z ? 0.5f : Key == GLFW_KEY_X ? -0.5f : 0;
@@ -110,42 +111,8 @@ int CG_Implementation::run(){
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		renderer->Render();
-	
-		/*
-		//Use the shader
-		basicShader.UseShader();
 
-		//Draw the first entity
-		glBindVertexArray(VAO->GetID());
-
-		auto ubo_updater = [this](int i){
-			translate_ubo->SetData((void*)glm::value_ptr(entityList[i].GetTransformMatrix()));
-			translate_ubo->Update();
-			projection_ubo->SetData((void*)glm::value_ptr(camera[i].GetProjectionMatrix()));
-			projection_ubo->Update();
-			view_ubo->SetData((void*)glm::value_ptr(camera[i].GetViewMatrix()));
-			view_ubo->Update(); 
-		};
-
-		const auto width = windowProperties.width, height = windowProperties.height;
-
-		ubo_updater(0);
-		glViewport(0, 0, width / 2, height / 2);
-		glDrawArrays(GL_TRIANGLES, 0, teapot_vertex_count);
-
-		ubo_updater(1);
-		glViewport(width / 2, 0, width / 2, height / 2);
-		glDrawArrays(GL_TRIANGLES, 0, teapot_vertex_count);
-
-		ubo_updater(2);
-		glViewport(width / 2, height / 2, width / 2, height / 2);
-		glDrawArrays(GL_TRIANGLES, 0, teapot_vertex_count);
-
-		ubo_updater(3);
-		glViewport(0, height / 2, width / 2, height / 2);
-		glDrawArrays(GL_TRIANGLES, 0, teapot_vertex_count);
-		*/
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+//		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		//Swap buffers
 		glfwSwapBuffers(windowProperties.window);
 		glfwPollEvents();
@@ -210,19 +177,20 @@ void CG_Implementation::initialise(){
 
 	camera[2].SetCameraPosition(glm::vec4(0, 0, 0, 1.0));
 	camera[2].SetProjectionMatrix(OrthoProj);
-	const auto left = -1.0, right = 1.0, bottom = -1.0, top = 1.0, nearp = -1.0, farp = 10.0;
+	const auto left = -1.0f, right = 1.0f, bottom = -1.0f, top = 1.0f, nearp = -1.0f, farp = 10.0f;
 	const float ConstructMatrix[] = {
-		2 / (right - left), 0, 0, 0,// -(left + right) / (right - left),
-		0, 2/(top - bottom), 0, 0,//-(top + bottom)/(top - bottom),
-		0, 0, -2/(farp - nearp), -(farp + nearp)/(farp - nearp),
-		0, 0, 0, 1
+		2.0f / (right - left), 0, 0, 0,// -(left + right) / (right - left),
+		0, 2.0f/(top - bottom), 0, 0,//-(top + bottom)/(top - bottom),
+		0, 0, -2.0f/(farp - nearp), -(farp + nearp)/(farp - nearp),
+		0, 0, 0, 1.0f
 	};
 	OrthoProj = glm::make_mat4(ConstructMatrix);
 	camera[3].SetCameraPosition(glm::vec4(0, 0, 0, 1.0));
 	camera[3].SetProjectionMatrix(OrthoProj);
 
+	{
 	//Register key events
-	keyHandler.AddKeyEvent(GLFW_KEY_W, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*) &camera[0]);
+	keyHandler.AddKeyEvent(GLFW_KEY_W, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera[0]);
 	keyHandler.AddKeyEvent(GLFW_KEY_A, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera[0]);
 	keyHandler.AddKeyEvent(GLFW_KEY_S, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera[0]);
 	keyHandler.AddKeyEvent(GLFW_KEY_D, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera[0]);
@@ -254,40 +222,66 @@ void CG_Implementation::initialise(){
 	keyHandler.AddKeyEvent(GLFW_KEY_2, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
 	keyHandler.AddKeyEvent(GLFW_KEY_3, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
 	keyHandler.AddKeyEvent(GLFW_KEY_4, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
-
+	}
 	//Initialise entities
 	for(int i = 0; i < 4; i++){
 		entityList[i].Translate(glm::vec3(0, 0, 0));
 	}
 
 	//Set the update callbacks for the various uniforms using Lambda functions
-	time_ubo->SetUpdateCallback([](const CG_Data::Uniform &u) {glUniform1fv(u.GetID(), 1, static_cast<const GLfloat*>(u.GetData())); });
-	time_ubo->SetData(static_cast<void*>(&time));
 
 	auto MatrixLambda = [](const CG_Data::Uniform &u) {glUniformMatrix4fv(u.GetID(), 1, GL_FALSE, static_cast<const GLfloat*>(u.GetData())); };
 	translate_ubo->SetUpdateCallback(MatrixLambda);
 
-	view_ubo->SetUpdateCallback([](const CG_Data::Uniform &u) 
-			{glUniformMatrix4fv(u.GetID(), 1, GL_FALSE, glm::value_ptr(((Camera*)u.GetData())->GetViewMatrix()) );});
-
 	projection_ubo->SetUpdateCallback(MatrixLambda);
 
-	auto RenderFunct = [](RenderPass &_Pass, void* data) {
+	view_ubo->SetUpdateCallback([](const CG_Data::Uniform &u)
+	{glUniformMatrix4fv(u.GetID(), 1, GL_FALSE, glm::value_ptr(((Camera*)u.GetData())->GetViewMatrix()));});
+
+
+	const auto width = windowProperties.width, height = windowProperties.height;
+	
+	auto RenderFunct = [width, height](RenderPass &_Pass, void* data) {
+		if (_Pass.batchUnits.size() != 4) {
+			return;
+		}
 		Camera *camera = static_cast<Camera*>(data);
 		_Pass.shader->UseShader();
 		_Pass.BatchVao->BindVAO();
 		int i = 0;
-		for (auto&& batch : _Pass.batchUnits) {
-			if (batch->active) {
-				_Pass.shader->GetUniform(2)->SetData(glm::value_ptr(camera[i].GetViewMatrix()));
-				_Pass.shader->GetUniform(3)->SetData(glm::value_ptr(camera[i].GetProjectionMatrix()));
-				_Pass.shader->GetUniform(1)->SetData(glm::value_ptr(batch->entity->GetTransformMatrix()));
-				_Pass.shader->UpdateUniforms();
-				_Pass.DrawFunction();
+		
+		auto passFunct = [width, height, &_Pass, camera](auto&& batch, int j) {
+			for (auto link : _Pass.dataLink) {
+				link.uniform->SetData(batch->entity->GetData(link.eDataIndex));
 			}
-		}
+			_Pass.shader->GetUniform(2)->SetData(glm::value_ptr(camera[j].GetViewMatrix()));
+			_Pass.shader->GetUniform(3)->SetData(glm::value_ptr(camera[j].GetProjectionMatrix()));
+			_Pass.shader->GetUniform(1)->SetData(glm::value_ptr(batch->entity->GetTransformMatrix()));
+			_Pass.shader->UpdateUniforms();
+			_Pass.DrawFunction();
+		}; 
+		glViewport(0, 0, width / 2, height / 2);
+		passFunct(_Pass.batchUnits[0], 0);
 
-	};
+		glViewport(width / 2, 0, width / 2, height / 2);
+		passFunct(_Pass.batchUnits[1], 1);
+
+		glViewport(width / 2, height / 2, width / 2, height / 2);
+		passFunct(_Pass.batchUnits[2], 2);
+
+		glViewport(0, height / 2, width / 2, height / 2);
+		passFunct(_Pass.batchUnits[3], 3);
+
+	}; 
+	auto cam_link_index = entityList[0].AddData((void*) glm::value_ptr(camera[0].GetViewMatrix()));
+	entityList[1].AddData((void*)glm::value_ptr(camera[1].GetViewMatrix()));
+	entityList[2].AddData((void*)glm::value_ptr(camera[2].GetViewMatrix()));
+	entityList[3].AddData((void*)glm::value_ptr(camera[3].GetViewMatrix()));
+
+	auto proj_link_index = entityList[0].AddData((void*)glm::value_ptr(camera[0].GetProjectionMatrix()));
+	entityList[1].AddData((void*)glm::value_ptr(camera[1].GetProjectionMatrix()));
+	entityList[2].AddData((void*)glm::value_ptr(camera[2].GetProjectionMatrix()));
+	entityList[3].AddData((void*)glm::value_ptr(camera[3].GetProjectionMatrix()));
 
 	RenderPass *teapotPass = renderer->AddRenderPass(&basicShader, RenderFunct, camera);
 	teapotPass->SetDrawFunction ([](){glDrawArrays(GL_TRIANGLES, 0, teapot_vertex_count);});
@@ -296,6 +290,9 @@ void CG_Implementation::initialise(){
 	teapotPass->AddBatchUnit(&entityList[1]);
 	teapotPass->AddBatchUnit(&entityList[2]);
 	teapotPass->AddBatchUnit(&entityList[3]);
+	teapotPass->AddDataLink(translate_ubo, 0);	//Link the translate uniform to the transformation matrix of the entities
+	teapotPass->AddDataLink(view_ubo, cam_link_index);
+	teapotPass->AddDataLink(projection_ubo, proj_link_index);
 	glEnable(GL_DEPTH_TEST);
 }
 

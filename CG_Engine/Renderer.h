@@ -7,25 +7,25 @@ namespace GL_Engine {
 		Entity* entity;
 		bool active{ true };
 	};
-
+	struct eDataUniLink {
+		CG_Data::Uniform *uniform;
+		uint16_t eDataIndex;
+	};
 	struct RenderPass {
+		BatchUnit* AddBatchUnit(Entity* _Entity);
+		void SetDrawFunction(std::function<void(void)> _dFunc);
+		void AddDataLink(CG_Data::Uniform *_Uniform, uint16_t _DataIndex) {
+			eDataUniLink link = { _Uniform, _DataIndex };
+			this->dataLink.push_back(link);
+		}
+
+		std::vector<eDataUniLink> dataLink;
+		void* Data;
 		Shader* shader;
 		std::vector<std::unique_ptr<BatchUnit>> batchUnits;
 		std::shared_ptr<CG_Data::VAO> BatchVao;
-		void* Data;
 		std::function<void(RenderPass&, void*)> renderFunction;
 		std::function<void(void)> DrawFunction;
-		BatchUnit* AddBatchUnit(Entity* _Entity) {
-			auto batchUnit = std::make_unique<BatchUnit>();
-			batchUnit->entity = _Entity;
-			auto pOut = batchUnit.get();
-			batchUnits.push_back(std::move(batchUnit));
-			return pOut;
-		}
-
-		void SetDrawFunction(std::function<void(void)> _dFunc) {
-			DrawFunction = _dFunc;
-		}
 	};
 
 	

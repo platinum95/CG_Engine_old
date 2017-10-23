@@ -1,4 +1,4 @@
-float teapot_vertex_count = 2975;
+int teapot_vertex_count = 2975;
 
 float teapot_vertex_points[] = {
 	5.92969, 4.125, 0,

@@ -52,3 +52,16 @@ void Renderer::DefaultRenderer(RenderPass& _Pass, void* _Data) {
 	}
 	
 }
+
+
+BatchUnit* RenderPass::AddBatchUnit(Entity* _Entity) {
+	auto batchUnit = std::make_unique<BatchUnit>();
+	batchUnit->entity = _Entity;
+	auto pOut = batchUnit.get();
+	batchUnits.push_back(std::move(batchUnit));
+	return pOut;
+}
+
+void RenderPass::SetDrawFunction(std::function<void(void)> _dFunc) {
+	DrawFunction = _dFunc;
+}

@@ -21,6 +21,17 @@ namespace GL_Engine {
 		const glm::mat4 GetTransformMatrix();
 		const glm::quat GetOrientation() const;
 
+		const uint16_t AddData(void* _Data) {
+			eData.push_back(_Data);
+			return eData.size() - 1;
+		}
+
+		void* GetData(int index) {
+			return eData[index];
+		}
+
+		const std::vector<void*> GeteDataList() const { return this->eData; };
+
 		void UpdateUniforms() const;
 	private:
 		glm::vec4 Position{ 0, 0, 0, 1 };
@@ -29,6 +40,7 @@ namespace GL_Engine {
 		glm::quat Orientation;
 		std::vector<CG_Data::Uniform*> EntityUniforms;
 		glm::mat4 TransformMatrix;
+		std::vector<void*> eData;
 		void UpdateMatrix();
 		bool MatrixNeedsUpdating{ true };
 	};
