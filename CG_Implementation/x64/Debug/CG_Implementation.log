@@ -6,5 +6,6 @@ u:\cg\cg_engine\cg_implementation\teapot.h(5959): warning C4838: conversion from
 u:\cg\cg_engine\cg_implementation\teapot.h(5959): warning C4305: 'initializing': truncation from 'double' to 'float'
 u:\cg\cg_engine\cg_implementation\teapot.h(8938): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
 u:\cg\cg_engine\cg_implementation\teapot.h(8938): warning C4305: 'initializing': truncation from 'double' to 'float'
+u:\cg\cg_engine\cg_implementation\cg_implementation.cpp(113): warning C4305: 'argument': truncation from 'double' to 'float'
   CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.exe
   CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)

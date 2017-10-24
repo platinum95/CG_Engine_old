@@ -1,6 +1,6 @@
 
 //== PROGRAM LINK STATUS = TRUE
-//== PROGRAM VALIDATE STATUS = TRUE
+//== PROGRAM VALIDATE STATUS = FALSE
 
 //======================================================
 //   Vertex Shader 2 

@@ -12,7 +12,7 @@ Renderer::~Renderer() {
 
 RenderPass * GL_Engine::Renderer::AddRenderPass(Shader* _Shader) {
 	
-	auto rPass{ std::make_unique<RenderPass>() };
+	auto rPass =  std::make_unique<RenderPass>() ;
 	rPass->renderFunction = DefaultRenderer;
 	rPass->Data = nullptr;
 	rPass->shader = _Shader;
@@ -23,7 +23,7 @@ RenderPass * GL_Engine::Renderer::AddRenderPass(Shader* _Shader) {
 }
 
 RenderPass * GL_Engine::Renderer::AddRenderPass(Shader* _Shader, std::function<void(RenderPass&, void*)> _RenderFunction, void * _Data) {
-	auto rPass{ std::make_unique<RenderPass>() };
+	auto rPass = std::make_unique<RenderPass>();
 	rPass->renderFunction = _RenderFunction;
 	rPass->Data = _Data;
 	rPass->shader = _Shader;

@@ -110,9 +110,11 @@ int CG_Implementation::run(){
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+		entityList[0].YawBy(0.3);
+
 		renderer->Render();
 
-//		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	//	std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		//Swap buffers
 		glfwSwapBuffers(windowProperties.window);
 		glfwPollEvents();
@@ -165,8 +167,7 @@ void CG_Implementation::initialise(){
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	glm::mat4 OrthoProj{ 1.0 };
-	OrthoProj[2][2] = 0;
+	
 	
 	//Initialise camera
 	camera[0].SetCameraPosition(glm::vec4(0, 0, 0, 1.0));
@@ -175,12 +176,15 @@ void CG_Implementation::initialise(){
 	camera[1].SetCameraPosition(glm::vec4(0, 0, 0, 1.0));
 	camera[1].SetProjectionMatrix(0.01f, 100.0f, 120.0f, 800.0f / 600.0f);
 
+	glm::mat4 OrthoProj{ 1.0 };
+	OrthoProj[2][2] = 0;
 	camera[2].SetCameraPosition(glm::vec4(0, 0, 0, 1.0));
 	camera[2].SetProjectionMatrix(OrthoProj);
-	const auto left = -1.0f, right = 1.0f, bottom = -1.0f, top = 1.0f, nearp = -1.0f, farp = 10.0f;
+	const auto left = -1.0f, right = 1.0f, bottom = -1.0f, top = 1.0f, nearp = 0.10f, farp = 10.0f;
+
 	const float ConstructMatrix[] = {
-		2.0f / (right - left), 0, 0, 0,// -(left + right) / (right - left),
-		0, 2.0f/(top - bottom), 0, 0,//-(top + bottom)/(top - bottom),
+		2.0f / (right - left), 0, 0, -(left + right) / (right - left),
+		0, 2.0f/(top - bottom), 0, -(top + bottom)/(top - bottom),
 		0, 0, -2.0f/(farp - nearp), -(farp + nearp)/(farp - nearp),
 		0, 0, 0, 1.0f
 	};
@@ -250,7 +254,7 @@ void CG_Implementation::initialise(){
 		_Pass.BatchVao->BindVAO();
 		int i = 0;
 		
-		auto passFunct = [width, height, &_Pass, camera](auto&& batch, int j) {
+		auto passFunct = [width, height, &_Pass, camera](std::unique_ptr<BatchUnit>& batch, int j) {
 			for (auto link : _Pass.dataLink) {
 				link.uniform->SetData(batch->entity->GetData(link.eDataIndex));
 			}
