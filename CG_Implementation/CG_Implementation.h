@@ -124,5 +124,6 @@ private:
 
 	Entity entityList[4];
 	std::unique_ptr<Renderer> renderer;
+	std::unique_ptr<Hierarchy> hierarchy;
 }; 
 

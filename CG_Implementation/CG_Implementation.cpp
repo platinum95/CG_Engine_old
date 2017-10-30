@@ -298,6 +298,10 @@ void CG_Implementation::initialise(){
 	teapotPass->AddDataLink(view_ubo, cam_link_index);
 	teapotPass->AddDataLink(projection_ubo, proj_link_index);
 	glEnable(GL_DEPTH_TEST);
+
+
+	hierarchy = std::make_unique<Hierarchy>();
+	
 }
 
 //Cleanup

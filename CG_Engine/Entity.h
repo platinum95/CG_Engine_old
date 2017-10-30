@@ -45,4 +45,46 @@ namespace GL_Engine {
 		bool MatrixNeedsUpdating{ true };
 	};
 
+	class Hierarchy {
+		struct HNode {
+			Entity* Entity{ nullptr };
+			std::vector<HNode*> Childer;
+
+			~HNode() {
+				for (auto n : Childer) {
+					if (!n)
+						delete n;
+				}
+			}
+		};
+
+		Hierarchy() {
+			entities = std::vector<Entity*>();
+			root = nullptr;
+		}
+		~Hierarchy() {
+			if (!root)
+				delete root;
+		}
+		HNode *InitialiseHierarchy(std::vector<Entity*>&& _eList) {
+			entities = std::move(_eList);
+			root = new HNode;
+			root->Childer = std::vector<HNode*>();
+			return root;
+		}
+
+		HNode *AddChild(HNode* _Node, Entity* entity) {
+			HNode *newNode = new HNode;
+			newNode->Entity = entity;
+			_Node->Childer.push_back(newNode);
+			return newNode;
+		}
+
+
+
+	private:
+		std::vector<Entity*> entities;
+		HNode* root;
+	};
+
 }
