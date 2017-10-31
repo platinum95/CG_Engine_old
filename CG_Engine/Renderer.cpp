@@ -46,6 +46,10 @@ void Renderer::DefaultRenderer(RenderPass& _Pass, void* _Data) {
 	_Pass.BatchVao->BindVAO();
 	for (auto&& batch : _Pass.batchUnits) {
 		if (batch->active) {
+			for (auto l : _Pass.dataLink) {
+				l.uniform->SetData(batch->entity->GetData(l.eDataIndex));
+				l.uniform->Update();
+			}
 			batch->entity->UpdateUniforms();
 			_Pass.DrawFunction();
 		}

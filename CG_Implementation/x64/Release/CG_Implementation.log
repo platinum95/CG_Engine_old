@@ -1,9 +1,16 @@
 ﻿  CG_Implementation.cpp
-CG_Implementation.cpp(161): warning C4305: 'argument': truncation from 'double' to 'float'
+U:\CG\CG_Engine\CG_Engine\Entity.h(26): warning C4267: 'return': conversion from 'size_t' to 'const uint16_t', possible loss of data
+u:\cg\cg_engine\cg_implementation\teapot.h(2980): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
+u:\cg\cg_engine\cg_implementation\teapot.h(2980): warning C4305: 'initializing': truncation from 'double' to 'float'
+u:\cg\cg_engine\cg_implementation\teapot.h(5959): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
+u:\cg\cg_engine\cg_implementation\teapot.h(5959): warning C4305: 'initializing': truncation from 'double' to 'float'
+u:\cg\cg_engine\cg_implementation\teapot.h(8938): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
+u:\cg\cg_engine\cg_implementation\teapot.h(8938): warning C4305: 'initializing': truncation from 'double' to 'float'
+CG_Implementation.cpp(112): warning C4305: 'argument': truncation from 'double' to 'float'
   Generating code
-  28 of 1050 functions ( 2.7%) were compiled, the rest were copied from previous compilation.
+  20 of 1876 functions ( 1.1%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    24 functions had inline decision re-evaluated but remain unchanged
+    6 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
-  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Release\CG_Implementation.exe
-  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Release\CG_Implementation.pdb (Full PDB)
+  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Release\CG_Implementation.exe
+  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Release\CG_Implementation.pdb (Full PDB)

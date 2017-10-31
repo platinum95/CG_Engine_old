@@ -46,6 +46,7 @@ namespace GL_Engine {
 	};
 
 	class Hierarchy {
+	public:
 		struct HNode {
 			Entity* Entity{ nullptr };
 			std::vector<HNode*> Childer;

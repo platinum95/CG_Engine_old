@@ -71,9 +71,9 @@ namespace GL_Engine {
 	}
 
 	void Entity::UpdateUniforms() const {
-//		for (const auto uniform : this->EntityUniforms) {
-//			uniform.Update();
-//		}
+		for (const auto uniform : this->EntityUniforms) {
+			uniform->Update();
+		}
 	}
 
 
