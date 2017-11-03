@@ -41,7 +41,7 @@ private:
 	KeyHandler keyHandler;
 	float time{0};
 
-	Entity entityList[4];
+	Entity entityList[5];
 	std::unique_ptr<Renderer> renderer;
 	std::unique_ptr<Hierarchy> hierarchy;
 }; 

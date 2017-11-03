@@ -1,9 +1,14 @@
-﻿Build started 24/10/2017 10:16:45.
+﻿Build started 03/11/2017 18:29:08.
      1>Project "X:\CG\CG_Engine\CG_Engine\CG_Engine.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /IX:\CG\CG_Engine\libs /Zi /nologo /W3 /WX- /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug_v13\\" /Fd"x64\Debug_v13\vc120.pdb" /Gd /TP /errorReport:prompt Renderer.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /IX:\CG\CG_Engine\libs /Zi /nologo /W3 /WX- /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug_v13\\" /Fd"x64\Debug_v13\vc120.pdb" /Gd /TP /errorReport:prompt Entity.cpp Renderer.cpp
+         Entity.cpp
+     1>x:\cg\cg_engine\cg_engine\Entity.h(32): warning C4267: 'return' : conversion from 'size_t' to 'const uint16_t', possible loss of data
+         Generating Code...
+         Compiling...
          Renderer.cpp
-     1>x:\cg\cg_engine\cg_engine\Entity.h(26): warning C4267: 'return' : conversion from 'size_t' to 'const uint16_t', possible loss of data
+     1>x:\cg\cg_engine\cg_engine\Entity.h(32): warning C4267: 'return' : conversion from 'size_t' to 'const uint16_t', possible loss of data
+         Generating Code...
        Lib:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\Lib.exe /OUT:"../libs13/CG_Engined_x64.lib" /LIBPATH:X:\CG\CG_Engine\libs13 /NOLOGO /MACHINE:X64 x64\Debug_v13\Camera.obj
          x64\Debug_v13\CG_Data.obj
@@ -19,4 +24,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:05.08
+Time Elapsed 00:00:05.13

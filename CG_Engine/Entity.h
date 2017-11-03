@@ -17,9 +17,15 @@ namespace GL_Engine {
 		void RollBy(float _Degrees);
 		void SetScale(glm::vec3 _Scale);
 		void ScaleBy(glm::vec3 _ScaleBy);
+		void SetOrientation(glm::quat _Orientation){ this->Orientation = _Orientation; this->MatrixNeedsUpdating = true; }
 
 		const glm::mat4 GetTransformMatrix();
 		const glm::quat GetOrientation() const;
+		const glm::vec4 GetPosition() const { return this->Position; }
+
+		const glm::mat4 TransformBy(glm::mat4 _Transform){
+			return this->TransformMatrix = _Transform * this->TransformMatrix;
+		}
 
 		const uint16_t AddData(void* _Data) {
 			eData.push_back(_Data);
@@ -48,8 +54,35 @@ namespace GL_Engine {
 	class Hierarchy {
 	public:
 		struct HNode {
-			Entity* Entity{ nullptr };
+			Entity* entity{ nullptr };
 			std::vector<HNode*> Childer;
+			glm::vec3 NodePosition;
+			void RotateBy(float _Degrees, glm::vec3 _Axis, glm::vec3 _Pos){
+				glm::quat versor = glm::angleAxis(_Degrees, _Axis);
+				NodePosition -= _Pos;
+				NodePosition = versor * NodePosition;
+				NodePosition += _Pos;
+
+				glm::vec3 entityPos = entity->GetPosition();
+				entityPos -= _Pos;
+				entityPos = versor * entityPos;
+				entityPos += _Pos;
+				entity->SetPosition(entityPos);
+				entity->SetOrientation(versor * entity->GetOrientation());
+
+				for (auto c : Childer)
+					c->RotateBy(_Degrees, _Axis, _Pos);
+			}
+			
+			void RollBy(float _Degrees){
+				RotateBy(_Degrees, glm::vec3(0, 0, 1), this->NodePosition);
+			}
+			void PitchBy(float _Degrees){
+				RotateBy(_Degrees, glm::vec3(1, 0, 0), this->NodePosition);
+			}
+			void YawBy(float _Degrees){
+				RotateBy(_Degrees, glm::vec3(0, 1, 0), this->NodePosition);
+			}
 
 			~HNode() {
 				for (auto n : Childer) {
@@ -60,31 +93,32 @@ namespace GL_Engine {
 		};
 
 		Hierarchy() {
-			entities = std::vector<Entity*>();
 			root = nullptr;
 		}
 		~Hierarchy() {
 			if (!root)
 				delete root;
 		}
-		HNode *InitialiseHierarchy(std::vector<Entity*>&& _eList) {
-			entities = std::move(_eList);
+		HNode *InitialiseHierarchy(Entity* _Entity, const glm::vec3 &_Pos) {
 			root = new HNode;
+			root->entity = _Entity;
+			root->NodePosition = _Pos;
 			root->Childer = std::vector<HNode*>();
 			return root;
 		}
 
-		HNode *AddChild(HNode* _Node, Entity* entity) {
+		HNode *AddChild(HNode* _Node, Entity* entity, const glm::vec3 &_Pos) {
 			HNode *newNode = new HNode;
-			newNode->Entity = entity;
+			newNode->NodePosition = _Pos;
+			newNode->entity = entity;
 			_Node->Childer.push_back(newNode);
 			return newNode;
 		}
 
+		HNode* GetRoot() const { return root; }
 
 
 	private:
-		std::vector<Entity*> entities;
 		HNode* root;
 	};
 

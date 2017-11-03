@@ -109,14 +109,18 @@ int CG_Implementation::run(){
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		entityList[0].YawBy(0.3);
+	//	entityList[0].YawBy(0.3);
 
+		hierarchy->GetRoot()->RollBy(0.0005f);
+		
+		hierarchy->GetRoot()->Childer[0]->PitchBy(0.0005f);
 		renderer->Render();
 
-		entityList[0].GetTransformMatrix();
+		for (int i = 0; i < 5; i++)
+			entityList[i].GetTransformMatrix();
 
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		//std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		//Swap buffers
 		glfwSwapBuffers(windowProperties.window);
 		glfwPollEvents();
@@ -172,7 +176,7 @@ void CG_Implementation::initialise(){
 	
 	
 	//Initialise camera
-	camera.SetCameraPosition(glm::vec4(0, 0, 0, 1.0));
+	camera.SetCameraPosition(glm::vec4(0, 0, -40, 1.0));
 	camera.SetProjectionMatrix(0.01f, 100.0f, 70.0f, 800.0f / 600.0f);
 
 	{
@@ -210,10 +214,6 @@ void CG_Implementation::initialise(){
 	keyHandler.AddKeyEvent(GLFW_KEY_3, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
 	keyHandler.AddKeyEvent(GLFW_KEY_4, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&entityList[0]);
 	}
-	//Initialise entities
-	for(int i = 0; i < 4; i++){
-		entityList[i].Translate(glm::vec3(0, 0, 0));
-	}
 
 	//Set the update callbacks for the various uniforms using Lambda functions
 
@@ -228,14 +228,18 @@ void CG_Implementation::initialise(){
 
 	const auto width = windowProperties.width, height = windowProperties.height;
 
-	auto cam_link_index = entityList[0].AddData((void*) glm::value_ptr(camera.GetViewMatrix()));
+	auto cam_link_index = entityList[0].AddData((void*)glm::value_ptr(camera.GetViewMatrix()));
 	auto proj_link_index = entityList[0].AddData((void*)glm::value_ptr(camera.GetProjectionMatrix()));
-
+	for (int i = 1; i < 5; i++){
+		entityList[i].AddData((void*)glm::value_ptr(camera.GetViewMatrix()));
+		entityList[i].AddData((void*)glm::value_ptr(camera.GetProjectionMatrix()));
+	}
 
 	RenderPass *teapotPass = renderer->AddRenderPass(&basicShader);
 	teapotPass->SetDrawFunction ([](){glDrawArrays(GL_TRIANGLES, 0, teapot_vertex_count);});
 	teapotPass->BatchVao = VAO;
-	teapotPass->AddBatchUnit(&entityList[0]);
+	for (int i = 0; i < 5; i++)
+		teapotPass->AddBatchUnit(&entityList[i]);
 	teapotPass->AddDataLink(translate_ubo, 0);	//Link the translate uniform to the transformation matrix of the entities
 	teapotPass->AddDataLink(view_ubo, cam_link_index);
 	teapotPass->AddDataLink(projection_ubo, proj_link_index);
@@ -250,9 +254,17 @@ void CG_Implementation::initialise(){
 	  ^		root
 	  
 	*/
-	auto root = hierarchy->InitialiseHierarchy({});
-	root->Entity = &entityList[0];
-	auto arm = hierarchy->AddChild(root, &entityList[1]);
+	entityList[0].Translate(glm::vec3(0, 0, 0));
+	entityList[1].Translate(glm::vec3(0, 20, 0));
+	entityList[2].Translate(glm::vec3(20, 40, 0));
+	entityList[3].Translate(glm::vec3(0, 40, 0));
+	entityList[4].Translate(glm::vec3(-20, 40, 0));
+
+	auto root = hierarchy->InitialiseHierarchy(&entityList[0], glm::vec3(0, 0, 0));
+	auto arm = hierarchy->AddChild(root, &entityList[1], glm::vec3(0, 20, 0));
+	auto leftFinger = hierarchy->AddChild(arm, &entityList[2], glm::vec3(20, 40, 0));
+	auto middleFinger = hierarchy->AddChild(arm, &entityList[3], glm::vec3(0, 40, 0));
+	auto rightFinger = hierarchy->AddChild(arm, &entityList[4], glm::vec3(-20, 40, 0));
 }
 
 //Cleanup

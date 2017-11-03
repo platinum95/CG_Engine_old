@@ -1,12 +1,17 @@
-﻿Build started 24/10/2017 10:18:46.
+﻿Build started 03/11/2017 18:29:13.
      1>Project "X:\CG\CG_Engine\CG_Implementation\CG_Implementation.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /IX:\CG\CG_Engine\CG_Engine /IX:\CG\CG_Engine\include /Zi /nologo /W3 /WX- /Od /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug_v13\\" /Fd"x64\Debug_v13\vc120.pdb" /Gd /TP /errorReport:prompt CG_Implementation.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /IX:\CG\CG_Engine\CG_Engine /IX:\CG\CG_Engine\include /Zi /nologo /W3 /WX- /Od /D WIN32 /D _DEBUG /D _CONSOLE /D _LIB /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug_v13\\" /Fd"x64\Debug_v13\vc120.pdb" /Gd /TP /errorReport:prompt CG_Implementation.cpp main.cpp
          CG_Implementation.cpp
-     1>X:\CG\CG_Engine\CG_Engine\Entity.h(26): warning C4267: 'return' : conversion from 'size_t' to 'const uint16_t', possible loss of data
+     1>X:\CG\CG_Engine\CG_Engine\Entity.h(32): warning C4267: 'return' : conversion from 'size_t' to 'const uint16_t', possible loss of data
      1>x:\cg\cg_engine\cg_implementation\teapot.h(2980): warning C4305: 'initializing' : truncation from 'double' to 'float'
      1>x:\cg\cg_engine\cg_implementation\teapot.h(5959): warning C4305: 'initializing' : truncation from 'double' to 'float'
      1>x:\cg\cg_engine\cg_implementation\teapot.h(8938): warning C4305: 'initializing' : truncation from 'double' to 'float'
+         Generating Code...
+         Compiling...
+         main.cpp
+     1>X:\CG\CG_Engine\CG_Engine\Entity.h(32): warning C4267: 'return' : conversion from 'size_t' to 'const uint16_t', possible loss of data
+         Generating Code...
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\link.exe /ERRORREPORT:PROMPT /OUT:"X:\CG\CG_Engine\x64\Debug_v13\CG_Implementation.exe" /INCREMENTAL /NOLOGO /LIBPATH:X:\CG\CG_Engine\\libs13 opengl32.lib glew32_x64.lib "GLFW-3.2.1d_x64.lib" CG_Engined_x64.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"X:\CG\CG_Engine\x64\Debug_v13\CG_Implementation.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"X:\CG\CG_Engine\x64\Debug_v13\CG_Implementation.lib" /MACHINE:X64 x64\Debug_v13\CG_Implementation.obj
          x64\Debug_v13\main.obj
@@ -15,4 +20,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:06.05
+Time Elapsed 00:00:06.30
