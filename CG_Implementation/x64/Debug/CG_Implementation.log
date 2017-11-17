@@ -1,11 +1,2 @@
-﻿  CG_Implementation.cpp
-u:\cg\cg_engine\cg_engine\entity.h(26): warning C4267: 'return': conversion from 'size_t' to 'const uint16_t', possible loss of data
-u:\cg\cg_engine\cg_implementation\teapot.h(2980): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
-u:\cg\cg_engine\cg_implementation\teapot.h(2980): warning C4305: 'initializing': truncation from 'double' to 'float'
-u:\cg\cg_engine\cg_implementation\teapot.h(5959): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
-u:\cg\cg_engine\cg_implementation\teapot.h(5959): warning C4305: 'initializing': truncation from 'double' to 'float'
-u:\cg\cg_engine\cg_implementation\teapot.h(8938): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
-u:\cg\cg_engine\cg_implementation\teapot.h(8938): warning C4305: 'initializing': truncation from 'double' to 'float'
-u:\cg\cg_engine\cg_implementation\cg_implementation.cpp(112): warning C4305: 'argument': truncation from 'double' to 'float'
-  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.exe
-  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)
+﻿  CG_Implementation.vcxproj -> X:\CG\CG_Engine\x64\Debug\CG_Implementation.exe
+  CG_Implementation.vcxproj -> X:\CG\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)

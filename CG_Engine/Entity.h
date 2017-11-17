@@ -1,9 +1,16 @@
 #pragma once
 
-#include <glm/gtc/quaternion.hpp>
-#include <glm/mat4x4.hpp>
 #include <vector>
 #include "CG_Data.h"
+
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/glm.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/mat4x4.hpp>
+
+
 namespace GL_Engine {
 	class Entity {
 	public:
@@ -15,9 +22,17 @@ namespace GL_Engine {
 		void YawBy(float _Degrees);
 		void PitchBy(float _degrees);
 		void RollBy(float _Degrees);
+		void RotateBy(float _Degrees, glm::vec3 _Axis);
 		void SetScale(glm::vec3 _Scale);
 		void ScaleBy(glm::vec3 _ScaleBy);
 		void SetOrientation(glm::quat _Orientation){ this->Orientation = _Orientation; this->MatrixNeedsUpdating = true; }
+		void Rotate(glm::quat _Rotation) { 
+			this->Orientation = _Rotation * Orientation;
+			this->Forward = _Rotation * Forward;
+			this->Up = _Rotation * Up;
+			this->Right = _Rotation * Right;
+			this->MatrixNeedsUpdating = true;
+		}
 
 		const glm::mat4 GetTransformMatrix();
 		const glm::quat GetOrientation() const;
@@ -27,7 +42,7 @@ namespace GL_Engine {
 			return this->TransformMatrix = _Transform * this->TransformMatrix;
 		}
 
-		const uint16_t AddData(void* _Data) {
+		const size_t AddData(void* _Data) {
 			eData.push_back(_Data);
 			return eData.size() - 1;
 		}
@@ -39,87 +54,65 @@ namespace GL_Engine {
 		const std::vector<void*> GeteDataList() const { return this->eData; };
 
 		void UpdateUniforms() const;
+		glm::mat4 TransformMatrix;
+
 	private:
 		glm::vec4 Position{ 0, 0, 0, 1 };
 		glm::vec3 Forward{ 0, 0, 1 }, Up{ 0, 1, 0 }, Right{ 1, 0, 0 };
 		glm::vec3 Scale{ 1, 1, 1 };
 		glm::quat Orientation;
 		std::vector<CG_Data::Uniform*> EntityUniforms;
-		glm::mat4 TransformMatrix;
+		
 		std::vector<void*> eData;
 		void UpdateMatrix();
 		bool MatrixNeedsUpdating{ true };
 	};
 
+
 	class Hierarchy {
 	public:
-		struct HNode {
-			Entity* entity{ nullptr };
-			std::vector<HNode*> Childer;
-			glm::vec3 NodePosition;
-			void RotateBy(float _Degrees, glm::vec3 _Axis, glm::vec3 _Pos){
-				glm::quat versor = glm::angleAxis(_Degrees, _Axis);
-				NodePosition -= _Pos;
-				NodePosition = versor * NodePosition;
-				NodePosition += _Pos;
-
-				glm::vec3 entityPos = entity->GetPosition();
-				entityPos -= _Pos;
-				entityPos = versor * entityPos;
-				entityPos += _Pos;
-				entity->SetPosition(entityPos);
-				entity->SetOrientation(versor * entity->GetOrientation());
-
-				for (auto c : Childer)
-					c->RotateBy(_Degrees, _Axis, _Pos);
-			}
-			
-			void RollBy(float _Degrees){
-				RotateBy(_Degrees, glm::vec3(0, 0, 1), this->NodePosition);
-			}
-			void PitchBy(float _Degrees){
-				RotateBy(_Degrees, glm::vec3(1, 0, 0), this->NodePosition);
-			}
-			void YawBy(float _Degrees){
-				RotateBy(_Degrees, glm::vec3(0, 1, 0), this->NodePosition);
-			}
-
-			~HNode() {
-				for (auto n : Childer) {
-					if (!n)
-						delete n;
-				}
-			}
+		class HNode : public Entity {
+		public:
+			HNode();
+			glm::mat4 UpdateMatrix(glm::mat4 _JointMatrix);
+			glm::mat4* GetGlobalMatrix();
+			void SetPosition(const glm::vec3 _Pos);
+			void SetPosition(const float x, const float y, const float z);
+		private:
+			glm::vec3 eRelativePosition;
+			glm::quat eRelativeOrientation;
+			glm::mat4 LocalMatrix, GlobalMatrix;
 		};
 
-		Hierarchy() {
-			root = nullptr;
-		}
-		~Hierarchy() {
-			if (!root)
-				delete root;
-		}
-		HNode *InitialiseHierarchy(Entity* _Entity, const glm::vec3 &_Pos) {
-			root = new HNode;
-			root->entity = _Entity;
-			root->NodePosition = _Pos;
-			root->Childer = std::vector<HNode*>();
-			return root;
-		}
+		class HJoint {
+		public:
+			HJoint(glm::vec3 _RelativePosition, glm::quat _Orientation = glm::quat(1, 0, 0, 0));
+			void InitialiseJoint(glm::mat4 parent);
+			void AddChild(HJoint *_Child);
+			void AddNode(HNode *_Node);
+			void Translate(glm::vec3 _Translation);
+			void rotate(float _Degrees, glm::vec3 axis);
+			void YawBy(float _Degrees);
+			void RollBy(float _Degrees);
+			void PitchBy(float _Degrees);
+			std::vector<HJoint*> *GetChilder();
+			
+		private:
+			glm::vec3 JointRelativePosition;
+			glm::quat NodeOrientation;
+			glm::mat4 LocalMatrix, GlobalMatrix, ParentMatrix, TranslationMatrix, RotationMatrix;
+			std::vector<HNode*> nodes;
+			std::vector<HJoint*> childer;
+			void UpdateJoint(glm::mat4 _ParentMatrix);
+		};
 
-		HNode *AddChild(HNode* _Node, Entity* entity, const glm::vec3 &_Pos) {
-			HNode *newNode = new HNode;
-			newNode->NodePosition = _Pos;
-			newNode->entity = entity;
-			_Node->Childer.push_back(newNode);
-			return newNode;
-		}
-
-		HNode* GetRoot() const { return root; }
-
+		Hierarchy();
+		void InitialiseHierarchy();
+		void SetRoot(HJoint *root);
+		HJoint *GetRoot() const;
 
 	private:
-		HNode* root;
+		HJoint* root;
 	};
 
 }

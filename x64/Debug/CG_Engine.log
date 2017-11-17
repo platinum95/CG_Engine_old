@@ -1,3 +1,8 @@
-﻿  Renderer.cpp
-u:\cg\cg_engine\cg_engine\entity.h(26): warning C4267: 'return': conversion from 'size_t' to 'const uint16_t', possible loss of data
+﻿  Entity.cpp
+u:\cg\cg_engine\cg_engine\entity.h(47): warning C4267: 'return': conversion from 'size_t' to 'const uint16_t', possible loss of data
+  Generating Code...
+  Compiling...
+  Renderer.cpp
+u:\cg\cg_engine\cg_engine\entity.h(47): warning C4267: 'return': conversion from 'size_t' to 'const uint16_t', possible loss of data
+  Generating Code...
   CG_Engine.vcxproj -> U:\CG\CG_Engine\CG_Engine\../libs/CG_Engined_x64.lib

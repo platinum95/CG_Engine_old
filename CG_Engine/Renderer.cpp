@@ -3,7 +3,7 @@
 using namespace GL_Engine;
 
 Renderer::Renderer() {
-//	this->renderPasses = std::vector<std::unique_ptr<RenderPass>>();
+	this->renderPasses = std::vector<std::unique_ptr<RenderPass>>();
 }
 
 
