@@ -34,6 +34,9 @@ RenderPass * GL_Engine::Renderer::AddRenderPass(Shader* _Shader, std::function<v
 }
 
 void GL_Engine::Renderer::Render() const {
+	for (auto ubo : this->UBO_List) {
+		ubo->UpdateUBO();
+	}
 	for (auto&& pass : renderPasses) {
 		pass->renderFunction(*pass, pass->Data);
 	}

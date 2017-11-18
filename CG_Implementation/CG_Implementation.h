@@ -18,6 +18,15 @@ static GL_Engine::Properties::GLFWproperties windowProperties = {
 	false			//Fullscreen
 };
 
+
+struct CameraUBO_Data {
+	float ViewMatrix[16];
+	float ProjectionMatrix[16];
+	float PV_Matrix[16];
+	float CameraPosition[4];
+	float CameraOrientation[4];
+};
+
 static const char* vertexLoc = "v.glsl";
 static const char* fragLoc = "f.glsl";
 
@@ -32,6 +41,8 @@ public:
 
 private:
 	void initialise();
+	void LoadModels();
+	void UpdateCameraUBO();
 	Shader basicShader;
 	CG_Engine engine;
 	CG_Data::VBO *vertexVBO, *colourVBO;
@@ -40,11 +51,18 @@ private:
 	Camera camera;
 	KeyHandler keyHandler;
 	float time{0};
+	CG_Data::ModelLoader mLoader;
 
 	Hierarchy::HNode nodes[5];
 
 //	Entity entityList[5];
 	std::unique_ptr<Renderer> renderer;
 	std::unique_ptr<Hierarchy> hierarchy;
+
+	CG_Data::ModelAttribList monkeyAttributes;
+	Entity suzanne;
+	std::string suzanne_loc = "assets/models/monkeyhead.dae";
+
+	CameraUBO_Data camera_ubo_data;
 }; 
 

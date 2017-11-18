@@ -132,6 +132,7 @@ int CG_Implementation::run(){
 
 	while (!glfwWindowShouldClose(windowProperties.window)){
 		keyHandler.Update(windowProperties.window);
+		UpdateCameraUBO();
 
 		//Clear screen
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -153,6 +154,8 @@ int CG_Implementation::run(){
 			nodes[i].GetTransformMatrix();
 		}
 
+		suzanne.GetTransformMatrix();
+
 
 	//	std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		//Swap buffers
@@ -161,6 +164,17 @@ int CG_Implementation::run(){
 		
 	}
 	return 0;
+}
+
+void CG_Implementation::UpdateCameraUBO() {
+
+	memcpy(camera_ubo_data.ViewMatrix, glm::value_ptr(camera.GetViewMatrix()), sizeof(float) * 16);
+	memcpy(camera_ubo_data.ProjectionMatrix, glm::value_ptr(camera.GetProjectionMatrix()), sizeof(float) * 16);
+	glm::mat4 PV = camera.GetProjectionMatrix() * camera.GetViewMatrix();
+	memcpy(camera_ubo_data.PV_Matrix, glm::value_ptr(PV), sizeof(float) * 16);
+	memcpy(camera_ubo_data.CameraOrientation, glm::value_ptr(camera.GetCameraPosition()), sizeof(float) * 4);
+	memcpy(camera_ubo_data.CameraPosition, glm::value_ptr(camera.GetCameraPosition()), sizeof(float) * 4);
+	
 }
 
 void CG_Implementation::initialise(){
@@ -175,12 +189,17 @@ void CG_Implementation::initialise(){
 		throw std::runtime_error("Error initialising GLAD!");
 	}
 
+	CG_Data::UBO *com_ubo = new CG_Data::UBO((void*)&camera_ubo_data, sizeof(camera_ubo_data));
+
+
 	renderer = std::make_unique<Renderer>();
+	renderer->AddUBO(com_ubo);
 	//Set up shader using a Shader object
 	basicShader.RegisterShaderStageFromFile(vertexLoc, GL_VERTEX_SHADER);
 	basicShader.RegisterShaderStageFromFile(fragLoc, GL_FRAGMENT_SHADER);
 	basicShader.RegisterAttribute("vPosition", 0);
 	basicShader.RegisterAttribute("fColor", 1);
+	basicShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
 	time_ubo = basicShader.RegisterUniform("time");
 	translate_ubo = basicShader.RegisterUniform("model");
 	view_ubo = basicShader.RegisterUniform("view");
@@ -192,22 +211,20 @@ void CG_Implementation::initialise(){
 	VAO = std::make_shared<CG_Data::VAO>();
 	VAO->BindVAO();
 
-	vertexVBO = new CG_Data::VBO();
+	vertexVBO = new CG_Data::VBO(teapot_vertex_points, sizeof(teapot_vertex_points), GL_STATIC_DRAW);
 	vertexVBO->BindVBO();
-	vertexVBO->SetVBOData(teapot_vertex_points, sizeof(teapot_vertex_points), GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 	glEnableVertexAttribArray(0);
 
-	colourVBO = new CG_Data::VBO();
+	colourVBO = new CG_Data::VBO(teapot_normals, sizeof(teapot_normals), GL_STATIC_DRAW);
 	colourVBO->BindVBO();
-	colourVBO->SetVBOData(teapot_normals, sizeof(teapot_normals), GL_STATIC_DRAW);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 	glEnableVertexAttribArray(1);
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	
+	LoadModels();
 	
 	//Initialise camera
 	camera.SetCameraPosition(glm::vec4(0, 0, -80, 1.0));
@@ -245,6 +262,22 @@ void CG_Implementation::initialise(){
 	teapotPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	teapotPass->AddDataLink(view_ubo, cam_link_index);
 	teapotPass->AddDataLink(projection_ubo, proj_link_index);
+	glEnable(GL_DEPTH_TEST);
+
+
+	cam_link_index = suzanne.AddData((void*)glm::value_ptr(camera.GetViewMatrix()));
+	proj_link_index = suzanne.AddData((void*)glm::value_ptr(camera.GetProjectionMatrix()));
+	nodeModelIndex = suzanne.AddData((void*)glm::value_ptr(suzanne.TransformMatrix));
+
+	auto mCount = monkeyAttributes[0]->GetVertexCount();
+
+	RenderPass *suzannePass = renderer->AddRenderPass(&basicShader);
+	suzannePass->SetDrawFunction([mCount]() {glDrawElements(GL_TRIANGLES, mCount, GL_UNSIGNED_INT, 0); });
+	suzannePass->BatchVao = monkeyAttributes[0];
+	suzannePass->AddBatchUnit(&suzanne);
+	suzannePass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+	suzannePass->AddDataLink(view_ubo, cam_link_index);
+	suzannePass->AddDataLink(projection_ubo, proj_link_index);
 	glEnable(GL_DEPTH_TEST);
 
 	
@@ -342,6 +375,32 @@ void CG_Implementation::initialise(){
 		keyHandler.AddKeyEvent(GLFW_KEY_3, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
 		keyHandler.AddKeyEvent(GLFW_KEY_4, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
 	}
+	
+}
+
+void CG_Implementation::LoadModels() {
+	const aiScene *monkeyScene = mLoader.LoadModel(suzanne_loc,	aiProcess_CalcTangentSpace |
+																aiProcess_Triangulate |
+																aiProcess_JoinIdenticalVertices |
+																aiProcess_SortByPType);
+	
+	aiMesh *m = monkeyScene->mMeshes[0];
+
+	suzanne.SetPosition(glm::vec3(0, 0, 0));
+	suzanne.SetScale(glm::vec3(30, 30, 30));
+	monkeyAttributes = mLoader.LoadScene(monkeyScene);
+
+	monkeyAttributes[0]->BindVAO();
+	auto mVBO = monkeyAttributes[0]->GetVBO(monkeyAttributes[0]->MeshIndex);
+	mVBO->BindVBO();
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(0);
+	auto nVBO = monkeyAttributes[0]->GetVBO(monkeyAttributes[0]->NormalIndex);
+	nVBO->BindVBO();
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(1);
+
+	
 }
 
 //Cleanup

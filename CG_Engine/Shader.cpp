@@ -61,6 +61,10 @@ namespace GL_Engine{
 			uni->UniformObject->SetID(glGetUniformLocation(ShaderID, uni->Name));
 			//delete uni;
 		}
+		for (auto ubo : UBO_BlockIndices) {
+			GLuint block_index = glGetUniformBlockIndex(this->ShaderID, ubo.first.c_str());
+			UBO_BlockIndices[ubo.first].BlockIndex = block_index;
+		}
 		//UBOs.clear();
 		
 
@@ -100,6 +104,9 @@ namespace GL_Engine{
 	}
 
 	void Shader::UseShader() const {
+		for (auto ubo : UBO_BlockIndices) {
+			glUniformBlockBinding(this->ShaderID, ubo.second.BlockIndex, ubo.second.ubo->GetBindingPost());
+		}
 		glUseProgram(this->ShaderID);
 	}
 

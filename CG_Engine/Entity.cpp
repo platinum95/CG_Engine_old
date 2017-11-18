@@ -9,7 +9,7 @@
 namespace GL_Engine {
 #pragma region ENTITY
 	Entity::Entity() {
-		Orientation = glm::quatLookAt(glm::vec3(0, 0, 1), Up);
+		Orientation = glm::quat(1, 0, 0, 0);
 		eData.push_back(glm::value_ptr(this->TransformMatrix));
 	}
 

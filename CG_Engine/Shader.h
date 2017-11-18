@@ -3,6 +3,7 @@
 #include <vector>
 #include "Common.h"
 #include "CG_Data.h"
+#include <map>
 namespace GL_Engine{
 	class Shader
 	{
@@ -32,6 +33,12 @@ namespace GL_Engine{
 		//Returns pointer to UBO (Object finalised after call to compile)
 		CG_Data::Uniform* RegisterUniform(const char* _UniformName);
 
+		void RegisterUBO(std::string &_UBO_Name, CG_Data::UBO *_ubo) {
+			UBO_Struct ubo_struct;
+			ubo_struct.ubo = _ubo;
+			UBO_BlockIndices[_UBO_Name] = ubo_struct;
+		}
+
 		CG_Data::Uniform* GetUniform(uint8_t index) const {
 			return UBOs[index]->UniformObject;
 		}
@@ -56,9 +63,14 @@ namespace GL_Engine{
 			const char *Name;
 			CG_Data::Uniform *UniformObject;
 		};
+		struct UBO_Struct {
+			CG_Data::UBO *ubo;
+			GLuint BlockIndex;
+		};
 		std::vector<ShaderStage*> shaderStages;
 		std::vector<Attribute*> Attributes;
 		std::vector<UniformStruct*> UBOs;
+		std::map<std::string, UBO_Struct> UBO_BlockIndices;
 
 		GLuint ShaderID;
 		bool initialised{ false };
