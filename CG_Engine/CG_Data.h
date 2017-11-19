@@ -35,16 +35,18 @@ namespace GL_Engine{
 			~VAO();
 			const GLuint GetID() const;
 			void BindVAO() const;
-
+			void Cleanup();
+		protected:
+			std::vector<std::unique_ptr<VBO>> VBOs;
 		private:
 			GLuint VAOId;
-			std::vector<VBO*> VBOList;
 			bool initialised{ false };
 		};
 
 		class ModelAttribute : public VAO {
 		public:
 			ModelAttribute();
+			~ModelAttribute();
 			ModelAttribute(const aiScene *_Scene, unsigned int index);
 
 			VBO* GetVBO(int index);
@@ -52,7 +54,6 @@ namespace GL_Engine{
 			const uint64_t GetVertexCount() const;
 
 		private:
-			std::vector<std::unique_ptr<VBO>> VBOs;
 			uint64_t VertexCount = 0;
 
 		};

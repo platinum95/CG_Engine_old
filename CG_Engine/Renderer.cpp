@@ -8,6 +8,11 @@ Renderer::Renderer() {
 
 
 Renderer::~Renderer() {
+	renderPasses.clear();
+}
+
+RenderPass::~RenderPass(){
+	
 }
 
 RenderPass * GL_Engine::Renderer::AddRenderPass(Shader* _Shader) {

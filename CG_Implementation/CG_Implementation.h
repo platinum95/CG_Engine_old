@@ -27,6 +27,12 @@ struct CameraUBO_Data {
 	float CameraOrientation[4];
 };
 
+struct LightUBO_Data {
+	float LightPosition[4];
+	float LightColour[3];
+	float LightBrightness;
+};
+
 static const char* vertexLoc = "v.glsl";
 static const char* fragLoc = "f.glsl";
 
@@ -45,24 +51,24 @@ private:
 	void UpdateCameraUBO();
 	Shader basicShader;
 	CG_Engine engine;
-	CG_Data::VBO *vertexVBO, *colourVBO;
 	std::shared_ptr<CG_Data::VAO> VAO;
-	CG_Data::Uniform *time_ubo, *translate_ubo, *view_ubo, *projection_ubo;
+	CG_Data::Uniform *translate_ubo;
 	Camera camera;
 	KeyHandler keyHandler;
 	float time{0};
 	CG_Data::ModelLoader mLoader;
 
-	Hierarchy::HNode nodes[5];
+//	Hierarchy::HNode nodes[5];
 
 //	Entity entityList[5];
 	std::unique_ptr<Renderer> renderer;
-	std::unique_ptr<Hierarchy> hierarchy;
+//	std::unique_ptr<Hierarchy> hierarchy;
 
 	CG_Data::ModelAttribList monkeyAttributes;
 	Entity suzanne;
-	std::string suzanne_loc = "assets/models/monkeyhead.dae";
+	std::string suzanne_loc = "assets/models/suzanne.dae";
 
 	CameraUBO_Data camera_ubo_data;
+	LightUBO_Data light_ubo_data;
 }; 
 

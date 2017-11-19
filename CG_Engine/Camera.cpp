@@ -90,6 +90,10 @@ namespace GL_Engine {
 		return this->CameraPosition;
 	}
 
+	const glm::vec3 &Camera::GetForwardVector() const {
+		return this->ForwardVector;
+	}
+
 
 
 	void Camera::GenerateViewMatrix() {

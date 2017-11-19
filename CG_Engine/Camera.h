@@ -18,6 +18,8 @@ namespace GL_Engine {
 		const glm::mat4 &GetViewMatrix();
 		const glm::mat4 &GetProjectionMatrix() const;
 		const glm::vec4 &GetCameraPosition() const;
+
+		const glm::vec3 &GetForwardVector() const;
 		
 		void PitchBy(float _Pitch);
 		void RollBy(float _Roll);

@@ -40,11 +40,11 @@ namespace GL_Engine{
 		}
 
 		CG_Data::Uniform* GetUniform(uint8_t index) const {
-			return UBOs[index]->UniformObject;
+			return Uniforms[index]->UniformObject;
 		}
 
 		void UpdateUniforms() {
-			for (auto u : this->UBOs) {
+			for (auto u : this->Uniforms) {
 				u->UniformObject->Update();
 			}
 		}
@@ -69,7 +69,7 @@ namespace GL_Engine{
 		};
 		std::vector<ShaderStage*> shaderStages;
 		std::vector<Attribute*> Attributes;
-		std::vector<UniformStruct*> UBOs;
+		std::vector<UniformStruct*> Uniforms;
 		std::map<std::string, UBO_Struct> UBO_BlockIndices;
 
 		GLuint ShaderID;

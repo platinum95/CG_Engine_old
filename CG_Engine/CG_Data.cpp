@@ -47,6 +47,23 @@ namespace GL_Engine{
 
 		VAO::~VAO(){
 			if (initialised) {
+				this->BindVAO();
+				for (auto &vbo : this->VBOs){
+					vbo.reset();
+				}
+				VBOs.clear();
+				glDeleteVertexArrays(1, &this->VAOId);
+				initialised = false;
+			}
+		}
+
+		void VAO::Cleanup(){
+			if (initialised) {
+				this->BindVAO();
+				for (auto &vbo : this->VBOs){
+					vbo.reset();
+				}
+				VBOs.clear();
 				glDeleteVertexArrays(1, &this->VAOId);
 				initialised = false;
 			}
@@ -63,6 +80,9 @@ namespace GL_Engine{
 #pragma region ModelAttribute
 		ModelAttribute::ModelAttribute() {
 
+		}
+		ModelAttribute::~ModelAttribute(){
+			
 		}
 		ModelAttribute::ModelAttribute(const aiScene *_Scene, unsigned int index) {
 			this->BindVAO();

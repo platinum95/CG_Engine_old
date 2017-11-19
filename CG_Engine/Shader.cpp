@@ -44,7 +44,7 @@ namespace GL_Engine{
 		glGetProgramiv(ShaderID, GL_LINK_STATUS, &Result);
 		if (!Result) {
 			glGetProgramInfoLog(ShaderID, sizeof(ErrorBuffer), NULL, ErrorBuffer);
-			throw std::runtime_error("Error linking Shader!\n" + std::string(ErrorBuffer));
+			throw std::runtime_error("Error linking Shader\n" + std::string(ErrorBuffer));
 			return 0;
 		}
 
@@ -57,13 +57,12 @@ namespace GL_Engine{
 			return 0;
 		}
 
-		for (auto uni : UBOs) {
+		for (auto uni : Uniforms) {
 			uni->UniformObject->SetID(glGetUniformLocation(ShaderID, uni->Name));
 			//delete uni;
 		}
-		for (auto ubo : UBO_BlockIndices) {
-			GLuint block_index = glGetUniformBlockIndex(this->ShaderID, ubo.first.c_str());
-			UBO_BlockIndices[ubo.first].BlockIndex = block_index;
+		for (auto &ubo : UBO_BlockIndices) {
+			ubo.second.BlockIndex = glGetUniformBlockIndex(this->ShaderID, ubo.first.c_str());
 		}
 		//UBOs.clear();
 		
@@ -114,7 +113,7 @@ namespace GL_Engine{
 		UniformStruct *uniform = new UniformStruct;
 		uniform->UniformObject = new CG_Data::Uniform();
 		uniform->Name = _UniformName;
-		this->UBOs.push_back(uniform);
+		this->Uniforms.push_back(uniform);
 		return uniform->UniformObject;
 	}
 

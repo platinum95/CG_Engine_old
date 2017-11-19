@@ -1,1 +1,28 @@
-﻿C:\Program Files (x86)\Microsoft Visual Studio\2017\Enterprise\Common7\IDE\VC\VCTargets\Microsoft.Cpp.Platform.targets(57,5): error MSB8020: The build tools for v120 (Platform Toolset = 'v120') cannot be found. To build using the v120 build tools, please install v120 build tools.  Alternatively, you may upgrade to the current Visual Studio tools by selecting the Project menu or right-click the solution, and then selecting "Retarget solution".
+﻿Build started 19/11/2017 12:32:16.
+     1>Project "X:\CG\CG_Engine\CG_Engine\CG_Engine.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /IX:\CG\CG_Engine\libs /Zi /nologo /W3 /WX- /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug_v13\\" /Fd"x64\Debug_v13\vc120.pdb" /Gd /TP /errorReport:prompt CG_Data.cpp Camera.cpp
+         Camera.cpp
+         CG_Data.cpp
+     1>CG_Data.cpp(92): warning C4018: '<' : signed/unsigned mismatch
+     1>CG_Data.cpp(94): warning C4018: '<' : signed/unsigned mismatch
+     1>CG_Data.cpp(107): warning C4267: '=' : conversion from 'size_t' to 'int', possible loss of data
+     1>CG_Data.cpp(111): warning C4267: '=' : conversion from 'size_t' to 'int', possible loss of data
+     1>CG_Data.cpp(191): warning C4018: '<' : signed/unsigned mismatch
+         Generating Code...
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\Lib.exe /OUT:"../libs13/CG_Engined_x64.lib" /LIBPATH:X:\CG\CG_Engine\libs13 /NOLOGO /MACHINE:X64 x64\Debug_v13\Camera.obj
+         x64\Debug_v13\CG_Data.obj
+         x64\Debug_v13\CG_Engine.obj
+         x64\Debug_v13\Entity.obj
+         x64\Debug_v13\File_IO.obj
+         x64\Debug_v13\glad.obj
+         x64\Debug_v13\InputHandler.obj
+         x64\Debug_v13\Renderer.obj
+         x64\Debug_v13\Shader.obj
+         CG_Engine.vcxproj -> X:\CG\CG_Engine\CG_Engine\../libs13/CG_Engined_x64.lib
+     1>Done Building Project "X:\CG\CG_Engine\CG_Engine\CG_Engine.vcxproj" (Build target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:05.03
