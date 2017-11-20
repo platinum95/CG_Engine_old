@@ -52,6 +52,9 @@ void GL_Engine::Renderer::Render() const {
 void Renderer::DefaultRenderer(RenderPass& _Pass, void* _Data) {
 	_Pass.shader->UseShader();
 	_Pass.BatchVao->BindVAO();
+	for (auto tex : _Pass.Textures) {
+		tex->Bind();
+	}
 	for (auto&& batch : _Pass.batchUnits) {
 		if (batch->active) {
 			for (auto l : _Pass.dataLink) {

@@ -94,7 +94,7 @@ void CG_Implementation::UpdateCameraUBO() {
 	memcpy(camera_ubo_data.CameraOrientation, glm::value_ptr(glm::vec4(camera.GetForwardVector(), 0.0)), sizeof(float) * 4);
 	memcpy(camera_ubo_data.CameraPosition, glm::value_ptr(camera.GetCameraPosition()), sizeof(float) * 4);
 	
-//	memcpy(light_ubo_data.LightPosition, glm::value_ptr(camera.GetCameraPosition()), sizeof(float) * 4);
+	memcpy(light_ubo_data.LightPosition, glm::value_ptr(camera.GetCameraPosition()), sizeof(float) * 4);
 //	memcpy(light_ubo_data.LightPosition, glm::value_ptr(glm::vec4(0, 50, -50, 1.0)), sizeof(float) * 4);
 	//memcpy(light_ubo_data.LightColour, glm::value_ptr(glm::vec3(1, 1, 1)), sizeof(float) * 3);
 	light_ubo_data.LightBrightness = 1;
@@ -129,7 +129,7 @@ void CG_Implementation::initialise(){
 	basicShader.RegisterAttribute("vNormal", 1);
 	basicShader.RegisterAttribute("TexCoord", 2);
 	basicShader.RegisterAttribute("vTangeant", 3);
-	basicShader.RegisterAttribute("vBiangeant", 4);
+	basicShader.RegisterAttribute("vBitangeant", 4);
 	basicShader.RegisterTextureUnit("diffuseTexture", 0);
 	basicShader.RegisterTextureUnit("normalTexture", 1);
 	basicShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
@@ -137,11 +137,20 @@ void CG_Implementation::initialise(){
 	translate_ubo = basicShader.RegisterUniform("model");
 	basicShader.CompileShader();
 
+	SkyboxShader.RegisterShaderStageFromFile(skyboxVLoc.c_str(), GL_VERTEX_SHADER);
+	SkyboxShader.RegisterShaderStageFromFile(skyboxFLoc.c_str(), GL_FRAGMENT_SHADER);
+	SkyboxShader.RegisterAttribute("vPosition", 1);
+	SkyboxShader.RegisterTextureUnit("BoxTexture", 0);
+	SkyboxShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
+	SkyboxShader.CompileShader();
+	int loc = glGetAttribLocation(SkyboxShader.GetShaderID(), "vPosition");
+	Skybox = std::make_unique<Cubemap>(SkyboxTexLoc, &SkyboxShader, renderer.get());
+
 	LoadModels();
 	
 	//Initialise camera
 	camera.SetCameraPosition(glm::vec4(0, 0, -80, 1.0));
-	camera.SetProjectionMatrix(0.01f, 100.0f, 70.0f, 800.0f / 600.0f);
+	camera.SetProjectionMatrix(0.01f, 100.0f, 70.0f, (float)windowProperties.width / (float)windowProperties.height);
 
 	
 
@@ -168,6 +177,7 @@ void CG_Implementation::initialise(){
 	RenderPass *barrelPass = renderer->AddRenderPass(&basicShader);
 	barrelPass->SetDrawFunction([mCount]() {glDrawElements(GL_TRIANGLES, mCount, GL_UNSIGNED_INT, 0); });
 	barrelPass->BatchVao = barrelAttributes[0];
+	std::move(barrelAttributes[0]->ModelTextures.begin(), barrelAttributes[0]->ModelTextures.end(), std::back_inserter(barrelPass->Textures));
 	barrelPass->AddBatchUnit(&barrel);
 	barrelPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 
@@ -319,7 +329,7 @@ void CG_Implementation::LoadModels() {
 	glEnableVertexAttribArray(3);
 	auto btaVBO = barrelAttributes[0]->GetVBO(4);
 	btaVBO->BindVBO();
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 	glEnableVertexAttribArray(4);
 	
 }

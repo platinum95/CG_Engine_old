@@ -38,6 +38,9 @@ namespace GL_Engine{
 			const GLuint GetID() const;
 			void BindVAO() const;
 			void Cleanup();
+			void AddVBO(std::unique_ptr<VBO> _VBO) {
+				this->VBOs.push_back(std::move(_VBO));
+			}
 		protected:
 			std::vector<std::unique_ptr<VBO>> VBOs;
 		private:
@@ -56,10 +59,15 @@ namespace GL_Engine{
 				glTexImage2D(this->Target, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, _Data);
 				glGenerateMipmap(this->Target);
 			}
+			Texture(GLuint _Unit, GLenum _Target) {
+				glGenTextures(1, &this->ID);
+				this->Target = _Target;
+				this->Unit = _Unit;
+			}
 
 			void Bind(){
 				glActiveTexture(this->Unit);
-				glBindTexture(GL_TEXTURE_2D, this->ID);
+				glBindTexture(this->Target, this->ID);
 			}
 
 			const GLuint GetID() const { return this->ID; }
@@ -84,10 +92,10 @@ namespace GL_Engine{
 			void AddTexture(std::shared_ptr<Texture> _Texture){
 				this->ModelTextures.push_back(_Texture);
 			}
-
+			std::vector<std::shared_ptr<Texture>> ModelTextures;
 		private:
 			uint64_t VertexCount = 0;
-			std::vector<std::shared_ptr<Texture>> ModelTextures;
+			
 
 		};
 			
@@ -167,8 +175,8 @@ namespace GL_Engine{
 			ModelAttribList LoadScene(const aiScene *_Scene);
 
 			static std::shared_ptr<Texture> LoadTexture(std::string _Path, GLuint _Unit){
-				int width, height;
-				void* data = File_IO::LoadImageFile(_Path, width, height);
+				int width, height, nChannels;
+				void* data = File_IO::LoadImageFile(_Path, width, height, nChannels, true);
 				std::shared_ptr<Texture> newTexture = std::make_shared<Texture>(data, width, height, _Unit, GL_TEXTURE_2D);
 				return newTexture;
 			}

@@ -31,6 +31,12 @@
     <None Include="v.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="skyboxV.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="skyboxF.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="f.glsl">

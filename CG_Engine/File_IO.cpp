@@ -15,10 +15,9 @@ namespace GL_Engine{
 	{
 	}
 
-	void* File_IO::LoadImageFile(std::string _Path, int &width, int &height) {
-		stbi_set_flip_vertically_on_load(true);
-		int nrChannels;
-		void *data = stbi_load(_Path.c_str(), &width, &height, &nrChannels, 0);
+	void* File_IO::LoadImageFile(std::string _Path, int &width, int &height, int &nChannels, bool flip) {
+		stbi_set_flip_vertically_on_load(flip);
+		void *data = stbi_load(_Path.c_str(), &width, &height, &nChannels, 0);
 		return data;
 	}
 

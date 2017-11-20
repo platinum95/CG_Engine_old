@@ -1,10 +1,22 @@
-﻿  CG_Data.cpp
-d:\projects\c++\vs2015\cg_engine\cg_engine\cg_data.h(161): warning C4267: 'argument': conversion from 'size_t' to 'GLuint', possible loss of data
-d:\projects\c++\vs2015\cg_engine\cg_engine\cg_data.cpp(92): warning C4018: '<': signed/unsigned mismatch
-d:\projects\c++\vs2015\cg_engine\cg_engine\cg_data.cpp(94): warning C4018: '<': signed/unsigned mismatch
-d:\projects\c++\vs2015\cg_engine\cg_engine\cg_data.cpp(107): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-d:\projects\c++\vs2015\cg_engine\cg_engine\cg_data.cpp(111): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-d:\projects\c++\vs2015\cg_engine\cg_engine\cg_data.cpp(119): warning C4018: '<': signed/unsigned mismatch
-d:\projects\c++\vs2015\cg_engine\cg_engine\cg_data.cpp(125): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-d:\projects\c++\vs2015\cg_engine\cg_engine\cg_data.cpp(219): warning C4018: '<': signed/unsigned mismatch
-  CG_Engine.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\CG_Engine\../libs/CG_Engined_x64.lib
+﻿  File_IO.cpp
+  Generating Code...
+  Compiling...
+  Shader.cpp
+u:\cg\cg_engine\cg_engine\cg_data.h(169): warning C4267: 'argument': conversion from 'size_t' to 'GLuint', possible loss of data
+  Renderer.cpp
+u:\cg\cg_engine\cg_engine\cg_data.h(169): warning C4267: 'argument': conversion from 'size_t' to 'GLuint', possible loss of data
+  Entity.cpp
+u:\cg\cg_engine\cg_engine\cg_data.h(169): warning C4267: 'argument': conversion from 'size_t' to 'GLuint', possible loss of data
+  Cubemap.cpp
+u:\cg\cg_engine\cg_engine\cg_data.h(169): warning C4267: 'argument': conversion from 'size_t' to 'GLuint', possible loss of data
+  CG_Data.cpp
+u:\cg\cg_engine\cg_engine\cg_data.h(169): warning C4267: 'argument': conversion from 'size_t' to 'GLuint', possible loss of data
+u:\cg\cg_engine\cg_engine\cg_data.cpp(92): warning C4018: '<': signed/unsigned mismatch
+u:\cg\cg_engine\cg_engine\cg_data.cpp(94): warning C4018: '<': signed/unsigned mismatch
+u:\cg\cg_engine\cg_engine\cg_data.cpp(107): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+u:\cg\cg_engine\cg_engine\cg_data.cpp(111): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+u:\cg\cg_engine\cg_engine\cg_data.cpp(119): warning C4018: '<': signed/unsigned mismatch
+u:\cg\cg_engine\cg_engine\cg_data.cpp(125): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
+u:\cg\cg_engine\cg_engine\cg_data.cpp(219): warning C4018: '<': signed/unsigned mismatch
+  Generating Code...
+  CG_Engine.vcxproj -> U:\CG\CG_Engine\CG_Engine\../libs/CG_Engined_x64.lib

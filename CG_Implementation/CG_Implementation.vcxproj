@@ -300,6 +300,8 @@
     <Text Include="f.glsl">
       <FileType>Document</FileType>
     </Text>
+    <None Include="skyboxF.glsl" />
+    <None Include="skyboxV.glsl" />
     <None Include="v.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

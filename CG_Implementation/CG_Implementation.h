@@ -7,10 +7,11 @@
 #include "InputHandler.h"
 #include "Entity.h"
 #include "Renderer.h"
+#include "Cubemap.h"
 
 static GL_Engine::Properties::GLFWproperties windowProperties = {
-	800,			//Width
-	600,			//Height
+	1920,			//Width
+	1080,			//Height
 	"Test Window",	//Title
 	nullptr,
 	nullptr,
@@ -49,7 +50,7 @@ private:
 	void initialise();
 	void LoadModels();
 	void UpdateCameraUBO();
-	Shader basicShader;
+	Shader basicShader, SkyboxShader;
 	CG_Engine engine;
 	std::shared_ptr<CG_Data::VAO> VAO;
 	CG_Data::Uniform *translate_ubo;
@@ -73,5 +74,11 @@ private:
 
 	CameraUBO_Data camera_ubo_data;
 	LightUBO_Data light_ubo_data;
-}; 
+
+	std::string skyboxVLoc = "skyboxV.glsl", skyboxFLoc = "skyboxF.glsl"; 
+	std::vector<std::string> SkyboxTexLoc{ "./assets/skybox/right.png", "./assets/skybox/left.png", "./assets/skybox/top.jpg",
+		"./assets/skybox/bottom.png", "./assets/skybox/back.png", "./assets/skybox/front.png" };
+	std::unique_ptr<Cubemap> Skybox;
+};
+	
 

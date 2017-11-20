@@ -27,6 +27,7 @@ namespace GL_Engine {
 		std::shared_ptr<CG_Data::VAO> BatchVao;
 		std::function<void(RenderPass&, void*)> renderFunction;
 		std::function<void(void)> DrawFunction;
+		std::vector<std::shared_ptr<CG_Data::Texture>> Textures;
 	};
 
 	

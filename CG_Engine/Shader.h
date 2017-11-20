@@ -54,6 +54,8 @@ namespace GL_Engine{
 			}
 		}
 
+		bool Initialised() const { return this->initialised; }
+
 	private:
 		struct ShaderStage {
 			const char* Source;

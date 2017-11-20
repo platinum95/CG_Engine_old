@@ -1,14 +1,25 @@
-﻿Build started 19/11/2017 12:32:16.
+﻿Build started 20/11/2017 14:02:33.
      1>Project "X:\CG\CG_Engine\CG_Engine\CG_Engine.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
-         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /IX:\CG\CG_Engine\libs /Zi /nologo /W3 /WX- /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug_v13\\" /Fd"x64\Debug_v13\vc120.pdb" /Gd /TP /errorReport:prompt CG_Data.cpp Camera.cpp
-         Camera.cpp
+         C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\CL.exe /c /IX:\CG\CG_Engine\libs /Zi /nologo /W3 /WX- /Od /D _DEBUG /D _CONSOLE /D _UNICODE /D UNICODE /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"x64\Debug_v13\\" /Fd"x64\Debug_v13\vc120.pdb" /Gd /TP /errorReport:prompt CG_Data.cpp Entity.cpp File_IO.cpp Renderer.cpp Shader.cpp
+         Shader.cpp
+     1>x:\cg\cg_engine\cg_engine\CG_Data.h(161): warning C4267: 'argument' : conversion from 'size_t' to 'GLuint', possible loss of data
+         File_IO.cpp
          CG_Data.cpp
+     1>x:\cg\cg_engine\cg_engine\CG_Data.h(161): warning C4267: 'argument' : conversion from 'size_t' to 'GLuint', possible loss of data
      1>CG_Data.cpp(92): warning C4018: '<' : signed/unsigned mismatch
      1>CG_Data.cpp(94): warning C4018: '<' : signed/unsigned mismatch
      1>CG_Data.cpp(107): warning C4267: '=' : conversion from 'size_t' to 'int', possible loss of data
      1>CG_Data.cpp(111): warning C4267: '=' : conversion from 'size_t' to 'int', possible loss of data
-     1>CG_Data.cpp(191): warning C4018: '<' : signed/unsigned mismatch
+     1>CG_Data.cpp(119): warning C4018: '<' : signed/unsigned mismatch
+     1>CG_Data.cpp(125): warning C4267: '=' : conversion from 'size_t' to 'int', possible loss of data
+     1>CG_Data.cpp(219): warning C4018: '<' : signed/unsigned mismatch
+         Generating Code...
+         Compiling...
+         Renderer.cpp
+     1>x:\cg\cg_engine\cg_engine\CG_Data.h(161): warning C4267: 'argument' : conversion from 'size_t' to 'GLuint', possible loss of data
+         Entity.cpp
+     1>x:\cg\cg_engine\cg_engine\CG_Data.h(161): warning C4267: 'argument' : conversion from 'size_t' to 'GLuint', possible loss of data
          Generating Code...
        Lib:
          C:\Program Files (x86)\Microsoft Visual Studio 12.0\VC\bin\x86_amd64\Lib.exe /OUT:"../libs13/CG_Engined_x64.lib" /LIBPATH:X:\CG\CG_Engine\libs13 /NOLOGO /MACHINE:X64 x64\Debug_v13\Camera.obj
@@ -25,4 +36,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:05.03
+Time Elapsed 00:00:18.09
