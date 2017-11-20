@@ -8,6 +8,8 @@
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
+#include <map>
+#include "File_IO.h"
 
 namespace GL_Engine{
 	namespace CG_Data{
@@ -43,6 +45,33 @@ namespace GL_Engine{
 			bool initialised{ false };
 		};
 
+		class Texture{
+		public:
+			Texture(void* _Data, GLint width, GLint height, GLuint _Unit, GLenum _Target = GL_TEXTURE_2D) {
+				glGenTextures(1, &this->ID);
+				this->Target = _Target;
+				this->Unit = _Unit;
+				glActiveTexture(this->Unit);
+				glBindTexture(this->Target, this->ID);
+				glTexImage2D(this->Target, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, _Data);
+				glGenerateMipmap(this->Target);
+			}
+
+			void Bind(){
+				glActiveTexture(this->Unit);
+				glBindTexture(GL_TEXTURE_2D, this->ID);
+			}
+
+			const GLuint GetID() const { return this->ID; }
+		protected:
+			GLuint ID;
+			GLenum Target;
+			GLuint Unit;
+		private:
+			
+
+		};
+
 		class ModelAttribute : public VAO {
 		public:
 			ModelAttribute();
@@ -52,9 +81,13 @@ namespace GL_Engine{
 			VBO* GetVBO(int index);
 			int MeshIndex, NormalIndex, TexCoordIndex, IndicesIndex;
 			const uint64_t GetVertexCount() const;
+			void AddTexture(std::shared_ptr<Texture> _Texture){
+				this->ModelTextures.push_back(_Texture);
+			}
 
 		private:
 			uint64_t VertexCount = 0;
+			std::vector<std::shared_ptr<Texture>> ModelTextures;
 
 		};
 			
@@ -114,10 +147,35 @@ namespace GL_Engine{
 		public:
 			const aiScene* LoadModel(std::string &_Path, unsigned int _Flags);
 
+			static std::vector<std::shared_ptr<Texture>> LoadMaterial(const aiMaterial *material, const aiTextureType _Type){
+				std::vector<std::shared_ptr<Texture>> textures;
+				
+				for(unsigned int i = 0; i < material->GetTextureCount(_Type); i++){
+					aiString str;
+					material->GetTexture(_Type, i, &str);
+					std::string std_str = str.C_Str();
+					if(CachedTextures[std_str]){
+						textures.push_back(CachedTextures[std_str]);
+						continue;
+					}
+					const auto texture = LoadTexture(std_str, textures.size());
+					textures.push_back(texture);
+					CachedTextures[std_str] = texture;
+				}
+				return textures;
+			}
 			ModelAttribList LoadScene(const aiScene *_Scene);
+
+			static std::shared_ptr<Texture> LoadTexture(std::string _Path, GLuint _Unit){
+				int width, height;
+				void* data = File_IO::LoadImageFile(_Path, width, height);
+				std::shared_ptr<Texture> newTexture = std::make_shared<Texture>(data, width, height, _Unit, GL_TEXTURE_2D);
+				return newTexture;
+			}
 
 		private:
 			Assimp::Importer aImporter;
+			static std::map <std::string, std::shared_ptr<Texture>> CachedTextures;
 		};
 		
 	}

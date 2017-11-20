@@ -1,6 +1,9 @@
 #include "File_IO.h"
 #include <fstream>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 namespace GL_Engine{
 
 	File_IO::File_IO()
@@ -10,6 +13,13 @@ namespace GL_Engine{
 
 	File_IO::~File_IO()
 	{
+	}
+
+	void* File_IO::LoadImageFile(std::string _Path, int &width, int &height) {
+		stbi_set_flip_vertically_on_load(true);
+		int nrChannels;
+		void *data = stbi_load(_Path.c_str(), &width, &height, &nrChannels, 0);
+		return data;
 	}
 
 

@@ -64,6 +64,10 @@ namespace GL_Engine{
 		for (auto &ubo : UBO_BlockIndices) {
 			ubo.second.BlockIndex = glGetUniformBlockIndex(this->ShaderID, ubo.first.c_str());
 		}
+		glUseProgram(this->ShaderID);
+		for(auto tex : TextureLocations){
+			glUniform1i(glGetUniformLocation(this->ShaderID, tex.first.c_str()), tex.second);
+		}
 		//UBOs.clear();
 		
 

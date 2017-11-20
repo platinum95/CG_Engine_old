@@ -1,10 +1,2 @@
-﻿  CG_Implementation.cpp
-u:\cg\cg_engine\cg_implementation\cg_implementation.cpp(33): warning C4305: '+=': truncation from 'double' to 'float'
-u:\cg\cg_engine\cg_implementation\cg_implementation.cpp(36): warning C4305: '-=': truncation from 'double' to 'float'
-u:\cg\cg_engine\cg_implementation\cg_implementation.cpp(39): warning C4305: '+=': truncation from 'double' to 'float'
-u:\cg\cg_engine\cg_implementation\cg_implementation.cpp(42): warning C4305: '-=': truncation from 'double' to 'float'
-u:\cg\cg_engine\cg_implementation\cg_implementation.cpp(68): warning C4244: 'initializing': conversion from '__int64' to 'float', possible loss of data
-u:\cg\cg_engine\cg_implementation\cg_implementation.cpp(153): warning C4244: 'argument': conversion from 'const uint64_t' to 'GLsizei', possible loss of data
-u:\cg\cg_engine\cg_implementation\cg_implementation.cpp(156): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
-  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.exe
-  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)
+﻿  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Debug\CG_Implementation.exe
+  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)

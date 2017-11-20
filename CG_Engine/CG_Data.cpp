@@ -111,11 +111,37 @@ namespace GL_Engine{
 				NormalIndex = this->VBOs.size() - 1;
 				glEnableVertexAttribArray(1);
 			}
-	//		if (mesh->HasTextureCoords()) {
-	//			std::unique_ptr<VBO> texCoordVBO = std::make_unique<VBO>(new VBO(&mesh->mTextureCoords[0], mesh->mNumVertices * sizeof(aiVector3D), GL_STATIC_DRAW));
-	//			this->VBOs.push_back(texCoordVBO);
-	//			TexCoordIndex = this->VBOs.size() - 1;
-	//		}
+			int i = 0;
+			while(mesh->mTextureCoords[i]){
+				std::vector<float> texCoords;
+				texCoords.reserve(mesh->mNumVertices * sizeof(float) * 2);
+
+				for(int j = 0; j < mesh->mNumVertices; j++){
+					texCoords.push_back(mesh->mTextureCoords[i][j].x);
+					texCoords.push_back(mesh->mTextureCoords[i][j].y);
+				}
+				std::unique_ptr<VBO> texCoordVBO = std::make_unique<VBO>(&texCoords[0], sizeof(float) * texCoords.size() , GL_STATIC_DRAW);
+				this->VBOs.push_back(std::move(texCoordVBO));
+				TexCoordIndex = this->VBOs.size() - 1;
+				i++;
+			}
+			if(mesh->HasTangentsAndBitangents()){
+				std::unique_ptr<VBO> tangeantVBO = std::make_unique<VBO>(mesh->mTangents, mesh->mNumVertices * sizeof(aiVector3D), GL_STATIC_DRAW);
+				std::unique_ptr<VBO> bitangeantVBO = std::make_unique<VBO>(mesh->mBitangents, mesh->mNumVertices * sizeof(aiVector3D), GL_STATIC_DRAW);
+				this->VBOs.push_back(std::move(tangeantVBO));
+				this->VBOs.push_back(std::move(bitangeantVBO));
+				glEnableVertexAttribArray(3);
+				glEnableVertexAttribArray(4);
+			}
+			if(mesh->mMaterialIndex != -1){
+				aiMaterial *material = _Scene->mMaterials[mesh->mMaterialIndex];
+				std::vector<std::shared_ptr<Texture>> diffuseMaps = ModelLoader::LoadMaterial(material,
+					aiTextureType_DIFFUSE);
+				std::move(diffuseMaps.begin(), diffuseMaps.end(), std::back_inserter(this->ModelTextures));
+				std::vector<std::shared_ptr<Texture>> specularMaps = ModelLoader::LoadMaterial(material,
+					aiTextureType_SPECULAR);
+				std::move(specularMaps.begin(), specularMaps.end(), std::back_inserter(this->ModelTextures));
+			}
 		}
 
 		VBO* ModelAttribute::GetVBO(int index) {
@@ -173,6 +199,8 @@ namespace GL_Engine{
 		GLuint UBO::UBO_Count = 0;
 
 #pragma region ModelLoader
+
+		std::map <std::string, std::shared_ptr<Texture>> ModelLoader::CachedTextures;
 
 		const aiScene* ModelLoader::LoadModel(std::string &_Path, unsigned int _Flags) {
 			const aiScene* scene = aImporter.ReadFile(_Path, _Flags);

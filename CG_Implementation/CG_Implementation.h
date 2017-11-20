@@ -64,9 +64,12 @@ private:
 	std::unique_ptr<Renderer> renderer;
 //	std::unique_ptr<Hierarchy> hierarchy;
 
-	CG_Data::ModelAttribList monkeyAttributes;
-	Entity suzanne;
+	CG_Data::ModelAttribList monkeyAttributes, barrelAttributes;
+	Entity suzanne, barrel;
 	std::string suzanne_loc = "assets/models/suzanne.dae";
+	std::string barrel_loc = "assets/models/barrel.obj";
+	std::string barrel_diff_loc = "assets/models/textures/barrel.png";
+	std::string barrel_normal_loc = "assets/models/textures/barrelNormal.png";
 
 	CameraUBO_Data camera_ubo_data;
 	LightUBO_Data light_ubo_data;

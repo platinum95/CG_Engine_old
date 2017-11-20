@@ -30,16 +30,16 @@ void CubeKeyEvent(GLuint Key, void* Parameter) {
 	switch (Key) {
 	
 	case GLFW_KEY_LEFT :
-		data->LightColour[1] += .1;
+		data->LightPosition[1] += .1;
 		break;
 	case GLFW_KEY_RIGHT:
-		data->LightColour[1] -= .1;
+		data->LightPosition[1] -= .1;
 		break;
 	case GLFW_KEY_UP:
-		data->LightColour[0] += .1;
+		data->LightPosition[0] += .1;
 		break;
 	case GLFW_KEY_DOWN:
-		data->LightColour[0] -= .1;
+		data->LightPosition[0] -= .1;
 		break;
 
 
@@ -73,10 +73,10 @@ int CG_Implementation::run(){
 
 		renderer->Render();
 
-		suzanne.GetTransformMatrix();
+		barrel.GetTransformMatrix();
 
 
-	//	std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		std::this_thread::sleep_for(std::chrono::milliseconds(3));
 		//Swap buffers
 		glfwSwapBuffers(windowProperties.window);
 		glfwPollEvents();
@@ -94,7 +94,7 @@ void CG_Implementation::UpdateCameraUBO() {
 	memcpy(camera_ubo_data.CameraOrientation, glm::value_ptr(glm::vec4(camera.GetForwardVector(), 0.0)), sizeof(float) * 4);
 	memcpy(camera_ubo_data.CameraPosition, glm::value_ptr(camera.GetCameraPosition()), sizeof(float) * 4);
 	
-	memcpy(light_ubo_data.LightPosition, glm::value_ptr(camera.GetCameraPosition()), sizeof(float) * 4);
+//	memcpy(light_ubo_data.LightPosition, glm::value_ptr(camera.GetCameraPosition()), sizeof(float) * 4);
 //	memcpy(light_ubo_data.LightPosition, glm::value_ptr(glm::vec4(0, 50, -50, 1.0)), sizeof(float) * 4);
 	//memcpy(light_ubo_data.LightColour, glm::value_ptr(glm::vec3(1, 1, 1)), sizeof(float) * 3);
 	light_ubo_data.LightBrightness = 1;
@@ -102,6 +102,8 @@ void CG_Implementation::UpdateCameraUBO() {
 
 void CG_Implementation::initialise(){
 	
+	memcpy(light_ubo_data.LightPosition, glm::value_ptr(glm::vec4(0, 20, -20, 1.0)), sizeof(float) * 4);
+
 	//Initialise window and Glad
 	if (!engine.CG_CreateWindow(&windowProperties)){
 		throw std::runtime_error("Error initialising GLFW!");
@@ -124,7 +126,12 @@ void CG_Implementation::initialise(){
 	basicShader.RegisterShaderStageFromFile(vertexLoc, GL_VERTEX_SHADER);
 	basicShader.RegisterShaderStageFromFile(fragLoc, GL_FRAGMENT_SHADER);
 	basicShader.RegisterAttribute("vPosition", 0);
-	basicShader.RegisterAttribute("fColor", 1);
+	basicShader.RegisterAttribute("vNormal", 1);
+	basicShader.RegisterAttribute("TexCoord", 2);
+	basicShader.RegisterAttribute("vTangeant", 3);
+	basicShader.RegisterAttribute("vBiangeant", 4);
+	basicShader.RegisterTextureUnit("diffuseTexture", 0);
+	basicShader.RegisterTextureUnit("normalTexture", 1);
 	basicShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
 	basicShader.RegisterUBO(std::string("LightData"), light_ubo);
 	translate_ubo = basicShader.RegisterUniform("model");
@@ -149,11 +156,21 @@ void CG_Implementation::initialise(){
 
 	auto mCount = monkeyAttributes[0]->GetVertexCount();
 	suzanne.YawBy(180);
-	RenderPass *suzannePass = renderer->AddRenderPass(&basicShader);
-	suzannePass->SetDrawFunction([mCount]() {glDrawElements(GL_TRIANGLES, mCount, GL_UNSIGNED_INT, 0); });
-	suzannePass->BatchVao = monkeyAttributes[0];
-	suzannePass->AddBatchUnit(&suzanne);
-	suzannePass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+//	RenderPass *suzannePass = renderer->AddRenderPass(&basicShader);
+//	suzannePass->SetDrawFunction([mCount]() {glDrawElements(GL_TRIANGLES, mCount, GL_UNSIGNED_INT, 0); });
+//	suzannePass->BatchVao = monkeyAttributes[0];
+//	suzannePass->AddBatchUnit(&suzanne);
+//	suzannePass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+
+	nodeModelIndex = barrel.AddData((void*)glm::value_ptr(barrel.TransformMatrix));
+	barrel.SetPosition(glm::vec3(0, 0, 0));
+	mCount = barrelAttributes[0]->GetVertexCount();
+	RenderPass *barrelPass = renderer->AddRenderPass(&basicShader);
+	barrelPass->SetDrawFunction([mCount]() {glDrawElements(GL_TRIANGLES, mCount, GL_UNSIGNED_INT, 0); });
+	barrelPass->BatchVao = barrelAttributes[0];
+	barrelPass->AddBatchUnit(&barrel);
+	barrelPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+
 	glEnable(GL_DEPTH_TEST);
 
 	
@@ -271,6 +288,39 @@ void CG_Implementation::LoadModels() {
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 	glEnableVertexAttribArray(1);
 
+
+	const aiScene *barrel = mLoader.LoadModel(barrel_loc, aiProcess_CalcTangentSpace |
+		aiProcess_Triangulate |
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_SortByPType |
+		aiProcess_GenSmoothNormals);
+
+	aiMesh *b = barrel->mMeshes[0];
+	barrelAttributes = mLoader.LoadScene(barrel);
+	barrelAttributes[0]->AddTexture(mLoader.LoadTexture(barrel_diff_loc, GL_TEXTURE0));
+	barrelAttributes[0]->AddTexture(mLoader.LoadTexture(barrel_normal_loc, GL_TEXTURE1));
+
+	barrelAttributes[0]->BindVAO();
+	mVBO = barrelAttributes[0]->GetVBO(barrelAttributes[0]->MeshIndex);
+	mVBO->BindVBO();
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(0);
+	nVBO = barrelAttributes[0]->GetVBO(barrelAttributes[0]->NormalIndex);
+	nVBO->BindVBO();
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(1);
+	auto tVBO = barrelAttributes[0]->GetVBO(barrelAttributes[0]->TexCoordIndex);
+	tVBO->BindVBO();
+	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(2);
+	auto taVBO = barrelAttributes[0]->GetVBO(3);
+	taVBO->BindVBO();
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(3);
+	auto btaVBO = barrelAttributes[0]->GetVBO(4);
+	btaVBO->BindVBO();
+	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(4);
 	
 }
 

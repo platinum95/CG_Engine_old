@@ -26,6 +26,11 @@ namespace GL_Engine{
 		//Register a shader attribute, to be bound at _Location
 		void RegisterAttribute(const char* _AttributeName, GLuint _Location);
 
+		//Register a shader attribute, to be bound at _Location
+		void RegisterTextureUnit(std::string _AttributeName, GLuint _Location){
+			this->TextureLocations[_AttributeName] = _Location;
+		}
+
 		//Activate the program
 		void UseShader() const;
 
@@ -71,6 +76,7 @@ namespace GL_Engine{
 		std::vector<Attribute*> Attributes;
 		std::vector<UniformStruct*> Uniforms;
 		std::map<std::string, UBO_Struct> UBO_BlockIndices;
+		std::map<std::string, GLuint> TextureLocations;
 
 		GLuint ShaderID;
 		bool initialised{ false };
