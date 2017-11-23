@@ -30,16 +30,16 @@ void CubeKeyEvent(GLuint Key, void* Parameter) {
 	switch (Key) {
 	
 	case GLFW_KEY_LEFT :
-		data->LightPosition[1] += .1;
+		data->LightPosition[1] += 0.1f;
 		break;
 	case GLFW_KEY_RIGHT:
-		data->LightPosition[1] -= .1;
+		data->LightPosition[1] -= 0.1f;
 		break;
 	case GLFW_KEY_UP:
-		data->LightPosition[0] += .1;
+		data->LightPosition[0] += 0.1f;
 		break;
 	case GLFW_KEY_DOWN:
-		data->LightPosition[0] -= .1;
+		data->LightPosition[0] -= 0.1f;
 		break;
 
 
@@ -65,8 +65,8 @@ int CG_Implementation::run(){
 
 		auto diff = now - prev;
 		auto tim = std::chrono::duration_cast<std::chrono::nanoseconds>(diff).count();
-		float f = tim;
-		f /= 1000000000;
+		double f = (double)tim;
+		f /= 1000000000.0;
 //		std::cout << 1.0/f << std::endl;
 //		std::cout << nodes[4].GlobalMatrix[3][0] << std::endl;
 		prev = std::chrono::high_resolution_clock::now();
@@ -74,7 +74,8 @@ int CG_Implementation::run(){
 		renderer->Render();
 
 		barrel.GetTransformMatrix();
-
+		kitchen.GetTransformMatrix();
+		nanosuit.GetTransformMatrix();
 
 		std::this_thread::sleep_for(std::chrono::milliseconds(3));
 		//Swap buffers
@@ -94,7 +95,7 @@ void CG_Implementation::UpdateCameraUBO() {
 	memcpy(camera_ubo_data.CameraOrientation, glm::value_ptr(glm::vec4(camera.GetForwardVector(), 0.0)), sizeof(float) * 4);
 	memcpy(camera_ubo_data.CameraPosition, glm::value_ptr(camera.GetCameraPosition()), sizeof(float) * 4);
 	
-	memcpy(light_ubo_data.LightPosition, glm::value_ptr(camera.GetCameraPosition()), sizeof(float) * 4);
+//	memcpy(light_ubo_data.LightPosition, glm::value_ptr(camera.GetCameraPosition()), sizeof(float) * 4);
 //	memcpy(light_ubo_data.LightPosition, glm::value_ptr(glm::vec4(0, 50, -50, 1.0)), sizeof(float) * 4);
 	//memcpy(light_ubo_data.LightColour, glm::value_ptr(glm::vec3(1, 1, 1)), sizeof(float) * 3);
 	light_ubo_data.LightBrightness = 1;
@@ -137,6 +138,31 @@ void CG_Implementation::initialise(){
 	translate_ubo = basicShader.RegisterUniform("model");
 	basicShader.CompileShader();
 
+	nanosuitShader.RegisterShaderStageFromFile(nanosuitVShader.c_str(), GL_VERTEX_SHADER);
+	nanosuitShader.RegisterShaderStageFromFile(nanosuitFShader.c_str(), GL_FRAGMENT_SHADER);
+	nanosuitShader.RegisterAttribute("vPosition", 0);
+	nanosuitShader.RegisterAttribute("vNormal", 1);
+	nanosuitShader.RegisterAttribute("TexCoord", 2);
+	nanosuitShader.RegisterAttribute("vTangeant", 3);
+	nanosuitShader.RegisterAttribute("vBitangeant", 4);
+	nanosuitShader.RegisterTextureUnit("diffuseTexture", 0);
+	nanosuitShader.RegisterTextureUnit("normalTexture", 1);
+	nanosuitShader.RegisterTextureUnit("specularTexture", 2);
+	nanosuitShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
+	nanosuitShader.RegisterUBO(std::string("LightData"), light_ubo);
+	translate_ubo = nanosuitShader.RegisterUniform("model");
+	nanosuitShader.CompileShader();
+
+	kitchenShader.RegisterShaderStageFromFile(kitchenVLoc.c_str(), GL_VERTEX_SHADER);
+	kitchenShader.RegisterShaderStageFromFile(kitchenFLoc.c_str(), GL_FRAGMENT_SHADER);
+	kitchenShader.RegisterAttribute("vPosition", 0);
+	kitchenShader.RegisterAttribute("vNormal", 1);
+	SkyboxShader.RegisterTextureUnit("diffuseTexture", 0);
+	kitchenShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
+	kitchenShader.RegisterUBO(std::string("LightData"), light_ubo);
+	translate_ubo = kitchenShader.RegisterUniform("model");
+	kitchenShader.CompileShader();
+
 	SkyboxShader.RegisterShaderStageFromFile(skyboxVLoc.c_str(), GL_VERTEX_SHADER);
 	SkyboxShader.RegisterShaderStageFromFile(skyboxFLoc.c_str(), GL_FRAGMENT_SHADER);
 	SkyboxShader.RegisterAttribute("vPosition", 1);
@@ -149,7 +175,7 @@ void CG_Implementation::initialise(){
 	LoadModels();
 	
 	//Initialise camera
-	camera.SetCameraPosition(glm::vec4(0, 0, -80, 1.0));
+	camera.SetCameraPosition(glm::vec4(0, 10, -3, 1.0));
 	camera.SetProjectionMatrix(0.01f, 100.0f, 70.0f, (float)windowProperties.width / (float)windowProperties.height);
 
 	
@@ -161,26 +187,46 @@ void CG_Implementation::initialise(){
 
 	const auto width = windowProperties.width, height = windowProperties.height;
 
-	auto nodeModelIndex = suzanne.AddData((void*)glm::value_ptr(suzanne.TransformMatrix));
 
-	auto mCount = monkeyAttributes[0]->GetVertexCount();
-	suzanne.YawBy(180);
-//	RenderPass *suzannePass = renderer->AddRenderPass(&basicShader);
-//	suzannePass->SetDrawFunction([mCount]() {glDrawElements(GL_TRIANGLES, mCount, GL_UNSIGNED_INT, 0); });
-//	suzannePass->BatchVao = monkeyAttributes[0];
-//	suzannePass->AddBatchUnit(&suzanne);
-//	suzannePass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
-
-	nodeModelIndex = barrel.AddData((void*)glm::value_ptr(barrel.TransformMatrix));
+	GLsizei bCount;
+	auto nodeModelIndex = barrel.AddData((void*)glm::value_ptr(barrel.TransformMatrix));
 	barrel.SetPosition(glm::vec3(0, 0, 0));
-	mCount = barrelAttributes[0]->GetVertexCount();
+	bCount = (GLsizei)barrelAttributes[0]->GetVertexCount();
 	RenderPass *barrelPass = renderer->AddRenderPass(&basicShader);
-	barrelPass->SetDrawFunction([mCount]() {glDrawElements(GL_TRIANGLES, mCount, GL_UNSIGNED_INT, 0); });
+	barrelPass->SetDrawFunction([bCount]() {glDrawElements(GL_TRIANGLES, bCount, GL_UNSIGNED_INT, 0); });
 	barrelPass->BatchVao = barrelAttributes[0];
 	std::move(barrelAttributes[0]->ModelTextures.begin(), barrelAttributes[0]->ModelTextures.end(), std::back_inserter(barrelPass->Textures));
 	barrelPass->AddBatchUnit(&barrel);
 	barrelPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+	barrel.Translate(glm::vec3(3, 4,8));
 
+	nodeModelIndex = kitchen.AddData((void*)glm::value_ptr(kitchen.TransformMatrix));
+	kitchen.SetPosition(glm::vec3(0, 0, 0));
+	for (auto &a : kitchenAttributes) {
+		GLsizei kCount = (GLsizei)a->GetVertexCount();
+		RenderPass *kitchenPass = renderer->AddRenderPass(&kitchenShader);
+		kitchenPass->SetDrawFunction([kCount]() {glDrawElements(GL_TRIANGLES, kCount, GL_UNSIGNED_INT, 0); });
+		kitchenPass->BatchVao = a;
+		std::move(a->ModelTextures.begin(), a->ModelTextures.end(), std::back_inserter(kitchenPass->Textures));
+		kitchenPass->AddBatchUnit(&kitchen);
+		kitchenPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+	}
+	kitchen.ScaleBy(glm::vec3(0.3, 0.3, 0.3));
+	kitchen.Translate(glm::vec3(0, -2, 0));
+
+	nodeModelIndex = nanosuit.AddData((void*)glm::value_ptr(nanosuit.TransformMatrix));
+	nanosuit.SetPosition(glm::vec3(0, 0, 0));
+	for (auto &a : nanosuitAttributes) {
+		GLsizei nCount = (GLsizei)a->GetVertexCount();
+		RenderPass *nanosuitPass = renderer->AddRenderPass(&nanosuitShader);
+		nanosuitPass->SetDrawFunction([nCount]() {glDrawElements(GL_TRIANGLES, nCount, GL_UNSIGNED_INT, 0); });
+		nanosuitPass->BatchVao = a;
+		std::move(a->ModelTextures.begin(), a->ModelTextures.end(), std::back_inserter(nanosuitPass->Textures));
+		nanosuitPass->AddBatchUnit(&nanosuit);
+		nanosuitPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+	}
+	//kitchen.ScaleBy(glm::vec3(0.3, 0.3, 0.3));
+	//kitchen.Translate(glm::vec3(0, -2, 0));
 	glEnable(GL_DEPTH_TEST);
 
 	
@@ -276,46 +322,22 @@ void CG_Implementation::initialise(){
 }
 
 void CG_Implementation::LoadModels() {
-	const aiScene *monkeyScene = mLoader.LoadModel(suzanne_loc,	aiProcess_CalcTangentSpace |
-																aiProcess_Triangulate |
-																aiProcess_JoinIdenticalVertices |
-																aiProcess_SortByPType |
-																aiProcess_GenSmoothNormals);
-	
-	aiMesh *m = monkeyScene->mMeshes[0];
 
-	suzanne.SetPosition(glm::vec3(0, 0, 0));
-	suzanne.SetScale(glm::vec3(30, 30, 30));
-	monkeyAttributes = mLoader.LoadScene(monkeyScene);
-
-	monkeyAttributes[0]->BindVAO();
-	auto mVBO = monkeyAttributes[0]->GetVBO(monkeyAttributes[0]->MeshIndex);
-	mVBO->BindVBO();
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glEnableVertexAttribArray(0);
-	auto nVBO = monkeyAttributes[0]->GetVBO(monkeyAttributes[0]->NormalIndex);
-	nVBO->BindVBO();
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glEnableVertexAttribArray(1);
-
-
-	const aiScene *barrel = mLoader.LoadModel(barrel_loc, aiProcess_CalcTangentSpace |
+	barrelAttributes = mLoader.LoadModel(barrel_base, barrel_model, aiProcess_CalcTangentSpace |
 		aiProcess_Triangulate |
 		aiProcess_JoinIdenticalVertices |
 		aiProcess_SortByPType |
 		aiProcess_GenSmoothNormals);
 
-	aiMesh *b = barrel->mMeshes[0];
-	barrelAttributes = mLoader.LoadScene(barrel);
-	barrelAttributes[0]->AddTexture(mLoader.LoadTexture(barrel_diff_loc, GL_TEXTURE0));
-	barrelAttributes[0]->AddTexture(mLoader.LoadTexture(barrel_normal_loc, GL_TEXTURE1));
+	barrelAttributes[0]->AddTexture(mLoader.LoadTexture(barrel_diff_name, GL_TEXTURE0));
+	barrelAttributes[0]->AddTexture(mLoader.LoadTexture(barrel_normal_name, GL_TEXTURE1));
 
 	barrelAttributes[0]->BindVAO();
-	mVBO = barrelAttributes[0]->GetVBO(barrelAttributes[0]->MeshIndex);
+	auto mVBO = barrelAttributes[0]->GetVBO(barrelAttributes[0]->MeshIndex);
 	mVBO->BindVBO();
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 	glEnableVertexAttribArray(0);
-	nVBO = barrelAttributes[0]->GetVBO(barrelAttributes[0]->NormalIndex);
+	auto nVBO = barrelAttributes[0]->GetVBO(barrelAttributes[0]->NormalIndex);
 	nVBO->BindVBO();
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 	glEnableVertexAttribArray(1);
@@ -331,12 +353,71 @@ void CG_Implementation::LoadModels() {
 	btaVBO->BindVBO();
 	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
 	glEnableVertexAttribArray(4);
+
+
+	kitchenAttributes = mLoader.LoadModel(kitchen_base, kitchen_model, aiProcess_CalcTangentSpace |
+		aiProcess_Triangulate |
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_SortByPType |
+		aiProcess_GenSmoothNormals);
+
+		for (auto a : kitchenAttributes) {
+			a->BindVAO();
+			mVBO = a->GetVBO(a->MeshIndex);
+			mVBO->BindVBO();
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+			glEnableVertexAttribArray(0);
+			nVBO = a->GetVBO(a->NormalIndex);
+			nVBO->BindVBO();
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+			glEnableVertexAttribArray(1);
+			auto tVBO = a->GetVBO(a->TexCoordIndex);
+			tVBO->BindVBO();
+			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+			glEnableVertexAttribArray(2);
+			auto taVBO = a->GetVBO(3);
+			taVBO->BindVBO();
+			glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+			glEnableVertexAttribArray(3);
+			auto btaVBO = a->GetVBO(4);
+			btaVBO->BindVBO();
+			glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+			glEnableVertexAttribArray(4);
+		}
+
+		nanosuitAttributes = mLoader.LoadModel(nanosuit_base, nanosuit_model, aiProcess_CalcTangentSpace |
+			aiProcess_Triangulate |
+			aiProcess_JoinIdenticalVertices |
+			aiProcess_SortByPType |
+			aiProcess_GenSmoothNormals);
+		for (auto a : nanosuitAttributes) {
+			a->BindVAO();
+			mVBO = a->GetVBO(a->MeshIndex);
+			mVBO->BindVBO();
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+			glEnableVertexAttribArray(0);
+			nVBO = a->GetVBO(a->NormalIndex);
+			nVBO->BindVBO();
+			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+			glEnableVertexAttribArray(1);
+			auto tVBO = a->GetVBO(a->TexCoordIndex);
+			tVBO->BindVBO();
+			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+			glEnableVertexAttribArray(2);
+			auto taVBO = a->GetVBO(3);
+			taVBO->BindVBO();
+			glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+			glEnableVertexAttribArray(3);
+			auto btaVBO = a->GetVBO(4);
+			btaVBO->BindVBO();
+			glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+			glEnableVertexAttribArray(4);
+		}
 	
 }
 
 //Cleanup
 CG_Implementation::~CG_Implementation(){
-	monkeyAttributes[0]->Cleanup();
 	glfwTerminate();
 }
 

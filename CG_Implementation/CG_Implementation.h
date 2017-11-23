@@ -10,8 +10,8 @@
 #include "Cubemap.h"
 
 static GL_Engine::Properties::GLFWproperties windowProperties = {
-	1920,			//Width
-	1080,			//Height
+	1280,			//Width
+	720,			//Height
 	"Test Window",	//Title
 	nullptr,
 	nullptr,
@@ -50,7 +50,7 @@ private:
 	void initialise();
 	void LoadModels();
 	void UpdateCameraUBO();
-	Shader basicShader, SkyboxShader;
+	Shader basicShader, SkyboxShader, kitchenShader, nanosuitShader;
 	CG_Engine engine;
 	std::shared_ptr<CG_Data::VAO> VAO;
 	CG_Data::Uniform *translate_ubo;
@@ -65,17 +65,27 @@ private:
 	std::unique_ptr<Renderer> renderer;
 //	std::unique_ptr<Hierarchy> hierarchy;
 
-	CG_Data::ModelAttribList monkeyAttributes, barrelAttributes;
-	Entity suzanne, barrel;
-	std::string suzanne_loc = "assets/models/suzanne.dae";
-	std::string barrel_loc = "assets/models/barrel.obj";
-	std::string barrel_diff_loc = "assets/models/textures/barrel.png";
-	std::string barrel_normal_loc = "assets/models/textures/barrelNormal.png";
+
+	CG_Data::ModelAttribList barrelAttributes, kitchenAttributes, nanosuitAttributes;
+	Entity barrel, kitchen, nanosuit;
+	std::string AssetBase = "./assets/";
+	std::string ModelBase = AssetBase + "models/";
+
+	std::string barrel_base = ModelBase + "barrel/";
+	std::string barrel_model = "barrel.obj";
+	std::string barrel_diff_name = barrel_base + "textures/barrel.png";
+	std::string barrel_normal_name = barrel_base + "textures/barrelNormal.png";
+	std::string kitchen_base = "assets/models/kitchen/";
+	std::string kitchen_model = "kitchen.obj";
+	std::string nanosuit_base = ModelBase + "nanosuit/";
+	std::string nanosuit_model = "nanosuit.obj";
 
 	CameraUBO_Data camera_ubo_data;
 	LightUBO_Data light_ubo_data;
 
 	std::string skyboxVLoc = "skyboxV.glsl", skyboxFLoc = "skyboxF.glsl"; 
+	std::string kitchenVLoc = "kitchenV.glsl", kitchenFLoc = "kitchenF.glsl";
+	std::string nanosuitVShader = "nanosuitV.glsl", nanosuitFShader = "nanosuitF.glsl";
 	std::vector<std::string> SkyboxTexLoc{ "./assets/skybox/right.png", "./assets/skybox/left.png", "./assets/skybox/top.jpg",
 		"./assets/skybox/bottom.png", "./assets/skybox/back.png", "./assets/skybox/front.png" };
 	std::unique_ptr<Cubemap> Skybox;

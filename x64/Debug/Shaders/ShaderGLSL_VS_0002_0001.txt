@@ -1,6 +1,5 @@
 #version 330
 
-
 layout (std140) uniform CameraProjectionData
 { 
   mat4 ViewMatrix;

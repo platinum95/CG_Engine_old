@@ -84,17 +84,18 @@ namespace GL_Engine{
 		ModelAttribute::~ModelAttribute(){
 			
 		}
-		ModelAttribute::ModelAttribute(const aiScene *_Scene, unsigned int index) {
+		ModelAttribute::ModelAttribute(const aiScene *_Scene, unsigned int index, std::string& _PathBase) {
 			this->BindVAO();
 			MeshIndex = TexCoordIndex = NormalIndex = IndicesIndex = -1;
 			auto mesh = _Scene->mMeshes[index];
 			std::vector<unsigned int> indices;
-			for (int i = 0; i < mesh->mNumFaces; i++) {
+			for (unsigned int i = 0; i < mesh->mNumFaces; i++) {
 				aiFace face = mesh->mFaces[i];
-				for (int j = 0; j < face.mNumIndices; j++) {
+				for (unsigned int j = 0; j < face.mNumIndices; j++) {
 					indices.push_back(face.mIndices[j]);
 				}
 			}
+			
 			std::unique_ptr<VBO> indexVBO = std::make_unique<VBO>(&indices[0], indices.size() * sizeof(unsigned int), GL_STATIC_DRAW, GL_ELEMENT_ARRAY_BUFFER);
 			this->VBOs.push_back(std::move(indexVBO));
 			this->IndicesIndex = 0;
@@ -104,11 +105,11 @@ namespace GL_Engine{
 			std::unique_ptr<VBO> meshVBO = std::make_unique<VBO>(mesh->mVertices, mesh->mNumVertices * sizeof(aiVector3D), GL_STATIC_DRAW);
 			this->VBOs.push_back(std::move(meshVBO));
 			glEnableVertexAttribArray(0);
-			MeshIndex = this->VBOs.size() - 1;
+			MeshIndex = (int) this->VBOs.size() - 1;
 			if (mesh->HasNormals()) {
 				std::unique_ptr<VBO> normalVBO = std::make_unique<VBO>(mesh->mNormals, mesh->mNumVertices * sizeof(aiVector3D), GL_STATIC_DRAW);
 				this->VBOs.push_back(std::move(normalVBO));
-				NormalIndex = this->VBOs.size() - 1;
+				NormalIndex = (int) this->VBOs.size() - 1;
 				glEnableVertexAttribArray(1);
 			}
 			int i = 0;
@@ -116,13 +117,13 @@ namespace GL_Engine{
 				std::vector<float> texCoords;
 				texCoords.reserve(mesh->mNumVertices * sizeof(float) * 2);
 
-				for(int j = 0; j < mesh->mNumVertices; j++){
+				for(unsigned int j = 0; j < mesh->mNumVertices; j++){
 					texCoords.push_back(mesh->mTextureCoords[i][j].x);
 					texCoords.push_back(mesh->mTextureCoords[i][j].y);
 				}
 				std::unique_ptr<VBO> texCoordVBO = std::make_unique<VBO>(&texCoords[0], sizeof(float) * texCoords.size() , GL_STATIC_DRAW);
 				this->VBOs.push_back(std::move(texCoordVBO));
-				TexCoordIndex = this->VBOs.size() - 1;
+				TexCoordIndex = (int) this->VBOs.size() - 1;
 				i++;
 			}
 			if(mesh->HasTangentsAndBitangents()){
@@ -135,12 +136,15 @@ namespace GL_Engine{
 			}
 			if(mesh->mMaterialIndex != -1){
 				aiMaterial *material = _Scene->mMaterials[mesh->mMaterialIndex];
-				std::vector<std::shared_ptr<Texture>> diffuseMaps = ModelLoader::LoadMaterial(material,
-					aiTextureType_DIFFUSE);
-				std::move(diffuseMaps.begin(), diffuseMaps.end(), std::back_inserter(this->ModelTextures));
-				std::vector<std::shared_ptr<Texture>> specularMaps = ModelLoader::LoadMaterial(material,
-					aiTextureType_SPECULAR);
-				std::move(specularMaps.begin(), specularMaps.end(), std::back_inserter(this->ModelTextures));
+				ModelLoader::LoadMaterial(material,
+					aiTextureType_DIFFUSE, _PathBase, this->ModelTextures);
+				ModelLoader::LoadMaterial(material,
+					aiTextureType_NORMALS, _PathBase, this->ModelTextures);
+				ModelLoader::LoadMaterial(material,
+					aiTextureType_HEIGHT, _PathBase, this->ModelTextures);
+				ModelLoader::LoadMaterial(material,
+					aiTextureType_SPECULAR, _PathBase, this->ModelTextures);
+
 			}
 		}
 
@@ -202,23 +206,19 @@ namespace GL_Engine{
 
 		std::map <std::string, std::shared_ptr<Texture>> ModelLoader::CachedTextures;
 
-		const aiScene* ModelLoader::LoadModel(std::string &_Path, unsigned int _Flags) {
-			const aiScene* scene = aImporter.ReadFile(_Path, _Flags);
-			if (!scene) {
-				throw std::runtime_error("Error loading model " + _Path + "\n" + aImporter.GetErrorString() + "\n");
+		ModelAttribList ModelLoader::LoadModel(std::string &_PathBase, std::string&_ModelFile, unsigned int _Flags) {
+			const aiScene* _Scene = aImporter.ReadFile(_PathBase + _ModelFile, _Flags);
+			if (!_Scene) {
+				throw std::runtime_error("Error loading model " + _PathBase + _ModelFile + "\n" + aImporter.GetErrorString() + "\n");
 			}
 
-			return scene;
-		}
-
-		ModelAttribList ModelLoader::LoadScene(const aiScene *_Scene) {
 			auto numMeshes = _Scene->mNumMeshes;
 			ModelAttribList attributes;
 			attributes.reserve(numMeshes);
 
-			for (auto i = 0; i < _Scene->mNumMeshes; i++) {
+			for (unsigned int i = 0; i < _Scene->mNumMeshes; i++) {
 				auto m = _Scene->mMeshes[i];
-				std::shared_ptr<ModelAttribute> newAttrib = std::make_shared<ModelAttribute>(_Scene, i);
+				std::shared_ptr<ModelAttribute> newAttrib = std::make_shared<ModelAttribute>(_Scene, i, _PathBase);
 				attributes.push_back(std::move(newAttrib));
 			}
 

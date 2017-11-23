@@ -50,13 +50,15 @@ namespace GL_Engine{
 
 		class Texture{
 		public:
-			Texture(void* _Data, GLint width, GLint height, GLuint _Unit, GLenum _Target = GL_TEXTURE_2D) {
+			Texture(void* _Data, GLint width, GLint height, GLuint _Unit, GLuint _ImageFormat, GLenum _Target = GL_TEXTURE_2D) {
 				glGenTextures(1, &this->ID);
 				this->Target = _Target;
 				this->Unit = _Unit;
 				glActiveTexture(this->Unit);
 				glBindTexture(this->Target, this->ID);
-				glTexImage2D(this->Target, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, _Data);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+				glTexImage2D(this->Target, 0, GL_RGB, width, height, 0, _ImageFormat, GL_UNSIGNED_BYTE, _Data);
 				glGenerateMipmap(this->Target);
 			}
 			Texture(GLuint _Unit, GLenum _Target) {
@@ -84,7 +86,7 @@ namespace GL_Engine{
 		public:
 			ModelAttribute();
 			~ModelAttribute();
-			ModelAttribute(const aiScene *_Scene, unsigned int index);
+			ModelAttribute(const aiScene *_Scene, unsigned int index, std::string &_PathBase);
 
 			VBO* GetVBO(int index);
 			int MeshIndex, NormalIndex, TexCoordIndex, IndicesIndex;
@@ -153,31 +155,37 @@ namespace GL_Engine{
 		using ModelAttribList = std::vector<std::shared_ptr<ModelAttribute>>;
 		class ModelLoader {
 		public:
-			const aiScene* LoadModel(std::string &_Path, unsigned int _Flags);
+			
+			ModelAttribList LoadModel(std::string &_PathBase, std::string&_ModelFile, unsigned int _Flags);
 
-			static std::vector<std::shared_ptr<Texture>> LoadMaterial(const aiMaterial *material, const aiTextureType _Type){
-				std::vector<std::shared_ptr<Texture>> textures;
+			static std::vector<std::shared_ptr<Texture>> LoadMaterial(const aiMaterial *material, const aiTextureType _Type, std::string &_PathBase,
+																		std::vector<std::shared_ptr<Texture>> &_Textures){
 				
+
 				for(unsigned int i = 0; i < material->GetTextureCount(_Type); i++){
 					aiString str;
 					material->GetTexture(_Type, i, &str);
-					std::string std_str = str.C_Str();
+					std::string std_str = std::string(str.C_Str());
+					if (std_str.size() == 0)
+						continue;
+					std_str = _PathBase + std_str;
 					if(CachedTextures[std_str]){
-						textures.push_back(CachedTextures[std_str]);
+						_Textures.push_back(CachedTextures[std_str]);
 						continue;
 					}
-					const auto texture = LoadTexture(std_str, textures.size());
-					textures.push_back(texture);
+					const auto texture = LoadTexture(std_str, GL_TEXTURE0 + (GLuint)_Textures.size());
+					_Textures.push_back(texture);
 					CachedTextures[std_str] = texture;
 				}
-				return textures;
+				return _Textures;
 			}
-			ModelAttribList LoadScene(const aiScene *_Scene);
+			
 
-			static std::shared_ptr<Texture> LoadTexture(std::string _Path, GLuint _Unit){
+			static std::shared_ptr<Texture> LoadTexture(std::string& _Path, GLuint _Unit){
 				int width, height, nChannels;
 				void* data = File_IO::LoadImageFile(_Path, width, height, nChannels, true);
-				std::shared_ptr<Texture> newTexture = std::make_shared<Texture>(data, width, height, _Unit, GL_TEXTURE_2D);
+				GLint format = nChannels == 3 ? GL_RGB : GL_RGBA;
+				std::shared_ptr<Texture> newTexture = std::make_shared<Texture>(data, width, height, _Unit, format, GL_TEXTURE_2D);
 				return newTexture;
 			}
 

@@ -1,20 +1,2 @@
-﻿  Camera.cpp
-  CG_Data.cpp
-d:\projects\c++\vs2015\cg_engine\cg_engine\CG_Data.h(158): warning C4267: 'argument': conversion from 'size_t' to 'GLuint', possible loss of data
-CG_Data.cpp(92): warning C4018: '<': signed/unsigned mismatch
-CG_Data.cpp(94): warning C4018: '<': signed/unsigned mismatch
-CG_Data.cpp(107): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-CG_Data.cpp(111): warning C4267: '=': conversion from 'size_t' to 'int', possible loss of data
-CG_Data.cpp(119): warning C4018: '<': signed/unsigned mismatch
-CG_Data.cpp(209): warning C4018: '<': signed/unsigned mismatch
-  CG_Engine.cpp
-  Entity.cpp
-d:\projects\c++\vs2015\cg_engine\cg_engine\CG_Data.h(158): warning C4267: 'argument': conversion from 'size_t' to 'GLuint', possible loss of data
-  File_IO.cpp
-  InputHandler.cpp
-  Renderer.cpp
-d:\projects\c++\vs2015\cg_engine\cg_engine\CG_Data.h(158): warning C4267: 'argument': conversion from 'size_t' to 'GLuint', possible loss of data
-  Shader.cpp
-d:\projects\c++\vs2015\cg_engine\cg_engine\CG_Data.h(158): warning C4267: 'argument': conversion from 'size_t' to 'GLuint', possible loss of data
-  glad.c
-  CG_Engine.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\CG_Engine\../libs/CG_Engine_x64.lib
+﻿  CG_Data.cpp
+  CG_Engine.vcxproj -> X:\CG\CG_Engine\CG_Engine\../libs/CG_Engine_x64.lib

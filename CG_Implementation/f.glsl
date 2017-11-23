@@ -26,17 +26,26 @@ void main(){
     float ambientStrength = 0.1;
     vec3 ambient = ambientStrength * LightColour; 
 
-	vec3 normal2 = texture(normalTexture, fs_in.TexCoords).rgb;
-	normal2 = normalize(normal2 * 2.0 - 1.0);   
-	normal2 = normalize(fs_in.TBN * normal2); 
+	//Diffuse
+	vec3 norm = texture(normalTexture, fs_in.TexCoords).rgb;
+	norm = normalize(norm * 2.0 - 1.0);   
+	norm = normalize(fs_in.TBN * norm); 
 
-	vec3 norm = normal2;
 	vec3 lightDir = vec3(normalize(LightPosition_Viewspace.xyz - Pos_ViewSpace));
 	float diff = max(dot(norm, lightDir), 0.0);
 	vec3 diffuse = diff * LightColour;
-
 	diffuse = diffuse * Brightness;
-	vec3 result = (ambient + diffuse) * texture(diffuseTexture, fs_in.TexCoords).xyz;
+
+	//Specular
+	vec3 CamDir = normalize(vec3(0,0,0) - Pos_ViewSpace);
+	vec3 ReflectDir = reflect(-lightDir, norm);
+	float SpecAmount = pow(max(dot(CamDir, ReflectDir), 0.0), 16);
+	vec3 SpecularComponent = 0.99 * SpecAmount * LightColour;  
+
+
+
+	//Output
+	vec3 result = (ambient + diffuse + SpecularComponent) * texture(diffuseTexture, fs_in.TexCoords).xyz;
 	FragColour = vec4(result, 1.0);
 
 }

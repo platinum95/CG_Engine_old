@@ -1,2 +1,9 @@
-﻿  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.exe
-  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)
+﻿  CG_Implementation.cpp
+x:\cg\cg_engine\cg_implementation\cg_implementation.cpp(185): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
+x:\cg\cg_engine\cg_implementation\cg_implementation.cpp(197): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
+x:\cg\cg_engine\cg_implementation\cg_implementation.cpp(211): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
+  Generating Code...
+  Skipping... (no relevant changes detected)
+  main.cpp
+  CG_Implementation.vcxproj -> X:\CG\CG_Engine\x64\Debug\CG_Implementation.exe
+  CG_Implementation.vcxproj -> X:\CG\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)

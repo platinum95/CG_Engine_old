@@ -37,6 +37,18 @@
     <None Include="skyboxF.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="kitchenV.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="kitchenF.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="nanosuitV.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="nanosuitF.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="f.glsl">
