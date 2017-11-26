@@ -4,6 +4,25 @@
 
 #include <thread>
 
+float guiVertices[]{
+	-0.8, 0.8, -1.0,
+	-0.8, 0.2, -1.0,
+	-0.2, 0.2, -1.0,
+	-0.2, 0.8, -1.0
+};
+
+float guiTexCoords[]{
+	0.0, 0.0,
+	0.0, 1.0,
+	1.0, 1.0,
+	1.0, 0.0
+};
+
+unsigned int guiIndices[]{
+	0, 1, 3,
+	1, 2, 3
+};
+
 using namespace GL_Engine;
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
@@ -71,13 +90,23 @@ int CG_Implementation::run(){
 //		std::cout << nodes[4].GlobalMatrix[3][0] << std::endl;
 		prev = std::chrono::high_resolution_clock::now();
 
+		testFBO->Bind();
+		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		renderer->Render();
+
+		testFBO->Unbind();
+		renderer->Render();
+
+
+
+		guiRenderer->Render();
 
 		barrel.GetTransformMatrix();
 		kitchen.GetTransformMatrix();
 		nanosuit.GetTransformMatrix();
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(3));
+	//	std::this_thread::sleep_for(std::chrono::milliseconds(3));
 		//Swap buffers
 		glfwSwapBuffers(windowProperties.window);
 		glfwPollEvents();
@@ -120,15 +149,22 @@ void CG_Implementation::initialise(){
 	CG_Data::UBO *light_ubo = new CG_Data::UBO((void*)&light_ubo_data, sizeof(light_ubo_data));
 	memcpy(light_ubo_data.LightColour, glm::value_ptr(glm::vec3(1, 1, 1)), sizeof(float) * 3);
 
+	testFBO = std::make_unique<CG_Data::FBO>();
+	auto attachment = testFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
+	testFBO->AddAttachment(CG_Data::FBO::AttachmentType::DepthAttachment, windowProperties.width, windowProperties.height);
+	CG_Data::FBO::AttachmentBufferObject *abo = attachment.get();
+	tex = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(attachment)->GetTexture();
+
 	renderer = std::make_unique<Renderer>();
+	guiRenderer = std::make_unique<Renderer>();
 	renderer->AddUBO(com_ubo);
 	renderer->AddUBO(light_ubo);
 	//Set up shader using a Shader object
 	basicShader.RegisterShaderStageFromFile(vertexLoc, GL_VERTEX_SHADER);
 	basicShader.RegisterShaderStageFromFile(fragLoc, GL_FRAGMENT_SHADER);
 	basicShader.RegisterAttribute("vPosition", 0);
-	basicShader.RegisterAttribute("vNormal", 1);
-	basicShader.RegisterAttribute("TexCoord", 2);
+	basicShader.RegisterAttribute("vNormal", 2);
+	basicShader.RegisterAttribute("TexCoord", 1);
 	basicShader.RegisterAttribute("vTangeant", 3);
 	basicShader.RegisterAttribute("vBitangeant", 4);
 	basicShader.RegisterTextureUnit("diffuseTexture", 0);
@@ -141,8 +177,8 @@ void CG_Implementation::initialise(){
 	nanosuitShader.RegisterShaderStageFromFile(nanosuitVShader.c_str(), GL_VERTEX_SHADER);
 	nanosuitShader.RegisterShaderStageFromFile(nanosuitFShader.c_str(), GL_FRAGMENT_SHADER);
 	nanosuitShader.RegisterAttribute("vPosition", 0);
-	nanosuitShader.RegisterAttribute("vNormal", 1);
-	nanosuitShader.RegisterAttribute("TexCoord", 2);
+	nanosuitShader.RegisterAttribute("vNormal", 2);
+	nanosuitShader.RegisterAttribute("TexCoord", 1);
 	nanosuitShader.RegisterAttribute("vTangeant", 3);
 	nanosuitShader.RegisterAttribute("vBitangeant", 4);
 	nanosuitShader.RegisterTextureUnit("diffuseTexture", 0);
@@ -156,8 +192,9 @@ void CG_Implementation::initialise(){
 	kitchenShader.RegisterShaderStageFromFile(kitchenVLoc.c_str(), GL_VERTEX_SHADER);
 	kitchenShader.RegisterShaderStageFromFile(kitchenFLoc.c_str(), GL_FRAGMENT_SHADER);
 	kitchenShader.RegisterAttribute("vPosition", 0);
-	kitchenShader.RegisterAttribute("vNormal", 1);
-	SkyboxShader.RegisterTextureUnit("diffuseTexture", 0);
+	kitchenShader.RegisterAttribute("TexCoord", 1);
+	kitchenShader.RegisterAttribute("vNormal", 2);
+	kitchenShader.RegisterTextureUnit("diffuseTexture", 0);
 	kitchenShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
 	kitchenShader.RegisterUBO(std::string("LightData"), light_ubo);
 	translate_ubo = kitchenShader.RegisterUniform("model");
@@ -171,6 +208,13 @@ void CG_Implementation::initialise(){
 	SkyboxShader.CompileShader();
 	int loc = glGetAttribLocation(SkyboxShader.GetShaderID(), "vPosition");
 	Skybox = std::make_unique<Cubemap>(SkyboxTexLoc, &SkyboxShader, renderer.get());
+
+	guiShader.RegisterShaderStageFromFile(guiVLoc.c_str(), GL_VERTEX_SHADER);
+	guiShader.RegisterShaderStageFromFile(guiFLoc.c_str(), GL_FRAGMENT_SHADER);
+	guiShader.RegisterAttribute("vPosition", 0);
+	guiShader.RegisterAttribute("TexCoord", 1);
+	guiShader.RegisterTextureUnit("image", 0);
+	guiShader.CompileShader();
 
 	LoadModels();
 	
@@ -225,8 +269,27 @@ void CG_Implementation::initialise(){
 		nanosuitPass->AddBatchUnit(&nanosuit);
 		nanosuitPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
-	//kitchen.ScaleBy(glm::vec3(0.3, 0.3, 0.3));
-	//kitchen.Translate(glm::vec3(0, -2, 0));
+
+	guiVAO = std::make_shared<CG_Data::VAO>();
+	guiVAO->BindVAO();
+	auto vertexVBO = std::make_unique<CG_Data::VBO>(&guiVertices[0], 12 * sizeof(float), GL_STATIC_DRAW);
+	auto texcoordVBO = std::make_unique<CG_Data::VBO>(&guiTexCoords[0], 8 * sizeof(float), GL_STATIC_DRAW);
+	auto indices = std::make_unique<CG_Data::VBO>(&guiIndices[0], 6 * sizeof(unsigned int), GL_STATIC_DRAW, GL_ELEMENT_ARRAY_BUFFER);
+	vertexVBO->BindVBO();
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(0);
+	texcoordVBO->BindVBO();
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(1);
+	guiVAO->AddVBO(std::move(vertexVBO));
+	guiVAO->AddVBO(std::move(texcoordVBO));
+	guiVAO->AddVBO(std::move(indices));
+	auto guiRenderPass = guiRenderer->AddRenderPass(&guiShader);
+	guiRenderPass->SetDrawFunction([]() {glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); });
+	guiRenderPass->Textures.push_back(tex);// barrelPass->Textures[0]);
+	guiRenderPass->BatchVao = guiVAO;
+	guiRenderPass->AddBatchUnit(&gui);
+
 	glEnable(GL_DEPTH_TEST);
 
 	
@@ -332,27 +395,7 @@ void CG_Implementation::LoadModels() {
 	barrelAttributes[0]->AddTexture(mLoader.LoadTexture(barrel_diff_name, GL_TEXTURE0));
 	barrelAttributes[0]->AddTexture(mLoader.LoadTexture(barrel_normal_name, GL_TEXTURE1));
 
-	barrelAttributes[0]->BindVAO();
-	auto mVBO = barrelAttributes[0]->GetVBO(barrelAttributes[0]->MeshIndex);
-	mVBO->BindVBO();
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glEnableVertexAttribArray(0);
-	auto nVBO = barrelAttributes[0]->GetVBO(barrelAttributes[0]->NormalIndex);
-	nVBO->BindVBO();
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glEnableVertexAttribArray(1);
-	auto tVBO = barrelAttributes[0]->GetVBO(barrelAttributes[0]->TexCoordIndex);
-	tVBO->BindVBO();
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glEnableVertexAttribArray(2);
-	auto taVBO = barrelAttributes[0]->GetVBO(3);
-	taVBO->BindVBO();
-	glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glEnableVertexAttribArray(3);
-	auto btaVBO = barrelAttributes[0]->GetVBO(4);
-	btaVBO->BindVBO();
-	glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glEnableVertexAttribArray(4);
+
 
 
 	kitchenAttributes = mLoader.LoadModel(kitchen_base, kitchen_model, aiProcess_CalcTangentSpace |
@@ -361,59 +404,14 @@ void CG_Implementation::LoadModels() {
 		aiProcess_SortByPType |
 		aiProcess_GenSmoothNormals);
 
-		for (auto a : kitchenAttributes) {
-			a->BindVAO();
-			mVBO = a->GetVBO(a->MeshIndex);
-			mVBO->BindVBO();
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-			glEnableVertexAttribArray(0);
-			nVBO = a->GetVBO(a->NormalIndex);
-			nVBO->BindVBO();
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-			glEnableVertexAttribArray(1);
-			auto tVBO = a->GetVBO(a->TexCoordIndex);
-			tVBO->BindVBO();
-			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-			glEnableVertexAttribArray(2);
-			auto taVBO = a->GetVBO(3);
-			taVBO->BindVBO();
-			glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-			glEnableVertexAttribArray(3);
-			auto btaVBO = a->GetVBO(4);
-			btaVBO->BindVBO();
-			glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-			glEnableVertexAttribArray(4);
-		}
+
 
 		nanosuitAttributes = mLoader.LoadModel(nanosuit_base, nanosuit_model, aiProcess_CalcTangentSpace |
 			aiProcess_Triangulate |
 			aiProcess_JoinIdenticalVertices |
 			aiProcess_SortByPType |
 			aiProcess_GenSmoothNormals);
-		for (auto a : nanosuitAttributes) {
-			a->BindVAO();
-			mVBO = a->GetVBO(a->MeshIndex);
-			mVBO->BindVBO();
-			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-			glEnableVertexAttribArray(0);
-			nVBO = a->GetVBO(a->NormalIndex);
-			nVBO->BindVBO();
-			glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-			glEnableVertexAttribArray(1);
-			auto tVBO = a->GetVBO(a->TexCoordIndex);
-			tVBO->BindVBO();
-			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-			glEnableVertexAttribArray(2);
-			auto taVBO = a->GetVBO(3);
-			taVBO->BindVBO();
-			glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-			glEnableVertexAttribArray(3);
-			auto btaVBO = a->GetVBO(4);
-			btaVBO->BindVBO();
-			glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-			glEnableVertexAttribArray(4);
-		}
-	
+
 }
 
 //Cleanup

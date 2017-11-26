@@ -1,8 +1,9 @@
 ﻿  CG_Data.cpp
   Generating Code...
-  Skipping... (no relevant changes detected)
+  Compiling...
   Shader.cpp
   Renderer.cpp
   Entity.cpp
   Cubemap.cpp
-  CG_Engine.vcxproj -> X:\CG\CG_Engine\CG_Engine\../libs/CG_Engined_x64.lib
+  Generating Code...
+  CG_Engine.vcxproj -> C:\Projects\college\CG_Engine\CG_Engine\../libs/CG_Engined_x64.lib

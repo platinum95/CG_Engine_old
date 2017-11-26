@@ -50,24 +50,25 @@ private:
 	void initialise();
 	void LoadModels();
 	void UpdateCameraUBO();
-	Shader basicShader, SkyboxShader, kitchenShader, nanosuitShader;
+	Shader basicShader, SkyboxShader, kitchenShader, nanosuitShader, guiShader;
 	CG_Engine engine;
-	std::shared_ptr<CG_Data::VAO> VAO;
+	std::shared_ptr<CG_Data::VAO> VAO, guiVAO;
 	CG_Data::Uniform *translate_ubo;
 	Camera camera;
 	KeyHandler keyHandler;
 	float time{0};
 	CG_Data::ModelLoader mLoader;
+	std::unique_ptr<CG_Data::FBO> testFBO;
 
 //	Hierarchy::HNode nodes[5];
 
 //	Entity entityList[5];
-	std::unique_ptr<Renderer> renderer;
+	std::unique_ptr<Renderer> renderer, guiRenderer;
 //	std::unique_ptr<Hierarchy> hierarchy;
 
 
 	CG_Data::ModelAttribList barrelAttributes, kitchenAttributes, nanosuitAttributes;
-	Entity barrel, kitchen, nanosuit;
+	Entity barrel, kitchen, nanosuit, gui;
 	std::string AssetBase = "./assets/";
 	std::string ModelBase = AssetBase + "models/";
 
@@ -83,12 +84,17 @@ private:
 	CameraUBO_Data camera_ubo_data;
 	LightUBO_Data light_ubo_data;
 
-	std::string skyboxVLoc = "skyboxV.glsl", skyboxFLoc = "skyboxF.glsl"; 
+	std::string skyboxVLoc = "skyboxV.glsl", skyboxFLoc = "skyboxF.glsl";
+	std::string guiVLoc = "guiV.glsl", guiFLoc = "guiF.glsl";
 	std::string kitchenVLoc = "kitchenV.glsl", kitchenFLoc = "kitchenF.glsl";
 	std::string nanosuitVShader = "nanosuitV.glsl", nanosuitFShader = "nanosuitF.glsl";
 	std::vector<std::string> SkyboxTexLoc{ "./assets/skybox/right.png", "./assets/skybox/left.png", "./assets/skybox/top.jpg",
 		"./assets/skybox/bottom.png", "./assets/skybox/back.png", "./assets/skybox/front.png" };
 	std::unique_ptr<Cubemap> Skybox;
+
+	std::shared_ptr<CG_Data::Texture> tex;
+
+
 };
 	
 

@@ -85,6 +85,11 @@ namespace GL_Engine{
 			
 		}
 		ModelAttribute::ModelAttribute(const aiScene *_Scene, unsigned int index, std::string& _PathBase) {
+			//0 - Vertices
+			//1 - Texture coords
+			//2 - Normals
+			//3 - Tangents
+			//4 - Bitangents
 			this->BindVAO();
 			MeshIndex = TexCoordIndex = NormalIndex = IndicesIndex = -1;
 			auto mesh = _Scene->mMeshes[index];
@@ -100,20 +105,24 @@ namespace GL_Engine{
 			this->VBOs.push_back(std::move(indexVBO));
 			this->IndicesIndex = 0;
 			this->VertexCount = indices.size();
-			glEnableVertexAttribArray(2);
 
 			std::unique_ptr<VBO> meshVBO = std::make_unique<VBO>(mesh->mVertices, mesh->mNumVertices * sizeof(aiVector3D), GL_STATIC_DRAW);
-			this->VBOs.push_back(std::move(meshVBO));
+			meshVBO->BindVBO();
+			glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 			glEnableVertexAttribArray(0);
+			this->VBOs.push_back(std::move(meshVBO));
 			MeshIndex = (int) this->VBOs.size() - 1;
+
 			if (mesh->HasNormals()) {
 				std::unique_ptr<VBO> normalVBO = std::make_unique<VBO>(mesh->mNormals, mesh->mNumVertices * sizeof(aiVector3D), GL_STATIC_DRAW);
+				normalVBO->BindVBO();
+				glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+				glEnableVertexAttribArray(2);
 				this->VBOs.push_back(std::move(normalVBO));
 				NormalIndex = (int) this->VBOs.size() - 1;
-				glEnableVertexAttribArray(1);
 			}
 			int i = 0;
-			while(mesh->mTextureCoords[i]){
+			while(i==0){//mesh->mTextureCoords[i]){
 				std::vector<float> texCoords;
 				texCoords.reserve(mesh->mNumVertices * sizeof(float) * 2);
 
@@ -122,6 +131,9 @@ namespace GL_Engine{
 					texCoords.push_back(mesh->mTextureCoords[i][j].y);
 				}
 				std::unique_ptr<VBO> texCoordVBO = std::make_unique<VBO>(&texCoords[0], sizeof(float) * texCoords.size() , GL_STATIC_DRAW);
+				texCoordVBO->BindVBO();
+				glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+				glEnableVertexAttribArray(1);
 				this->VBOs.push_back(std::move(texCoordVBO));
 				TexCoordIndex = (int) this->VBOs.size() - 1;
 				i++;
@@ -129,10 +141,15 @@ namespace GL_Engine{
 			if(mesh->HasTangentsAndBitangents()){
 				std::unique_ptr<VBO> tangeantVBO = std::make_unique<VBO>(mesh->mTangents, mesh->mNumVertices * sizeof(aiVector3D), GL_STATIC_DRAW);
 				std::unique_ptr<VBO> bitangeantVBO = std::make_unique<VBO>(mesh->mBitangents, mesh->mNumVertices * sizeof(aiVector3D), GL_STATIC_DRAW);
+				tangeantVBO->BindVBO();
+				glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+				glEnableVertexAttribArray(3);
+				bitangeantVBO->BindVBO();
+				glVertexAttribPointer(4, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+				glEnableVertexAttribArray(4);
+				
 				this->VBOs.push_back(std::move(tangeantVBO));
 				this->VBOs.push_back(std::move(bitangeantVBO));
-				glEnableVertexAttribArray(3);
-				glEnableVertexAttribArray(4);
 			}
 			if(mesh->mMaterialIndex != -1){
 				aiMaterial *material = _Scene->mMaterials[mesh->mMaterialIndex];

@@ -1,2 +1,8 @@
-﻿  CG_Data.cpp
-  CG_Engine.vcxproj -> X:\CG\CG_Engine\CG_Engine\../libs/CG_Engine_x64.lib
+﻿  File_IO.cpp
+c:\projects\college\cg_engine\cg_engine\stb_image_write.h(233): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.15063.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
+c:\projects\college\cg_engine\cg_engine\stb_image_write.h(639): warning C4996: 'sprintf': This function or variable may be unsafe. Consider using sprintf_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.15063.0\ucrt\stdio.h(1772): note: see declaration of 'sprintf'
+c:\projects\college\cg_engine\cg_engine\stb_image_write.h(1025): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  C:\Program Files (x86)\Windows Kits\10\Include\10.0.15063.0\ucrt\stdio.h(207): note: see declaration of 'fopen'
+  CG_Engine.vcxproj -> C:\Projects\college\CG_Engine\CG_Engine\../libs/CG_Engine_x64.lib

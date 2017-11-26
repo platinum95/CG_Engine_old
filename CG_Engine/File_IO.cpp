@@ -2,7 +2,9 @@
 #include <fstream>
 
 #define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_WRITE_IMPLEMENTATION
 #include "stb_image.h"
+#include "stb_image_write.h"
 
 namespace GL_Engine{
 
@@ -13,6 +15,9 @@ namespace GL_Engine{
 
 	File_IO::~File_IO()
 	{
+	}
+	void File_IO::SaveImageFile(std::string _Path, int width, int height, int comp, void* data) {
+		stbi_write_bmp(_Path.c_str(), width, height, comp, data);
 	}
 
 	void* File_IO::LoadImageFile(std::string _Path, int &width, int &height, int &nChannels, bool flip) {

@@ -49,6 +49,12 @@
     <None Include="nanosuitF.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="guiV.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="guiF.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="f.glsl">

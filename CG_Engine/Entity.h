@@ -51,6 +51,10 @@ namespace GL_Engine {
 			return eData[index];
 		}
 
+		bool isActive() const { return Active; }
+		void Activate() { Active = true; }
+		void Deactivate() { Active = false; }
+
 		const std::vector<void*> GeteDataList() const { return this->eData; };
 
 		void UpdateUniforms() const;
@@ -62,7 +66,7 @@ namespace GL_Engine {
 		glm::vec3 Scale{ 1, 1, 1 };
 		glm::quat Orientation;
 		std::vector<CG_Data::Uniform*> EntityUniforms;
-		
+		bool Active{ true };
 		std::vector<void*> eData;
 		void UpdateMatrix();
 		bool MatrixNeedsUpdating{ true };

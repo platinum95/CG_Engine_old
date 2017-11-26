@@ -56,7 +56,7 @@ void Renderer::DefaultRenderer(RenderPass& _Pass, void* _Data) {
 		tex->Bind();
 	}
 	for (auto&& batch : _Pass.batchUnits) {
-		if (batch->active) {
+		if (batch->active && batch->entity->isActive()) {
 			for (auto l : _Pass.dataLink) {
 				l.uniform->SetData(batch->entity->GetData(l.eDataIndex));
 				l.uniform->Update();

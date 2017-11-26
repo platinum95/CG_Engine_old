@@ -300,6 +300,8 @@
     <Text Include="f.glsl">
       <FileType>Document</FileType>
     </Text>
+    <None Include="guiF.glsl" />
+    <None Include="guiV.glsl" />
     <None Include="kitchenF.glsl" />
     <None Include="kitchenV.glsl" />
     <None Include="nanosuitF.glsl" />

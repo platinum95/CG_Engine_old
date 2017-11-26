@@ -1,10 +1,6 @@
 
 //== PROGRAM LINK STATUS = TRUE
 //== PROGRAM VALIDATE STATUS = TRUE
-/*== INFO LOG ==
-Validation warning! - Sampler value normalTexture has not been set.
-Validation successful.
-  == INFO LOG END ==*/
 
 //======================================================
 //   Vertex Shader 2 
@@ -111,6 +107,6 @@ void main(){
 
 	//Output
 	vec3 result = (ambient + diffuse + SpecularComponent) * texture(diffuseTexture, fs_in.TexCoords).xyz;
-	FragColour = texture(normalTexture, fs_in.TexCoords);//vec4(result, 1.0);
+	FragColour = vec4(result, 1.0);
 
 }

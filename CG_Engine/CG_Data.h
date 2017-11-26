@@ -193,6 +193,120 @@ namespace GL_Engine{
 			Assimp::Importer aImporter;
 			static std::map <std::string, std::shared_ptr<Texture>> CachedTextures;
 		};
+
+
+		class FBO {
+		public:
+			class AttachmentBufferObject {
+			public:
+				GLuint ID;
+				virtual void Bind() const = 0;
+
+			};
+			class RenderbufferObject : public AttachmentBufferObject {
+			public:
+				RenderbufferObject(uint16_t _Width, uint16_t _Height, GLenum _Type) {
+					glGenRenderbuffers(1, &this->ID);
+					glBindRenderbuffer(GL_RENDERBUFFER, this->ID);
+					glRenderbufferStorage(GL_RENDERBUFFER, _Type, _Width, _Height);
+
+				}
+				void Bind() const {
+
+				}
+			};
+			class TexturebufferObject : public AttachmentBufferObject {
+			public:
+				TexturebufferObject(uint16_t _Width, uint16_t _Height) {
+					TextureObject = std::make_shared<Texture>(nullptr, _Width, _Height, GL_TEXTURE0, GL_RGB, GL_TEXTURE_2D);
+					this->ID = TextureObject->GetID();
+				}
+				void Bind() const {
+
+				}
+				const std::shared_ptr<Texture> GetTexture() const { return this->TextureObject; }
+			private:
+				std::shared_ptr<Texture> TextureObject;
+			};
+
+			enum AttachmentType {
+				TextureAttachment, StencilAttachment, DepthAttachment
+			};
+
+			FBO() {
+				glGenFramebuffers(1, &this->ID);
+				Initialised = true;
+			}
+			~FBO() {
+				if (Initialised) {
+					this->CleanUp();
+					Initialised = false;
+				}
+			}
+			void CleanUp() {
+				if (Initialised) {
+					glDeleteFramebuffers(1, &this->ID);
+					Initialised = false;
+				}
+			}
+			std::shared_ptr<AttachmentBufferObject> AddAttachment(AttachmentType _Attachment, uint16_t _Width, uint16_t _Height) {
+				glBindFramebuffer(GL_FRAMEBUFFER, this->ID);
+				glDrawBuffer(GL_COLOR_ATTACHMENT0);
+				switch (_Attachment) {
+				case TextureAttachment:{
+					std::shared_ptr<TexturebufferObject> TexObj = std::make_shared<TexturebufferObject>(_Width, _Height);
+					//glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + TextureAttachmentCount++, GL_TEXTURE_2D, TexObj->ID, 0);
+					glFramebufferTexture(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, TexObj->ID, 0);
+					this->Attachments.push_back(std::move(TexObj));
+					break;
+					}
+				case StencilAttachment: {
+					std::shared_ptr<RenderbufferObject> rbo = std::make_shared<RenderbufferObject>(_Width, _Height, GL_STENCIL_INDEX8);
+					glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo->ID);
+					this->Attachments.push_back(std::move(rbo));
+					break;
+					}
+				case DepthAttachment: {
+					std::shared_ptr<RenderbufferObject> rbo = std::make_shared<RenderbufferObject>(_Width, _Height, GL_DEPTH_COMPONENT32);
+					glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo->ID);
+					this->Attachments.push_back(std::move(rbo));
+					break;
+					}
+				}
+				if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
+					this->complete = true;
+				}
+				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+				std::shared_ptr<AttachmentBufferObject> abo = Attachments.back();
+				return abo;
+				
+			}
+			void Bind() const {
+				if (!this->complete)
+					throw std::runtime_error("Attempting to bind incomplete framebuffer!\n");
+				glBindTexture(GL_TEXTURE_2D, 0);
+				glBindFramebuffer(GL_FRAMEBUFFER, this->ID);
+				glDrawBuffer(GL_COLOR_ATTACHMENT0);
+				glViewport(0, 0, 1280, 720);
+			}
+			const GLuint GetID() const {
+				return this->ID;
+			}
+			void Unbind() const {
+				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+			}
+			
+
+		protected:
+			GLuint ID;
+			
+		private:
+			bool Initialised{ false }, complete{ false };
+			uint8_t TextureAttachmentCount{ 0 };
+			//attachments below classes
+			
+			std::vector<std::shared_ptr<AttachmentBufferObject>> Attachments;
+		};
 		
 	}
 }

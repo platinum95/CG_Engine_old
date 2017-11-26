@@ -1,11 +1,13 @@
 ﻿  CG_Implementation.cpp
-CG_Implementation.cpp(200): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
-CG_Implementation.cpp(212): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
-CG_Implementation.cpp(226): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
+CG_Implementation.cpp(12): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
+CG_Implementation.cpp(12): warning C4305: 'initializing': truncation from 'double' to 'float'
+CG_Implementation.cpp(245): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
+CG_Implementation.cpp(257): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
+CG_Implementation.cpp(271): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
   Generating code
-  7 of 2670 functions ( 0.3%) were compiled, the rest were copied from previous compilation.
+  29 of 2815 functions ( 1.0%) were compiled, the rest were copied from previous compilation.
     0 functions were new in current compilation
-    0 functions had inline decision re-evaluated but remain unchanged
+    7 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
-  CG_Implementation.vcxproj -> X:\CG\CG_Engine\x64\Release\CG_Implementation.exe
-  CG_Implementation.vcxproj -> X:\CG\CG_Engine\x64\Release\CG_Implementation.pdb (Full PDB)
+  CG_Implementation.vcxproj -> C:\Projects\college\CG_Engine\x64\Release\CG_Implementation.exe
+  CG_Implementation.vcxproj -> C:\Projects\college\CG_Engine\x64\Release\CG_Implementation.pdb (Full PDB)
