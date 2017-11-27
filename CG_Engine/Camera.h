@@ -14,10 +14,15 @@ namespace GL_Engine {
 		void			 SetProjectionMatrix(glm::mat4 &_Projection);
 		const glm::vec4 &SetCameraPosition(const glm::vec4 &_Position);
 		const glm::vec4 &TranslateCamera(const glm::vec4 &_Translation);
+		const glm::quat &SetOrientation();
 
 		const glm::mat4 &GetViewMatrix();
 		const glm::mat4 &GetProjectionMatrix() const;
 		const glm::vec4 &GetCameraPosition() const;
+		const glm::quat &GetOrientation() const;
+
+		void ReflectCamera();
+		
 
 		const glm::vec3 &GetForwardVector() const;
 		

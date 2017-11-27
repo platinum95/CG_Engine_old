@@ -55,6 +55,12 @@
     <None Include="guiF.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="waterV.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="waterF.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="f.glsl">

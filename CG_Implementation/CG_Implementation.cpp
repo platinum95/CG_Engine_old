@@ -23,6 +23,18 @@ unsigned int guiIndices[]{
 	1, 2, 3
 };
 
+
+float waterPlaneVert[]{
+	-1, 0, 1,
+	-1, 0, -1,
+	1, 0, -1,
+	1, 0, 1,
+};
+unsigned int waterPlaneIndices[]{
+	0, 1, 3,
+	1, 2, 3
+};
+
 using namespace GL_Engine;
 #define BUFFER_OFFSET(i) ((char *)NULL + (i))
 
@@ -49,16 +61,16 @@ void CubeKeyEvent(GLuint Key, void* Parameter) {
 	switch (Key) {
 	
 	case GLFW_KEY_LEFT :
-		data->LightPosition[1] += 0.1f;
-		break;
-	case GLFW_KEY_RIGHT:
-		data->LightPosition[1] -= 0.1f;
-		break;
-	case GLFW_KEY_UP:
 		data->LightPosition[0] += 0.1f;
 		break;
-	case GLFW_KEY_DOWN:
+	case GLFW_KEY_RIGHT:
 		data->LightPosition[0] -= 0.1f;
+		break;
+	case GLFW_KEY_UP:
+		data->LightPosition[1] += 0.1f;
+		break;
+	case GLFW_KEY_DOWN:
+		data->LightPosition[1] -= 0.1f;
 		break;
 
 
@@ -68,9 +80,12 @@ void CubeKeyEvent(GLuint Key, void* Parameter) {
 CG_Implementation::CG_Implementation(){
 }
 
+int testTexVal = 0;
+
 int CG_Implementation::run(){
 	
 	initialise();
+
 
 	while (!glfwWindowShouldClose(windowProperties.window)){
 		keyHandler.Update(windowProperties.window);
@@ -79,32 +94,25 @@ int CG_Implementation::run(){
 		//Clear screen
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		static auto prev = std::chrono::high_resolution_clock::now();
-		auto now = std::chrono::high_resolution_clock::now();
 
-		auto diff = now - prev;
-		auto tim = std::chrono::duration_cast<std::chrono::nanoseconds>(diff).count();
-		double f = (double)tim;
-		f /= 1000000000.0;
-//		std::cout << 1.0/f << std::endl;
-//		std::cout << nodes[4].GlobalMatrix[3][0] << std::endl;
-		prev = std::chrono::high_resolution_clock::now();
-
-		testFBO->Bind();
+		camera.ReflectCamera();
+		water.Deactivate();
+		ReflectionFBO->Bind();
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		renderer->Render();
+		ReflectionFBO->Unbind();
 
-		testFBO->Unbind();
+		camera.ReflectCamera();
+		water.Activate();
 		renderer->Render();
-
-
 
 		guiRenderer->Render();
 
 		barrel.GetTransformMatrix();
 		kitchen.GetTransformMatrix();
 		nanosuit.GetTransformMatrix();
+		sun.GetTransformMatrix();
 
 	//	std::this_thread::sleep_for(std::chrono::milliseconds(3));
 		//Swap buffers
@@ -128,6 +136,8 @@ void CG_Implementation::UpdateCameraUBO() {
 //	memcpy(light_ubo_data.LightPosition, glm::value_ptr(glm::vec4(0, 50, -50, 1.0)), sizeof(float) * 4);
 	//memcpy(light_ubo_data.LightColour, glm::value_ptr(glm::vec3(1, 1, 1)), sizeof(float) * 3);
 	light_ubo_data.LightBrightness = 1;
+	sun.SetPosition(glm::vec3(light_ubo_data.LightPosition[0], light_ubo_data.LightPosition[1], light_ubo_data.LightPosition[2]));
+
 }
 
 void CG_Implementation::initialise(){
@@ -149,11 +159,12 @@ void CG_Implementation::initialise(){
 	CG_Data::UBO *light_ubo = new CG_Data::UBO((void*)&light_ubo_data, sizeof(light_ubo_data));
 	memcpy(light_ubo_data.LightColour, glm::value_ptr(glm::vec3(1, 1, 1)), sizeof(float) * 3);
 
-	testFBO = std::make_unique<CG_Data::FBO>();
-	auto attachment = testFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
-	testFBO->AddAttachment(CG_Data::FBO::AttachmentType::DepthAttachment, windowProperties.width, windowProperties.height);
+	ReflectionFBO = std::make_unique<CG_Data::FBO>();
+	auto attachment = ReflectionFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
+	ReflectionFBO->AddAttachment(CG_Data::FBO::AttachmentType::DepthAttachment, windowProperties.width, windowProperties.height);
 	CG_Data::FBO::AttachmentBufferObject *abo = attachment.get();
 	tex = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(attachment)->GetTexture();
+	testTexVal = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(attachment)->ID_t;
 
 	renderer = std::make_unique<Renderer>();
 	guiRenderer = std::make_unique<Renderer>();
@@ -173,6 +184,15 @@ void CG_Implementation::initialise(){
 	basicShader.RegisterUBO(std::string("LightData"), light_ubo);
 	translate_ubo = basicShader.RegisterUniform("model");
 	basicShader.CompileShader();
+
+	waterShader.RegisterShaderStageFromFile(waterVLoc.c_str(), GL_VERTEX_SHADER);
+	waterShader.RegisterShaderStageFromFile(waterFLoc.c_str(), GL_FRAGMENT_SHADER);
+	waterShader.RegisterAttribute("vPosition", 0);
+	waterShader.RegisterTextureUnit("reflectionTexture", 0);
+	waterShader.RegisterTextureUnit("refractionTexture", 1);
+	waterShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
+	waterShader.RegisterUBO(std::string("LightData"), light_ubo);
+	waterShader.CompileShader();
 
 	nanosuitShader.RegisterShaderStageFromFile(nanosuitVShader.c_str(), GL_VERTEX_SHADER);
 	nanosuitShader.RegisterShaderStageFromFile(nanosuitFShader.c_str(), GL_FRAGMENT_SHADER);
@@ -270,6 +290,19 @@ void CG_Implementation::initialise(){
 		nanosuitPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
 
+	nodeModelIndex = sun.AddData((void*)glm::value_ptr(sun.TransformMatrix));
+	sun.SetPosition(glm::vec3(0, 0, 0));
+	for (auto &a : sunAttributes) {
+		GLsizei nCount = (GLsizei)a->GetVertexCount();
+		RenderPass *sunPass = renderer->AddRenderPass(&kitchenShader);
+		sunPass->SetDrawFunction([nCount]() {glDrawElements(GL_TRIANGLES, nCount, GL_UNSIGNED_INT, 0); });
+		sunPass->BatchVao = a;
+		std::move(a->ModelTextures.begin(), a->ModelTextures.end(), std::back_inserter(sunPass->Textures));
+		sunPass->AddBatchUnit(&sun);
+		sunPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+	}
+	
+
 	guiVAO = std::make_shared<CG_Data::VAO>();
 	guiVAO->BindVAO();
 	auto vertexVBO = std::make_unique<CG_Data::VBO>(&guiVertices[0], 12 * sizeof(float), GL_STATIC_DRAW);
@@ -290,6 +323,23 @@ void CG_Implementation::initialise(){
 	guiRenderPass->BatchVao = guiVAO;
 	guiRenderPass->AddBatchUnit(&gui);
 
+	
+	waterVAO = std::make_shared<CG_Data::VAO>();
+	waterVAO->BindVAO();
+	vertexVBO = std::make_unique<CG_Data::VBO>(&waterPlaneVert[0], 12 * sizeof(float), GL_STATIC_DRAW);
+	indices = std::make_unique<CG_Data::VBO>(&waterPlaneIndices[0], 6 * sizeof(unsigned int), GL_STATIC_DRAW, GL_ELEMENT_ARRAY_BUFFER);
+	vertexVBO->BindVBO();
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(0);
+	waterVAO->AddVBO(std::move(vertexVBO));
+	waterVAO->AddVBO(std::move(indices));
+	auto waterRenderPass = renderer->AddRenderPass(&waterShader);
+	waterRenderPass->SetDrawFunction([]() {glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); });
+	waterRenderPass->Textures.push_back(tex);// barrelPass->Textures[0]);
+	waterRenderPass->BatchVao = waterVAO;
+	waterRenderPass->AddBatchUnit(&water);
+	waterRenderPass->Textures.push_back(tex);
+	
 	glEnable(GL_DEPTH_TEST);
 
 	
@@ -411,6 +461,12 @@ void CG_Implementation::LoadModels() {
 			aiProcess_JoinIdenticalVertices |
 			aiProcess_SortByPType |
 			aiProcess_GenSmoothNormals);
+
+		sunAttributes = mLoader.LoadModel(sun_base, sun_model, aiProcess_CalcTangentSpace |
+																aiProcess_Triangulate |
+																aiProcess_JoinIdenticalVertices |
+																aiProcess_SortByPType |
+																aiProcess_GenSmoothNormals);
 
 }
 

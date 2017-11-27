@@ -297,6 +297,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="waterF.glsl" />
+    <None Include="waterV.glsl" />
     <Text Include="f.glsl">
       <FileType>Document</FileType>
     </Text>

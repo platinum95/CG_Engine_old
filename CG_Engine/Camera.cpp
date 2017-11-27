@@ -5,7 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/quaternion.hpp>
-
+#include <iostream>
 
 namespace GL_Engine {
 
@@ -36,6 +36,24 @@ namespace GL_Engine {
 	}
 	void Camera::SetProjectionMatrix(glm::mat4 &_Projection) {
 		this->ProjectionMatrix = _Projection;
+	}
+
+	void Camera::ReflectCamera() {
+		static Camera backup;
+		static bool reflected = false;
+		if (reflected == false) {
+			backup = *this;
+			this->CameraPosition.y *= -1.0;
+			float planeAngle = asin(ForwardVector.y / glm::length(ForwardVector));
+			planeAngle *= -1.0;
+			std::cout << glm::degrees(planeAngle) << std::endl;
+			this->PitchBy(-2.0 * glm::degrees(planeAngle));
+			reflected = true;
+		}
+		else {
+			reflected = false;
+			*this = backup;
+		}
 	}
 	const glm::vec4 &Camera::SetCameraPosition(const glm::vec4 &_Position) {
 		this->CameraPosition = _Position;
@@ -92,6 +110,10 @@ namespace GL_Engine {
 
 	const glm::vec3 &Camera::GetForwardVector() const {
 		return this->ForwardVector;
+	}
+
+	const glm::quat &Camera::GetOrientation() const {
+		return this->Orientation;
 	}
 
 

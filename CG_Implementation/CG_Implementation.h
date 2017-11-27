@@ -50,15 +50,15 @@ private:
 	void initialise();
 	void LoadModels();
 	void UpdateCameraUBO();
-	Shader basicShader, SkyboxShader, kitchenShader, nanosuitShader, guiShader;
+	Shader basicShader, SkyboxShader, kitchenShader, nanosuitShader, guiShader, waterShader;
 	CG_Engine engine;
-	std::shared_ptr<CG_Data::VAO> VAO, guiVAO;
+	std::shared_ptr<CG_Data::VAO> VAO, guiVAO, waterVAO;
 	CG_Data::Uniform *translate_ubo;
 	Camera camera;
 	KeyHandler keyHandler;
 	float time{0};
 	CG_Data::ModelLoader mLoader;
-	std::unique_ptr<CG_Data::FBO> testFBO;
+	std::unique_ptr<CG_Data::FBO> ReflectionFBO, RefractionFBO;
 
 //	Hierarchy::HNode nodes[5];
 
@@ -67,8 +67,8 @@ private:
 //	std::unique_ptr<Hierarchy> hierarchy;
 
 
-	CG_Data::ModelAttribList barrelAttributes, kitchenAttributes, nanosuitAttributes;
-	Entity barrel, kitchen, nanosuit, gui;
+	CG_Data::ModelAttribList barrelAttributes, kitchenAttributes, nanosuitAttributes, sunAttributes;
+	Entity barrel, kitchen, nanosuit, gui, water, sun;
 	std::string AssetBase = "./assets/";
 	std::string ModelBase = AssetBase + "models/";
 
@@ -80,11 +80,14 @@ private:
 	std::string kitchen_model = "kitchen.obj";
 	std::string nanosuit_base = ModelBase + "nanosuit/";
 	std::string nanosuit_model = "nanosuit.obj";
+	std::string sun_base = ModelBase + "sun/";
+	std::string sun_model = "sun.obj";
 
 	CameraUBO_Data camera_ubo_data;
 	LightUBO_Data light_ubo_data;
 
 	std::string skyboxVLoc = "skyboxV.glsl", skyboxFLoc = "skyboxF.glsl";
+	std::string waterVLoc = "waterV.glsl", waterFLoc = "waterF.glsl";
 	std::string guiVLoc = "guiV.glsl", guiFLoc = "guiF.glsl";
 	std::string kitchenVLoc = "kitchenV.glsl", kitchenFLoc = "kitchenF.glsl";
 	std::string nanosuitVShader = "nanosuitV.glsl", nanosuitFShader = "nanosuitF.glsl";
