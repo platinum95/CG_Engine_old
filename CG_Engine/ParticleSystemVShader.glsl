@@ -8,6 +8,7 @@ layout (std140) uniform CameraProjectionData
   mat4 PV_Matrix;
   vec4 CameraPosition;
   vec4 CameraOrientation;
+  vec4 ClippingPlane;
 };
 
 in vec3 Velocity;
@@ -42,7 +43,11 @@ void main(){
 	vec3 a = vec3(0, -1, 1);
 	vec3 velocity = Velocity + EmitterDirection;
 	ePos += velocity * elapsed_time + 0.5 * a * elapsed_time * elapsed_time;
-	gl_Position = PV_Matrix * model * vec4(ePos, 1);
+
+	vec4 WorldPosition = model * vec4(ePos, 1.0);
+	gl_ClipDistance[0] = dot(WorldPosition, ClippingPlane);
+
+	gl_Position = PV_Matrix * WorldPosition;
 	gl_PointSize = Size;
 
 }

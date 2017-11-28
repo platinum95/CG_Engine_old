@@ -9,6 +9,7 @@ layout (std140) uniform CameraProjectionData
   mat4 PV_Matrix;
   vec4 CameraPosition;
   vec4 CameraOrientation;
+  vec4 ClippingPlane;
 };
 
 layout (std140) uniform LightData
@@ -18,13 +19,15 @@ layout (std140) uniform LightData
 	float Brightness;
 };
 
+
 in vec3 vPosition;
 out vec4 ClipspaceCoord;
+out vec2 TexCoord;
 
 
 void main(){
 	vec4 vertexPos = vec4(vPosition * SCALE, 1);
-
+	TexCoord = vec2((vPosition.x + 1.0) / 2.0, (vPosition.z + 1.0) / 2.0);
 	ClipspaceCoord = PV_Matrix * vertexPos;
 	gl_Position = ClipspaceCoord;
 

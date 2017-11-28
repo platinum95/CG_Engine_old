@@ -1,2 +1,8 @@
-﻿  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.exe
-  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)
+﻿  main.cpp
+  CG_Implementation.cpp
+d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(12): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
+d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(12): warning C4305: 'initializing': truncation from 'double' to 'float'
+d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(107): warning C4305: '+=': truncation from 'double' to 'float'
+  Generating Code...
+  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Debug\CG_Implementation.exe
+  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)

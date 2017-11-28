@@ -53,13 +53,14 @@ private:
 	KeyHandler keyHandler;
 	float time{0};
 	CG_Data::ModelLoader mLoader;
-	std::unique_ptr<CG_Data::FBO> ReflectionFBO, RefractionFBO;
+	std::unique_ptr<CG_Data::FBO> WaterFBO;
 
 //	Hierarchy::HNode nodes[5];
 
 //	Entity entityList[5];
 	std::unique_ptr<Renderer> renderer, guiRenderer;
 //	std::unique_ptr<Hierarchy> hierarchy;
+
 
 
 	CG_Data::ModelAttribList barrelAttributes, kitchenAttributes, nanosuitAttributes, sunAttributes;
@@ -77,6 +78,7 @@ private:
 	std::string nanosuit_model = "nanosuit.obj";
 	std::string sun_base = ModelBase + "sun/";
 	std::string sun_model = "sun.obj";
+	std::string waterDUDV_loc = ModelBase + "water/waterDUDV.png";
 
 	CameraUBO_Data camera_ubo_data;
 	LightUBO_Data light_ubo_data;
@@ -90,11 +92,9 @@ private:
 		"./assets/skybox/bottom.png", "./assets/skybox/back.png", "./assets/skybox/front.png" };
 	std::unique_ptr<Cubemap> Skybox;
 
-	std::shared_ptr<CG_Data::Texture> tex;
-
 	std::unique_ptr<ParticleSystem> particleSystem;
 
-
+	std::shared_ptr<CG_Data::Texture> waterDUDVTexture;
 };
 	
 

@@ -1,5 +1,8 @@
 ﻿  Shader.cpp
   Renderer.cpp
+  ParticleSystem.cpp
+d:\projects\c++\vs2015\cg_engine\cg_engine\particlesystem.cpp(161): warning C4244: '+=': conversion from 'const double' to 'float', possible loss of data
+d:\projects\c++\vs2015\cg_engine\cg_engine\particlesystem.cpp(164): warning C4244: '=': conversion from 'const double' to 'float', possible loss of data
   InputHandler.cpp
   File_IO.cpp
 d:\projects\c++\vs2015\cg_engine\cg_engine\stb_image_write.h(233): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
@@ -13,7 +16,7 @@ d:\projects\c++\vs2015\cg_engine\cg_engine\stb_image_write.h(1025): warning C499
   CG_Engine.cpp
   CG_Data.cpp
   Camera.cpp
-d:\projects\c++\vs2015\cg_engine\cg_engine\camera.cpp(50): warning C4244: 'argument': conversion from 'double' to 'float', possible loss of data
   Generating Code...
+d:\projects\c++\vs2015\cg_engine\cg_engine\particlesystem.cpp(167): warning C4172: returning address of local variable or temporary
   glad.c
   CG_Engine.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\CG_Engine\../libs/CG_Engined_x64.lib

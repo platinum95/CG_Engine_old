@@ -104,6 +104,7 @@ int CG_Implementation::run(){
 		sun.GetTransformMatrix();
 		particleSystem->GetTransformMatrix();
 		particleSystem->UpdateTime(0.01);
+		time += 0.00001;
 
 		//Clear screen
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -113,27 +114,26 @@ int CG_Implementation::run(){
 		camera.ReflectCamera();
 		UpdateCameraUBO();
 		water.Deactivate();
-		ReflectionFBO->Bind();
+		WaterFBO->Bind(0);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		renderer->Render();
-		ReflectionFBO->Unbind();
 
 		camera_ubo_data.ClippingPlane[1] = -1;
 		camera.ReflectCamera();
 		UpdateCameraUBO();
 		water.Deactivate();
-		RefractionFBO->Bind();
+		WaterFBO->Bind(1);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		renderer->Render();
-		RefractionFBO->Unbind();
+		WaterFBO->Unbind();
 
 		glDisable(GL_CLIP_DISTANCE0);
 		water.Activate();
 		renderer->Render();
 
-	//	guiRenderer->Render();
+		guiRenderer->Render();
 
 		
 
@@ -186,16 +186,14 @@ void CG_Implementation::initialise(){
 	CG_Data::UBO *light_ubo = new CG_Data::UBO((void*)&light_ubo_data, sizeof(light_ubo_data));
 	memcpy(light_ubo_data.LightColour, glm::value_ptr(glm::vec3(1, 1, 1)), sizeof(float) * 3);
 
-	ReflectionFBO = std::make_unique<CG_Data::FBO>();
-	auto attachment = ReflectionFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
-	ReflectionFBO->AddAttachment(CG_Data::FBO::AttachmentType::DepthAttachment, windowProperties.width, windowProperties.height);
-	tex = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(attachment)->GetTexture();
-
-	RefractionFBO = std::make_unique<CG_Data::FBO>();
-	auto attachmentRa = RefractionFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
-	RefractionFBO->AddAttachment(CG_Data::FBO::AttachmentType::DepthAttachment, windowProperties.width, windowProperties.height);
-	auto RefractionTex = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(attachmentRa)->GetTexture();
-	RefractionTex->SetUnit(GL_TEXTURE1);
+	WaterFBO = std::make_unique<CG_Data::FBO>();
+	auto reflectColAttach = WaterFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
+	auto refractColAttach = WaterFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
+	WaterFBO->AddAttachment(CG_Data::FBO::AttachmentType::DepthAttachment, windowProperties.width, windowProperties.height);
+	auto reflectionTexture = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(reflectColAttach)->GetTexture();
+	auto refractionTexture = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(refractColAttach)->GetTexture();
+	reflectionTexture->SetUnit(GL_TEXTURE0);
+	refractionTexture->SetUnit(GL_TEXTURE1);
 
 	renderer = std::make_unique<Renderer>();
 	guiRenderer = std::make_unique<Renderer>();
@@ -221,8 +219,10 @@ void CG_Implementation::initialise(){
 	waterShader.RegisterAttribute("vPosition", 0);
 	waterShader.RegisterTextureUnit("reflectionTexture", 0);
 	waterShader.RegisterTextureUnit("refractionTexture", 1);
+	waterShader.RegisterTextureUnit("dudvMap", 2); 
 	waterShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
 	waterShader.RegisterUBO(std::string("LightData"), light_ubo);
+	auto waterTimeUniform = waterShader.RegisterUniform("Time");
 	waterShader.CompileShader();
 
 	nanosuitShader.RegisterShaderStageFromFile(nanosuitVShader.c_str(), GL_VERTEX_SHADER);
@@ -276,9 +276,10 @@ void CG_Implementation::initialise(){
 	
 
 	//Set the update callbacks for the various uniforms using Lambda functions
-
+	auto FloatLambda = [](const CG_Data::Uniform &u) {glUniform1fv(u.GetID(), 1, static_cast<const GLfloat*>(u.GetData())); };
 	auto MatrixLambda = [](const CG_Data::Uniform &u) {glUniformMatrix4fv(u.GetID(), 1, GL_FALSE, static_cast<const GLfloat*>(u.GetData())); };
 	translate_ubo->SetUpdateCallback(MatrixLambda);
+	waterTimeUniform->SetUpdateCallback(FloatLambda);
 
 	const auto width = windowProperties.width, height = windowProperties.height;
 
@@ -350,11 +351,13 @@ void CG_Implementation::initialise(){
 	guiVAO->AddVBO(std::move(indices));
 	auto guiRenderPass = guiRenderer->AddRenderPass(&guiShader);
 	guiRenderPass->SetDrawFunction([]() {glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); });
-	guiRenderPass->Textures.push_back(RefractionTex);
+	guiRenderPass->Textures.push_back(reflectionTexture);
 	guiRenderPass->BatchVao = guiVAO;
 	guiRenderPass->AddBatchUnit(&gui);
 
-	
+
+
+	waterDUDVTexture = CG_Data::ModelLoader::LoadTexture(waterDUDV_loc, GL_TEXTURE2);
 	waterVAO = std::make_shared<CG_Data::VAO>();
 	waterVAO->BindVAO();
 	vertexVBO = std::make_unique<CG_Data::VBO>(&waterPlaneVert[0], 12 * sizeof(float), GL_STATIC_DRAW);
@@ -364,11 +367,14 @@ void CG_Implementation::initialise(){
 	glEnableVertexAttribArray(0);
 	waterVAO->AddVBO(std::move(vertexVBO));
 	waterVAO->AddVBO(std::move(indices));
+	auto waterTimeIndex = water.AddData(&time);
 	auto waterRenderPass = renderer->AddRenderPass(&waterShader);
 	waterRenderPass->SetDrawFunction([]() {glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, nullptr); });
-	waterRenderPass->Textures.push_back(tex);
-	waterRenderPass->Textures.push_back(RefractionTex);
+	waterRenderPass->Textures.push_back(reflectionTexture);
+	waterRenderPass->Textures.push_back(refractionTexture);
+	waterRenderPass->Textures.push_back(waterDUDVTexture);
 	waterRenderPass->BatchVao = waterVAO;
+	waterRenderPass->AddDataLink(waterTimeUniform, waterTimeIndex);
 	waterRenderPass->AddBatchUnit(&water);
 
 

@@ -193,8 +193,8 @@ namespace GL_Engine{
 				void* data = File_IO::LoadImageFile(_Path, width, height, nChannels, true);
 				GLint format = nChannels == 3 ? GL_RGB : GL_RGBA;
 				auto parameters = []() {
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
 				};
 				std::shared_ptr<Texture> newTexture = std::make_shared<Texture>(data, width, height, _Unit, format, parameters, GL_TEXTURE_2D);
 				return newTexture;
@@ -228,37 +228,18 @@ namespace GL_Engine{
 			};
 			class TexturebufferObject : public AttachmentBufferObject {
 			public:
-				TexturebufferObject(uint16_t _Width, uint16_t _Height) {
+				TexturebufferObject(uint16_t _Width, uint16_t _Height, uint8_t _Unit) {
 					auto parameters = []() {
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 					};
-					TextureObject = std::make_shared<Texture>(nullptr, _Width, _Height, GL_TEXTURE0, GL_RGB, parameters, GL_TEXTURE_2D);
-					/*{	glGenTextures(1, &this->ID);
-						this->Target = _Target;
-						this->Unit = _Unit;
-						glActiveTexture(this->Unit);
-						glBindTexture(this->Target, this->ID);
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-						glTexImage2D(this->Target, 0, GL_RGBA, width, height, 0, _ImageFormat, GL_UNSIGNED_BYTE, _Data);
-						glGenerateMipmap(this->Target);}
-					
-					glGenTextures(1, &ID_t);
-					glActiveTexture(GL_TEXTURE0);
-					glBindTexture(GL_TEXTURE_2D, ID_t);
-					
-					glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1280, 720, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-					glBindTexture(GL_TEXTURE_2D, 0);
-					TextureObject->ID = ID_t;
-					*/
+					TextureObject = std::make_shared<Texture>(nullptr, _Width, _Height, GL_TEXTURE0 + _Unit, GL_RGB, parameters, GL_TEXTURE_2D);
 					this->ID = TextureObject->GetID();
 				}
 				void Bind() const {
 
 				}
 				const std::shared_ptr<Texture> GetTexture() const { return this->TextureObject; }
-				GLuint ID_t;
 			private:
 				std::shared_ptr<Texture> TextureObject;
 				
@@ -289,7 +270,7 @@ namespace GL_Engine{
 				glDrawBuffer(GL_COLOR_ATTACHMENT0);
 				switch (_Attachment) {
 				case TextureAttachment:{
-					std::shared_ptr<TexturebufferObject> TexObj = std::make_shared<TexturebufferObject>(_Width, _Height);
+					std::shared_ptr<TexturebufferObject> TexObj = std::make_shared<TexturebufferObject>(_Width, _Height, TextureAttachmentCount);
 					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + TextureAttachmentCount++, GL_TEXTURE_2D, TexObj->ID, 0);
 					this->Attachments.push_back(std::move(TexObj));
 					break;
@@ -315,12 +296,12 @@ namespace GL_Engine{
 				return abo;
 				
 			}
-			void Bind() const {
+			void Bind(uint8_t _ColourAttachment = 0) const {
 				if (!this->complete)
 					throw std::runtime_error("Attempting to bind incomplete framebuffer!\n");
 				glBindTexture(GL_TEXTURE_2D, 0);
 				glBindFramebuffer(GL_FRAMEBUFFER, this->ID);
-				glDrawBuffer(GL_COLOR_ATTACHMENT0);
+				glDrawBuffer(GL_COLOR_ATTACHMENT0 + _ColourAttachment);
 				glViewport(0, 0, 1280, 720);
 			}
 			const GLuint GetID() const {

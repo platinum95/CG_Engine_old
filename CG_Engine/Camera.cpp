@@ -45,8 +45,10 @@ namespace GL_Engine {
 			backup = *this;
 			this->CameraPosition.y *= -1.0;
 			float planeAngle = asin(ForwardVector.y / glm::length(ForwardVector));
+			volatile glm::quat test = glm::quat(ForwardVector);
+
 			planeAngle *= -1.0;
-			std::cout << glm::degrees(planeAngle) << std::endl;
+			std::cout << ForwardVector.x << " " << ForwardVector.y << " " << ForwardVector.z << std::endl;
 			this->PitchBy(-2.0f * glm::degrees(planeAngle));
 			reflected = true;
 			this->GenerateViewMatrix();
@@ -127,7 +129,7 @@ namespace GL_Engine {
 		this->UpVector =		glm::vec3(R * glm::vec4(0, 1, 0, 0));
 		this->RightVector =		glm::vec3(R * glm::vec4(1, 0, 0, 0));
 
-		this->ViewMatrix = glm::inverse(R) * T;
+		this->ViewMatrix = R * T;
 		this->UpdateViewMatrix = false;
 	}
 
