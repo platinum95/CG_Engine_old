@@ -1,12 +1,12 @@
-﻿  CG_Implementation.cpp
-c:\projects\college\cg_engine\cg_implementation\cg_implementation.cpp(12): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
-c:\projects\college\cg_engine\cg_implementation\cg_implementation.cpp(12): warning C4305: 'initializing': truncation from 'double' to 'float'
-c:\projects\college\cg_engine\cg_implementation\cg_implementation.cpp(243): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
-c:\projects\college\cg_engine\cg_implementation\cg_implementation.cpp(255): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
-c:\projects\college\cg_engine\cg_implementation\cg_implementation.cpp(269): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
+﻿  main.cpp
+  CG_Implementation.cpp
+d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(12): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
+d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(12): warning C4305: 'initializing': truncation from 'double' to 'float'
+d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(264): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
+d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(276): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
+d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(290): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
+d:\projects\c++\vs2015\cg_engine\cg_implementation\cg_implementation.cpp(302): warning C4267: 'argument': conversion from 'size_t' to 'uint16_t', possible loss of data
   Generating Code...
-  Compiling...
-  main.cpp
-  Generating Code...
-  CG_Implementation.vcxproj -> C:\Projects\college\CG_Engine\x64\Debug\CG_Implementation.exe
-  CG_Implementation.vcxproj -> C:\Projects\college\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)
+  LINK : D:\Projects\c++\VS2015\CG_Engine\x64\Debug\CG_Implementation.exe not found or not built by the last incremental link; performing full link
+  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Debug\CG_Implementation.exe
+  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)

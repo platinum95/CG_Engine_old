@@ -19,13 +19,13 @@ layout (std140) uniform LightData
 };
 
 in vec3 vPosition;
-out vec2 TexCoord;
+out vec4 ClipspaceCoord;
 
 
 void main(){
 	vec4 vertexPos = vec4(vPosition * SCALE, 1);
 
-	TexCoord = vec2((vPosition.x + 1.0 / 2.0), (vPosition.z + 1.0)/2.0);
-	gl_Position = PV_Matrix * vertexPos + Brightness/Brightness;
+	ClipspaceCoord = PV_Matrix * vertexPos;
+	gl_Position = ClipspaceCoord;
 
 }

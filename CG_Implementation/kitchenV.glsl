@@ -8,6 +8,7 @@ layout (std140) uniform CameraProjectionData
   mat4 PV_Matrix;
   vec4 CameraPosition;
   vec4 CameraOrientation;
+  vec4 ClippingPlane;
 };
 
 layout (std140) uniform LightData
@@ -32,7 +33,10 @@ void main(){
 	models = mat3(transpose(inverse( ViewMatrix * model)));
 	norms = vNormal;
 	TexCoords = TexCoord;
-	Pos_ViewSpace = vec3(ViewMatrix * model * vec4(vPosition, 1.0));
+	vec4 WorldPosition = model * vec4(vPosition, 1.0);
+	gl_ClipDistance[0] = dot(WorldPosition, ClippingPlane);
+
+	Pos_ViewSpace = vec3(ViewMatrix * WorldPosition);
 	LightPosition_Viewspace = ViewMatrix * LightPosition;
-    gl_Position =  PV_Matrix * model * vec4(vPosition, 1.0);
+    gl_Position =  PV_Matrix * WorldPosition;
 }

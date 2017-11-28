@@ -69,6 +69,10 @@ namespace GL_Engine{
 				this->Unit = _Unit;
 			}
 
+			void SetUnit(const GLuint _Unit){
+				this->Unit = _Unit;
+			}
+
 			void Bind(){
 				glActiveTexture(this->Unit);
 				glBindTexture(this->Target, this->ID);

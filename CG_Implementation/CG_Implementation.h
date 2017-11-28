@@ -26,6 +26,7 @@ struct CameraUBO_Data {
 	float PV_Matrix[16];
 	float CameraPosition[4];
 	float CameraOrientation[4];
+	float ClippingPlane[4];
 };
 
 struct LightUBO_Data {

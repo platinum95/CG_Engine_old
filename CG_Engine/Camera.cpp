@@ -49,6 +49,7 @@ namespace GL_Engine {
 			std::cout << glm::degrees(planeAngle) << std::endl;
 			this->PitchBy(-2.0 * glm::degrees(planeAngle));
 			reflected = true;
+			this->GenerateViewMatrix();
 		}
 		else {
 			reflected = false;

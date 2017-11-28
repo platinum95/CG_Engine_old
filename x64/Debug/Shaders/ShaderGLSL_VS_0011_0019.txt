@@ -1,8 +1,4 @@
-
-#version 330 
-
-in vec3 vPosition;
-out vec3 textureCoords;
+#version 330
 
 
 layout (std140) uniform CameraProjectionData
@@ -14,20 +10,29 @@ layout (std140) uniform CameraProjectionData
   vec4 CameraOrientation;
 };
 
+layout (std140) uniform LightData
+{ 
+	vec4 LightPosition;
+	vec3 LightColour;
+	float Brightness;
+};
 
-mat4 scaler = mat4(
-		500, 0, 0, 0,
-		0, 500, 0, 0,
-		0, 0, 500, 0,
-		0, 0, 0, 1);
+in vec3 vPosition;
+in vec3 vNormal;
+in vec2 TexCoord;
+out mat3 models;
+out vec3 norms;
+out vec2 TexCoords;
 
+uniform mat4 model;
+varying vec3 Pos_ViewSpace;
+varying vec4 LightPosition_Viewspace;
 
-void main(void){
-	vec4 currentPos = scaler * vec4(vPosition, 1.0);
-	mat4 view2 = ViewMatrix;
-	view2[3][0] = 0;
-	view2[3][1] = 0;
-	view2[3][2]= 0;
-	textureCoords = vPosition;
-	gl_Position = ProjectionMatrix * view2 * currentPos;
+void main(){
+	models = mat3(transpose(inverse( ViewMatrix * model)));
+	norms = vNormal;
+	TexCoords = TexCoord;
+	Pos_ViewSpace = vec3(ViewMatrix * model * vec4(vPosition, 1.0));
+	LightPosition_Viewspace = ViewMatrix * LightPosition;
+    gl_Position =  PV_Matrix * model * vec4(vPosition, 1.0);
 }

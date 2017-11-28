@@ -2,7 +2,6 @@
 //== SHADER COMPILE STATUS = TRUE
 #version 330
 
-
 layout (std140) uniform CameraProjectionData
 { 
   mat4 ViewMatrix;
@@ -21,10 +20,16 @@ layout (std140) uniform LightData
 
 in vec3 vPosition;
 in vec3 vNormal;
+in vec3 vTangeant;
+in vec3 vBitangeant;
 in vec2 TexCoord;
 out mat3 models;
-out vec3 norms;
-out vec2 TexCoords;
+
+out VS_OUT {
+    vec3 FragPos;
+    vec2 TexCoords;
+    mat3 TBN;
+} vs_out;  
 
 uniform mat4 model;
 varying vec3 Pos_ViewSpace;
@@ -32,9 +37,13 @@ varying vec4 LightPosition_Viewspace;
 
 void main(){
 	models = mat3(transpose(inverse( ViewMatrix * model)));
-	norms = vNormal;
-	TexCoords = TexCoord;
+	vec3 T = normalize(models * vTangeant);
+	vec3 B = normalize(models * vBitangeant);
+	vec3 N = normalize(models * vNormal);
+	vs_out.TBN = mat3(T, B, N);
+	vs_out.TexCoords = TexCoord;
 	Pos_ViewSpace = vec3(ViewMatrix * model * vec4(vPosition, 1.0));
 	LightPosition_Viewspace = ViewMatrix * LightPosition;
     gl_Position =  PV_Matrix * model * vec4(vPosition, 1.0);
+	vs_out.FragPos = gl_Position.xyz;
 }

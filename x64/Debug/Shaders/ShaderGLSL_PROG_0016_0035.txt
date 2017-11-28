@@ -1,0 +1,35 @@
+
+//== PROGRAM LINK STATUS = TRUE
+//== PROGRAM VALIDATE STATUS = TRUE
+
+//======================================================
+//   Vertex Shader 17 
+//======================================================
+
+//== SHADER COMPILE STATUS = TRUE
+#version 330
+in vec3 vPosition;
+in vec2 TexCoord;
+
+out vec2 PassTexCoord;
+
+
+void main(){
+	gl_Position = vec4(vPosition, 1);
+	PassTexCoord = TexCoord;
+}
+//======================================================
+//   Fragment Shader 18 
+//======================================================
+
+//== SHADER COMPILE STATUS = TRUE
+#version 330
+in vec2 PassTexCoord;
+
+out vec4 FragColour;
+
+uniform sampler2D image;
+
+void main(){
+	FragColour = texture(image, PassTexCoord);
+}
