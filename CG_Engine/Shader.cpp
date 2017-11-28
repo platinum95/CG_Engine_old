@@ -120,6 +120,14 @@ namespace GL_Engine{
 		this->Uniforms.push_back(uniform);
 		return uniform->UniformObject;
 	}
+	CG_Data::Uniform * Shader::RegisterUniform(const char * _UniformName, std::function<void(const CG_Data::Uniform&)> _CallbackFunction) {
+		UniformStruct *uniform = new UniformStruct;
+		uniform->UniformObject = new CG_Data::Uniform();
+		uniform->Name = _UniformName;
+		uniform->UniformObject->SetUpdateCallback(_CallbackFunction);
+		this->Uniforms.push_back(uniform);
+		return uniform->UniformObject;
+	}
 
 	const GLuint Shader::CompileShaderStage(ShaderStage * stage){
 		stage->ID = glCreateShader(stage->Type);

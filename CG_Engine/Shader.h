@@ -38,6 +38,8 @@ namespace GL_Engine{
 		//Returns pointer to UBO (Object finalised after call to compile)
 		CG_Data::Uniform* RegisterUniform(const char* _UniformName);
 
+		CG_Data::Uniform* RegisterUniform(const char* _UniformName, std::function<void(const CG_Data::Uniform&)> _CallbackFunction);
+
 		void RegisterUBO(std::string &_UBO_Name, CG_Data::UBO *_ubo) {
 			UBO_Struct ubo_struct;
 			ubo_struct.ubo = _ubo;

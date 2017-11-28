@@ -23,8 +23,13 @@ RenderPass * GL_Engine::Renderer::AddRenderPass(Shader* _Shader) {
 	rPass->shader = _Shader;
 	auto passOut = rPass.get();
 	this->renderPasses.push_back(std::move(rPass));
+	return passOut;	
+}
+
+RenderPass* GL_Engine::Renderer::AddRenderPass(std::unique_ptr<RenderPass> _RPass) {
+	auto passOut = _RPass.get();
+	this->renderPasses.push_back(std::move(_RPass));
 	return passOut;
-	
 }
 
 RenderPass * GL_Engine::Renderer::AddRenderPass(Shader* _Shader, std::function<void(RenderPass&, void*)> _RenderFunction, void * _Data) {

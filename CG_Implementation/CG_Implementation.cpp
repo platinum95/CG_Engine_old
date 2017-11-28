@@ -75,6 +75,13 @@ void CubeKeyEvent(GLuint Key, void* Parameter) {
 	case GLFW_KEY_DOWN:
 		data->LightPosition[1] -= 0.1f;
 		break;
+	case GLFW_KEY_INSERT:
+		data->LightPosition[2] += 0.1f;
+		break;
+	case GLFW_KEY_DELETE:
+		data->LightPosition[2] -= 0.1f;
+		break;
+
 
 
 	}
@@ -95,6 +102,8 @@ int CG_Implementation::run(){
 		kitchen.GetTransformMatrix();
 		nanosuit.GetTransformMatrix();
 		sun.GetTransformMatrix();
+		particleSystem->GetTransformMatrix();
+		particleSystem->UpdateTime(0.01);
 
 		//Clear screen
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -124,11 +133,11 @@ int CG_Implementation::run(){
 		water.Activate();
 		renderer->Render();
 
-		guiRenderer->Render();
+	//	guiRenderer->Render();
 
 		
 
-		std::this_thread::sleep_for(std::chrono::milliseconds(3));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1));
 		//Swap buffers
 		glfwSwapBuffers(windowProperties.window);
 		glfwPollEvents();
@@ -361,6 +370,11 @@ void CG_Implementation::initialise(){
 	waterRenderPass->Textures.push_back(RefractionTex);
 	waterRenderPass->BatchVao = waterVAO;
 	waterRenderPass->AddBatchUnit(&water);
+
+
+	particleSystem = std::make_unique<ParticleSystem>();
+	auto pRenderer = particleSystem->GenerateParticleSystem(8560, com_ubo, glm::vec3(0, 15, 0), glm::vec3(0, 1, 0));
+	renderer->AddRenderPass(std::move(pRenderer));
 	
 	glEnable(GL_DEPTH_TEST);
 
@@ -423,6 +437,8 @@ void CG_Implementation::initialise(){
 		keyHandler.AddKeyEvent(GLFW_KEY_DOWN, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
 		keyHandler.AddKeyEvent(GLFW_KEY_LEFT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
 		keyHandler.AddKeyEvent(GLFW_KEY_RIGHT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
+		keyHandler.AddKeyEvent(GLFW_KEY_INSERT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
+		keyHandler.AddKeyEvent(GLFW_KEY_DELETE, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
 		/*
 		keyHandler.AddKeyEvent(GLFW_KEY_UP, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
 		keyHandler.AddKeyEvent(GLFW_KEY_DOWN, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());

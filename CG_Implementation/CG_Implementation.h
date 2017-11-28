@@ -8,6 +8,7 @@
 #include "Entity.h"
 #include "Renderer.h"
 #include "Cubemap.h"
+#include "ParticleSystem.h"
 
 static GL_Engine::Properties::GLFWproperties windowProperties = {
 	1280,			//Width
@@ -20,14 +21,7 @@ static GL_Engine::Properties::GLFWproperties windowProperties = {
 };
 
 
-struct CameraUBO_Data {
-	float ViewMatrix[16];
-	float ProjectionMatrix[16];
-	float PV_Matrix[16];
-	float CameraPosition[4];
-	float CameraOrientation[4];
-	float ClippingPlane[4];
-};
+
 
 struct LightUBO_Data {
 	float LightPosition[4];
@@ -97,6 +91,8 @@ private:
 	std::unique_ptr<Cubemap> Skybox;
 
 	std::shared_ptr<CG_Data::Texture> tex;
+
+	std::unique_ptr<ParticleSystem> particleSystem;
 
 
 };

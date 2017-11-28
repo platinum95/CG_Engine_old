@@ -47,7 +47,7 @@ namespace GL_Engine {
 			float planeAngle = asin(ForwardVector.y / glm::length(ForwardVector));
 			planeAngle *= -1.0;
 			std::cout << glm::degrees(planeAngle) << std::endl;
-			this->PitchBy(-2.0 * glm::degrees(planeAngle));
+			this->PitchBy(-2.0f * glm::degrees(planeAngle));
 			reflected = true;
 			this->GenerateViewMatrix();
 		}

@@ -335,6 +335,7 @@
     <ClInclude Include="Entity.h" />
     <ClInclude Include="File_IO.h" />
     <ClInclude Include="InputHandler.h" />
+    <ClInclude Include="ParticleSystem.h" />
     <ClInclude Include="Properties.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Shader.h" />
@@ -349,8 +350,13 @@
     <ClCompile Include="File_IO.cpp" />
     <ClCompile Include="glad.c" />
     <ClCompile Include="InputHandler.cpp" />
+    <ClCompile Include="ParticleSystem.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Shader.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="ParticleSystemFShader.glsl" />
+    <None Include="ParticleSystemVShader.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

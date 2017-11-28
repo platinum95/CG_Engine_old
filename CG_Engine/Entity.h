@@ -42,9 +42,9 @@ namespace GL_Engine {
 			return this->TransformMatrix = _Transform * this->TransformMatrix;
 		}
 
-		const size_t AddData(void* _Data) {
+		const uint16_t AddData(void* _Data) {
 			eData.push_back(_Data);
-			return eData.size() - 1;
+			return (uint16_t) eData.size() - 1;
 		}
 
 		void* GetData(int index) {
@@ -60,7 +60,7 @@ namespace GL_Engine {
 		void UpdateUniforms() const;
 		glm::mat4 TransformMatrix;
 
-	private:
+	protected:
 		glm::vec4 Position{ 0, 0, 0, 1 };
 		glm::vec3 Forward{ 0, 0, 1 }, Up{ 0, 1, 0 }, Right{ 1, 0, 0 };
 		glm::vec3 Scale{ 1, 1, 1 };

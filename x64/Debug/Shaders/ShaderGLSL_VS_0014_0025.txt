@@ -12,6 +12,7 @@ layout (std140) uniform CameraProjectionData
   mat4 PV_Matrix;
   vec4 CameraPosition;
   vec4 CameraOrientation;
+  vec4 ClippingPlane;
 };
 
 

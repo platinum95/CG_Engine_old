@@ -5,6 +5,16 @@
 #include <glm/gtc/quaternion.hpp>
 
 namespace GL_Engine {
+
+	struct CameraUBO_Data {
+		float ViewMatrix[16];
+		float ProjectionMatrix[16];
+		float PV_Matrix[16];
+		float CameraPosition[4];
+		float CameraOrientation[4];
+		float ClippingPlane[4];
+	};
+
 	class Camera {
 	public:
 		Camera();
