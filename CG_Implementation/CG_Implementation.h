@@ -9,6 +9,7 @@
 #include "Renderer.h"
 #include "Cubemap.h"
 #include "ParticleSystem.h"
+#include "Time.h"
 
 static GL_Engine::Properties::GLFWproperties windowProperties = {
 	1280,			//Width
@@ -53,7 +54,7 @@ private:
 	KeyHandler keyHandler;
 	float time{0};
 	CG_Data::ModelLoader mLoader;
-	std::unique_ptr<CG_Data::FBO> WaterFBO;
+	std::unique_ptr<CG_Data::FBO> WaterFBO, ppFBO;
 
 //	Hierarchy::HNode nodes[5];
 
@@ -61,8 +62,8 @@ private:
 	std::unique_ptr<Renderer> renderer, guiRenderer;
 //	std::unique_ptr<Hierarchy> hierarchy;
 
-
-
+	Stopwatch<std::chrono::microseconds> CameraStopwatch;
+	
 	CG_Data::ModelAttribList barrelAttributes, kitchenAttributes, nanosuitAttributes, sunAttributes;
 	Entity barrel, kitchen, nanosuit, gui, water, sun;
 	std::string AssetBase = "./assets/";

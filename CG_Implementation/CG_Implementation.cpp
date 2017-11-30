@@ -5,10 +5,10 @@
 #include <thread>
 
 float guiVertices[]{
-	-0.8, 0.8, -1.0,
-	-0.8, 0.2, -1.0,
-	-0.2, 0.2, -1.0,
-	-0.2, 0.8, -1.0
+	-1, 1, -1.0,
+	-1, -1, -1.0,
+	1, -1, -1.0,
+	1, 1, -1.0
 };
 
 float guiTexCoords[]{
@@ -40,9 +40,12 @@ using namespace GL_Engine;
 
 //Callbacks for key events
 static uint8_t activeEnt = 0;
+long long time_millis_camera = 0;
 void CameraKeyEvent(GLuint Key, void* Parameter) {
 	Camera *camera = static_cast<Camera*>(Parameter);
-	auto amount = 0.5f;
+	auto speed = 20.0f;// metres per second
+	auto time_diff_sec = time_millis_camera / (float) 1e6;
+	auto amount = speed * time_diff_sec;
 	float dX = Key == GLFW_KEY_A ? -amount : Key == GLFW_KEY_D ? amount : 0;
 	float dY = Key == GLFW_KEY_LEFT_SHIFT ? amount : Key == GLFW_KEY_LEFT_CONTROL ? -amount : 0;
 	float dZ = Key == GLFW_KEY_W ? -amount : Key == GLFW_KEY_S ? amount : 0;
@@ -87,6 +90,12 @@ void CubeKeyEvent(GLuint Key, void* Parameter) {
 	}
 }
 
+static bool wireframe = false;
+void WireframeEvent(GLuint Key, void *Parameter) {
+	wireframe = !wireframe;
+	glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
+}
+
 CG_Implementation::CG_Implementation(){
 }
 
@@ -97,6 +106,7 @@ int CG_Implementation::run(){
 
 
 	while (!glfwWindowShouldClose(windowProperties.window)){
+		time_millis_camera = CameraStopwatch.MeasureTime().count();
 		keyHandler.Update(windowProperties.window);
 		barrel.GetTransformMatrix();
 		kitchen.GetTransformMatrix();
@@ -110,6 +120,7 @@ int CG_Implementation::run(){
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glEnable(GL_CLIP_DISTANCE0);
+		camera_ubo_data.ClippingPlane[3] = 0;
 		camera_ubo_data.ClippingPlane[1] = 1;
 		camera.ReflectCamera();
 		UpdateCameraUBO();
@@ -129,15 +140,18 @@ int CG_Implementation::run(){
 		renderer->Render();
 		WaterFBO->Unbind();
 
+		ppFBO->Bind(0);
+		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CLIP_DISTANCE0);
+		camera_ubo_data.ClippingPlane[3] = 1000;
 		water.Activate();
 		renderer->Render();
+		ppFBO->Unbind();
 
 		guiRenderer->Render();
 
-		
-
-		std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	
 		//Swap buffers
 		glfwSwapBuffers(windowProperties.window);
 		glfwPollEvents();
@@ -186,15 +200,6 @@ void CG_Implementation::initialise(){
 	CG_Data::UBO *light_ubo = new CG_Data::UBO((void*)&light_ubo_data, sizeof(light_ubo_data));
 	memcpy(light_ubo_data.LightColour, glm::value_ptr(glm::vec3(1, 1, 1)), sizeof(float) * 3);
 
-	WaterFBO = std::make_unique<CG_Data::FBO>();
-	auto reflectColAttach = WaterFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
-	auto refractColAttach = WaterFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
-	WaterFBO->AddAttachment(CG_Data::FBO::AttachmentType::DepthAttachment, windowProperties.width, windowProperties.height);
-	auto reflectionTexture = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(reflectColAttach)->GetTexture();
-	auto refractionTexture = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(refractColAttach)->GetTexture();
-	reflectionTexture->SetUnit(GL_TEXTURE0);
-	refractionTexture->SetUnit(GL_TEXTURE1);
-
 	renderer = std::make_unique<Renderer>();
 	guiRenderer = std::make_unique<Renderer>();
 	renderer->AddUBO(com_ubo);
@@ -221,7 +226,7 @@ void CG_Implementation::initialise(){
 	waterShader.RegisterTextureUnit("refractionTexture", 1);
 	waterShader.RegisterTextureUnit("dudvMap", 2); 
 	waterShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
-	waterShader.RegisterUBO(std::string("LightData"), light_ubo);
+//	waterShader.RegisterUBO(std::string("LightData"), light_ubo);
 	auto waterTimeUniform = waterShader.RegisterUniform("Time");
 	waterShader.CompileShader();
 
@@ -334,34 +339,20 @@ void CG_Implementation::initialise(){
 		sunPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
 	
-
-	guiVAO = std::make_shared<CG_Data::VAO>();
-	guiVAO->BindVAO();
-	auto vertexVBO = std::make_unique<CG_Data::VBO>(&guiVertices[0], 12 * sizeof(float), GL_STATIC_DRAW);
-	auto texcoordVBO = std::make_unique<CG_Data::VBO>(&guiTexCoords[0], 8 * sizeof(float), GL_STATIC_DRAW);
-	auto indices = std::make_unique<CG_Data::VBO>(&guiIndices[0], 6 * sizeof(unsigned int), GL_STATIC_DRAW, GL_ELEMENT_ARRAY_BUFFER);
-	vertexVBO->BindVBO();
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glEnableVertexAttribArray(0);
-	texcoordVBO->BindVBO();
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
-	glEnableVertexAttribArray(1);
-	guiVAO->AddVBO(std::move(vertexVBO));
-	guiVAO->AddVBO(std::move(texcoordVBO));
-	guiVAO->AddVBO(std::move(indices));
-	auto guiRenderPass = guiRenderer->AddRenderPass(&guiShader);
-	guiRenderPass->SetDrawFunction([]() {glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); });
-	guiRenderPass->Textures.push_back(reflectionTexture);
-	guiRenderPass->BatchVao = guiVAO;
-	guiRenderPass->AddBatchUnit(&gui);
-
-
+	WaterFBO = std::make_unique<CG_Data::FBO>();
+	auto reflectColAttach = WaterFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
+	auto refractColAttach = WaterFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
+	WaterFBO->AddAttachment(CG_Data::FBO::AttachmentType::DepthAttachment, windowProperties.width, windowProperties.height);
+	auto reflectionTexture = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(reflectColAttach)->GetTexture();
+	auto refractionTexture = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(refractColAttach)->GetTexture();
+	reflectionTexture->SetUnit(GL_TEXTURE0);
+	refractionTexture->SetUnit(GL_TEXTURE1);
 
 	waterDUDVTexture = CG_Data::ModelLoader::LoadTexture(waterDUDV_loc, GL_TEXTURE2);
 	waterVAO = std::make_shared<CG_Data::VAO>();
 	waterVAO->BindVAO();
-	vertexVBO = std::make_unique<CG_Data::VBO>(&waterPlaneVert[0], 12 * sizeof(float), GL_STATIC_DRAW);
-	indices = std::make_unique<CG_Data::VBO>(&waterPlaneIndices[0], 6 * sizeof(unsigned int), GL_STATIC_DRAW, GL_ELEMENT_ARRAY_BUFFER);
+	auto vertexVBO = std::make_unique<CG_Data::VBO>(&waterPlaneVert[0], 12 * sizeof(float), GL_STATIC_DRAW);
+	auto indices = std::make_unique<CG_Data::VBO>(&waterPlaneIndices[0], 6 * sizeof(unsigned int), GL_STATIC_DRAW, GL_ELEMENT_ARRAY_BUFFER);
 	vertexVBO->BindVBO();
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 	glEnableVertexAttribArray(0);
@@ -377,10 +368,38 @@ void CG_Implementation::initialise(){
 	waterRenderPass->AddDataLink(waterTimeUniform, waterTimeIndex);
 	waterRenderPass->AddBatchUnit(&water);
 
-
 	particleSystem = std::make_unique<ParticleSystem>();
 	auto pRenderer = particleSystem->GenerateParticleSystem(8560, com_ubo, glm::vec3(0, 15, 0), glm::vec3(0, 1, 0));
 	renderer->AddRenderPass(std::move(pRenderer));
+
+	ppFBO = std::make_unique<CG_Data::FBO>();
+	auto FragColAttach = ppFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
+	auto BrightColAttach = ppFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
+	ppFBO->AddAttachment(CG_Data::FBO::AttachmentType::DepthAttachment, windowProperties.width, windowProperties.height);
+	auto FragTexture = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(FragColAttach)->GetTexture();
+	auto BrightTexture = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(BrightColAttach)->GetTexture();
+	FragTexture->SetUnit(GL_TEXTURE0);
+	BrightTexture->SetUnit(GL_TEXTURE1);
+
+	guiVAO = std::make_shared<CG_Data::VAO>();
+	guiVAO->BindVAO();
+	vertexVBO = std::make_unique<CG_Data::VBO>(&guiVertices[0], 12 * sizeof(float), GL_STATIC_DRAW);
+	auto texcoordVBO = std::make_unique<CG_Data::VBO>(&guiTexCoords[0], 8 * sizeof(float), GL_STATIC_DRAW);
+	indices = std::make_unique<CG_Data::VBO>(&guiIndices[0], 6 * sizeof(unsigned int), GL_STATIC_DRAW, GL_ELEMENT_ARRAY_BUFFER);
+	vertexVBO->BindVBO();
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(0);
+	texcoordVBO->BindVBO();
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+	glEnableVertexAttribArray(1);
+	guiVAO->AddVBO(std::move(vertexVBO));
+	guiVAO->AddVBO(std::move(texcoordVBO));
+	guiVAO->AddVBO(std::move(indices));
+	auto guiRenderPass = guiRenderer->AddRenderPass(&guiShader);
+	guiRenderPass->SetDrawFunction([]() {glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); });
+	guiRenderPass->Textures.push_back(FragTexture);
+	guiRenderPass->BatchVao = guiVAO;
+	guiRenderPass->AddBatchUnit(&gui);
 	
 	glEnable(GL_DEPTH_TEST);
 
@@ -445,6 +464,7 @@ void CG_Implementation::initialise(){
 		keyHandler.AddKeyEvent(GLFW_KEY_RIGHT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
 		keyHandler.AddKeyEvent(GLFW_KEY_INSERT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
 		keyHandler.AddKeyEvent(GLFW_KEY_DELETE, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
+		keyHandler.AddKeyEvent(GLFW_KEY_F1, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &WireframeEvent, (void*)nullptr);
 		/*
 		keyHandler.AddKeyEvent(GLFW_KEY_UP, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
 		keyHandler.AddKeyEvent(GLFW_KEY_DOWN, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
@@ -475,6 +495,8 @@ void CG_Implementation::initialise(){
 		keyHandler.AddKeyEvent(GLFW_KEY_4, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
 		*/
 	}
+
+	CameraStopwatch.Initialise();
 	
 }
 

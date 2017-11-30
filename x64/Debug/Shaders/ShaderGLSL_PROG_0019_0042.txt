@@ -1,9 +1,6 @@
 
 //== PROGRAM LINK STATUS = TRUE
 //== PROGRAM VALIDATE STATUS = TRUE
-/*== INFO LOG ==
-Validation successful.
-  == INFO LOG END ==*/
 
 //======================================================
 //   Vertex Shader 20 

@@ -44,12 +44,13 @@ namespace GL_Engine {
 		if (reflected == false) {
 			backup = *this;
 			this->CameraPosition.y *= -1.0;
-			float planeAngle = asin(ForwardVector.y / glm::length(ForwardVector));
-			volatile glm::quat test = glm::quat(ForwardVector);
+			//float planeAngle = asin(ForwardVector.y / glm::length(ForwardVector));
+			//volatile glm::quat test = glm::quat(ForwardVector);
 
-			planeAngle *= -1.0;
-			std::cout << ForwardVector.x << " " << ForwardVector.y << " " << ForwardVector.z << std::endl;
-			this->PitchBy(-2.0f * glm::degrees(planeAngle));
+			//planeAngle *= -1.0;
+			//std::cout << ForwardVector.x << " " << ForwardVector.y << " " << ForwardVector.z << std::endl;
+			//this->PitchBy(-2.0f * glm::degrees(planeAngle));
+			this->RotationEuler.x = -this->RotationEuler.x;
 			reflected = true;
 			this->GenerateViewMatrix();
 		}
@@ -72,6 +73,7 @@ namespace GL_Engine {
 	}
 
 	void Camera::PitchBy(float _Pitch) {
+		this->RotationEuler.x += _Pitch;
 		float Radians = glm::radians(_Pitch);
 		glm::quat Versor = glm::angleAxis(Radians, this->RightVector);
 
@@ -81,6 +83,7 @@ namespace GL_Engine {
 		this->UpdateViewMatrix = true;
 	}
 	void Camera::RollBy(float _Roll) {
+		this->RotationEuler.z += _Roll;
 		float Radians = glm::radians(_Roll);
 		glm::quat Versor = glm::angleAxis(Radians, this->ForwardVector);
 
@@ -90,6 +93,7 @@ namespace GL_Engine {
 		this->UpdateViewMatrix = true;
 	}
 	void Camera::YawBy(float _Yaw) {
+		this->RotationEuler.y += _Yaw;
 		float Radians = glm::radians(_Yaw);
 		glm::quat Versor = glm::angleAxis(Radians, this->UpVector);
 
@@ -122,14 +126,22 @@ namespace GL_Engine {
 
 
 	void Camera::GenerateViewMatrix() {
+		glm::quat qPitch = glm::angleAxis(glm::radians(RotationEuler.x), glm::vec3(1, 0, 0));
+		glm::quat qYaw = glm::angleAxis(glm::radians(RotationEuler.y), glm::vec3(0, 1, 0));
+		glm::quat qRoll = glm::angleAxis(glm::radians(RotationEuler.z), glm::vec3(0, 0, 1));
+
+		glm::quat orientation2 = qPitch * qYaw * qRoll;
+		orientation2 = glm::normalize(orientation2);
+		glm::mat4 rotate = glm::mat4_cast(orientation2);
+
 		glm::mat4 R = glm::toMat4(Orientation);
 		glm::mat4 T = glm::mat4(1.0); //identity
 		T = glm::translate(T, glm::vec3(-CameraPosition));
-		this->ForwardVector =	glm::vec3(R * glm::vec4(0, 0, 1, 0));
-		this->UpVector =		glm::vec3(R * glm::vec4(0, 1, 0, 0));
-		this->RightVector =		glm::vec3(R * glm::vec4(1, 0, 0, 0));
+		this->ForwardVector =	glm::vec3(rotate * glm::vec4(0, 0, 1, 0));
+		this->UpVector =		glm::vec3(rotate * glm::vec4(0, 1, 0, 0));
+		this->RightVector =		glm::vec3(rotate * glm::vec4(1, 0, 0, 0));
 
-		this->ViewMatrix = R * T;
+		this->ViewMatrix = glm::inverse(rotate) * T;
 		this->UpdateViewMatrix = false;
 	}
 

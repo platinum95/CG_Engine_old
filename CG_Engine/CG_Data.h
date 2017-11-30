@@ -193,8 +193,8 @@ namespace GL_Engine{
 				void* data = File_IO::LoadImageFile(_Path, width, height, nChannels, true);
 				GLint format = nChannels == 3 ? GL_RGB : GL_RGBA;
 				auto parameters = []() {
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_MIRRORED_REPEAT);
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_MIRRORED_REPEAT);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 				};
 				std::shared_ptr<Texture> newTexture = std::make_shared<Texture>(data, width, height, _Unit, format, parameters, GL_TEXTURE_2D);
 				return newTexture;

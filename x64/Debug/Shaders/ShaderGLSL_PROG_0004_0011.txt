@@ -1,6 +1,6 @@
 
 //== PROGRAM LINK STATUS = TRUE
-//== PROGRAM VALIDATE STATUS = TRUE
+//== PROGRAM VALIDATE STATUS = FALSE
 
 //======================================================
 //   Vertex Shader 5 
@@ -50,6 +50,7 @@ void main(){
 
 #define WAVE_STRENGTH	0.01
 #define WAVE_SCALE		6
+#define WAVE_SPEED		10
 
 in vec4 ClipspaceCoord;
 uniform sampler2D reflectionTexture;
@@ -66,12 +67,12 @@ void main(){
 	int time_trunc = int(Time);
 	float time_normalised = Time - float(time_trunc);
 	
-	vec2 dudvVal = texture(dudvMap, (TexCoord + time_normalised) * WAVE_SCALE).rg * 2.0 - 1.0;
+	vec2 dudvVal = texture(dudvMap, (TexCoord + time_normalised * WAVE_SPEED) * WAVE_SCALE).rg * 2.0 - 1.0;
 	dudvVal = WAVE_STRENGTH * vec2(dudvVal.x * 2.0, dudvVal.y);
 	vec2 reflectionCoord = vec2(ndc.x, -ndc.y) + dudvVal;
 	vec2 refractionCoord = vec2(ndc.x, ndc.y) + dudvVal;
 
-	reflectionCoord.y = clamp(reflectionCoord.y, -0.01, -0.9);
+	reflectionCoord.y = clamp(reflectionCoord.y, -0.999, -0.01);
 	reflectionCoord.x = clamp(reflectionCoord.x, 0.01, 0.9);
 	refractionCoord = clamp(refractionCoord, 0.001, 0.999);
 

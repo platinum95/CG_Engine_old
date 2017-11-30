@@ -1,5 +1,5 @@
 #version 330                                                                        
-out vec4 FragColour;
+layout(location=0) out vec4 FragColour;
 
 in mat3 models;
 varying vec3 Pos_ViewSpace;

@@ -6,6 +6,6 @@ out vec4 FragColour;
 uniform sampler2D image;
 
 void main(){
-	vec2 tex = vec2(1-PassTexCoord.x, 1-PassTexCoord.y);
+	vec2 tex = vec2(PassTexCoord.x, 1-PassTexCoord.y);
 	FragColour = texture(image, tex);
 }

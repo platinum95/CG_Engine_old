@@ -46,6 +46,7 @@ namespace GL_Engine {
 		glm::vec4 CameraPosition{ 0, 0, 0, 1 };
 		glm::quat Orientation; 
 		glm::vec3 ForwardVector{ 0.0f, 0.0f, 1.0f }, RightVector{ 1.0f, 0.0f, 0.0f }, UpVector{ 0.0f, 1.0f, 0.0f };
+		glm::vec3 RotationEuler{ 0.0f, 0.0f, 0.0f };
 
 		bool UpdateViewMatrix{ true };
 
