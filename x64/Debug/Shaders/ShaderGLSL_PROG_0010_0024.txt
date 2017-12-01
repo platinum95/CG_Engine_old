@@ -1,6 +1,10 @@
 
 //== PROGRAM LINK STATUS = TRUE
 //== PROGRAM VALIDATE STATUS = TRUE
+/*== INFO LOG ==
+Validation warning! - Sampler value diffuseTexture has not been set.
+Validation successful.
+  == INFO LOG END ==*/
 
 //======================================================
 //   Vertex Shader 11 
@@ -55,7 +59,7 @@ void main(){
 
 //== SHADER COMPILE STATUS = TRUE
 #version 330                                                                        
-out vec4 FragColour;
+layout(location=0) out vec4 FragColour;
 
 in mat3 models;
 varying vec3 Pos_ViewSpace;

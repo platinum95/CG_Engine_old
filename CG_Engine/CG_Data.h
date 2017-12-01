@@ -13,24 +13,47 @@
 
 namespace GL_Engine{
 	namespace CG_Data{
-		
-
+		/*-------------VBO Class------------*/
+		/*
+		*Handles everything to do with VBOs
+		*/
 		class VBO{
 		public:
 			VBO();
+
+			//Construct a VBO by passing data, data size(in bytes), usage (i.e GL_STATIC_DRAW), and an optional target (i.e. GL_ARRAY_BUFFER)
 			VBO(void* _Data, uint64_t _DataSize, GLenum _Usage, GLenum _Target = GL_ARRAY_BUFFER);
+
 			~VBO();
+			
+			//Returns the ID of the VBO
 			const GLuint GetID() const;
+
+			//Binds the VBO
 			void BindVBO() const;
+
+			//Sets the VBO data
 			void SetVBOData(void* _Data, uint64_t _DataSize) const;
+
 		protected:
+			//The VBO target, e.g. GL_ARRAY_BUFFER
 			GLenum Target;
+
+			//The VBO usage, e.g. GL_STATIC_DRAW
 			GLenum Usage;
+
+			//The VBO ID
 			GLuint ID;
 		private:
+			//Indicates whether or not the VBO has been initialised
 			bool initialised{ false };
 		};
 
+		/*-------------VAO Class------------*/
+		/*
+		*Handles everything to do with VAOs
+		*Keeps track of the VBOs assigned to the VAO
+		*/
 		class VAO{
 		public:
 			VAO();
@@ -48,47 +71,30 @@ namespace GL_Engine{
 			bool initialised{ false };
 		};
 
+		/*-------------Texture Class------------*/
+		/*
+		*Handles everything to do with textures
+		*/
 		class Texture{
 		public:
-			Texture(void* _Data, GLint width, GLint height, GLuint _Unit, GLuint _ImageFormat, std::function<void()> _Parameters, GLenum _Target = GL_TEXTURE_2D) {
+			Texture(void* _Data, GLint width, GLint height, GLuint _Unit, GLuint _ImageFormat, std::function<void()> _Parameters, GLenum _Target = GL_TEXTURE_2D);
+			Texture(GLuint _Unit, GLenum _Target);
 
+			void SetUnit(const GLuint _Unit);
 
-				glGenTextures(1, &this->ID);
-				this->Target = _Target;
-				this->Unit = _Unit;
-				glActiveTexture(this->Unit);
-				glBindTexture(this->Target, this->ID);
-				_Parameters();
-				
-				glTexImage2D(this->Target, 0, GL_RGBA, width, height, 0, _ImageFormat, GL_UNSIGNED_BYTE, _Data);
-				glGenerateMipmap(this->Target);
-			}
-			Texture(GLuint _Unit, GLenum _Target) {
-				glGenTextures(1, &this->ID);
-				this->Target = _Target;
-				this->Unit = _Unit;
-			}
+			void Bind();
 
-			void SetUnit(const GLuint _Unit){
-				this->Unit = _Unit;
-			}
-
-			void Bind(){
-				glActiveTexture(this->Unit);
-				glBindTexture(this->Target, this->ID);
-			}
-
-			const GLuint GetID() const { return this->ID; }
+			const GLuint GetID() const;
 			GLuint ID;
 		protected:
-			
 			GLenum Target;
 			GLuint Unit;
-		private:
-			
-
 		};
 
+		/*-------------ModelAttribute Class------------*/
+		/*
+		*Handles the data loaded in from a model file.
+		*/
 		class ModelAttribute : public VAO {
 		public:
 			ModelAttribute();
@@ -107,10 +113,13 @@ namespace GL_Engine{
 			
 
 		};
-			
+		
+		/*-------------Uniform Class------------*/
+		/*
+		*Handles everything to do with shader uniforms
+		*/
 		class Uniform{
 		public:
-
 			Uniform(GLint _Location, void* _Data, std::function<void(const CG_Data::Uniform&)> _Callback);
 			Uniform();
 			~Uniform();
@@ -131,27 +140,16 @@ namespace GL_Engine{
 			std::function<void(const CG_Data::Uniform&)> UpdateCallback;
 		};
 
+		/*-------------UBO Class------------*/
+		/*
+		*Handles everything to do with uniform buffer objects
+		*/
 		class UBO : VBO {
 		public:
-			UBO() {};
-			UBO(void* _Data, size_t _DataSize) {
-				this->Data = _Data;
-				this->DataSize = _DataSize;
-				this->Target = GL_UNIFORM_BUFFER;
-				this->Usage = GL_DYNAMIC_DRAW;
-				this->SetVBOData(Data, DataSize);
-				this->BindingPost = UBO_Count++;
-				glBindBufferBase(GL_UNIFORM_BUFFER, this->BindingPost, this->ID);
-			}
-			void UpdateUBO() const {
-				glBindBuffer(GL_UNIFORM_BUFFER, this->ID);
-				GLvoid* UBO_Pointer = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
-				memcpy(UBO_Pointer, this->Data, this->DataSize);
-				glUnmapBuffer(GL_UNIFORM_BUFFER);
-			}
-			const GLuint GetBindingPost()const {
-				return this->BindingPost;
-			}
+			UBO();
+			UBO(void* _Data, size_t _DataSize);
+			void UpdateUBO() const;
+			const GLuint GetBindingPost()const;
 		private:
 			void* Data;
 			size_t DataSize;
@@ -159,166 +157,64 @@ namespace GL_Engine{
 			static GLuint UBO_Count;
 		};
 
+		/*-------------ModelLoader Class------------*/
+		/*
+		*Handles the loading and memory of models from file
+		*/
 		using ModelAttribList = std::vector<std::shared_ptr<ModelAttribute>>;
 		class ModelLoader {
 		public:
-			
 			ModelAttribList LoadModel(std::string &_PathBase, std::string&_ModelFile, unsigned int _Flags);
 
 			static std::vector<std::shared_ptr<Texture>> LoadMaterial(const aiMaterial *material, const aiTextureType _Type, std::string &_PathBase,
-																		std::vector<std::shared_ptr<Texture>> &_Textures){
-				
-
-				for(unsigned int i = 0; i < material->GetTextureCount(_Type); i++){
-					aiString str;
-					material->GetTexture(_Type, i, &str);
-					std::string std_str = std::string(str.C_Str());
-					if (std_str.size() == 0)
-						continue;
-					std_str = _PathBase + std_str;
-					if(CachedTextures[std_str]){
-						_Textures.push_back(CachedTextures[std_str]);
-						continue;
-					}
-					const auto texture = LoadTexture(std_str, GL_TEXTURE0 + (GLuint)_Textures.size());
-					_Textures.push_back(texture);
-					CachedTextures[std_str] = texture;
-				}
-				return _Textures;
-			}
-			
-
-			static std::shared_ptr<Texture> LoadTexture(std::string& _Path, GLuint _Unit){
-				int width, height, nChannels;
-				void* data = File_IO::LoadImageFile(_Path, width, height, nChannels, true);
-				GLint format = nChannels == 3 ? GL_RGB : GL_RGBA;
-				auto parameters = []() {
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-					glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-				};
-				std::shared_ptr<Texture> newTexture = std::make_shared<Texture>(data, width, height, _Unit, format, parameters, GL_TEXTURE_2D);
-				return newTexture;
-			}
+				std::vector<std::shared_ptr<Texture>> &_Textures);
+			static std::shared_ptr<Texture> LoadTexture(std::string& _Path, GLuint _Unit);
 
 		private:
 			Assimp::Importer aImporter;
 			static std::map <std::string, std::shared_ptr<Texture>> CachedTextures;
 		};
 
-
+		/*-------------FBO Class------------*/
+		/*
+		*Handles everything to do with framebuffer objects
+		*/
 		class FBO {
 		public:
 			class AttachmentBufferObject {
 			public:
 				GLuint ID;
 				virtual void Bind() const = 0;
-
 			};
+
 			class RenderbufferObject : public AttachmentBufferObject {
 			public:
-				RenderbufferObject(uint16_t _Width, uint16_t _Height, GLenum _Type) {
-					glGenRenderbuffers(1, &this->ID);
-					glBindRenderbuffer(GL_RENDERBUFFER, this->ID);
-					glRenderbufferStorage(GL_RENDERBUFFER, _Type, _Width, _Height);
-
-				}
-				void Bind() const {
-
-				}
+				RenderbufferObject(uint16_t _Width, uint16_t _Height, GLenum _Type);
+				void Bind() const;
 			};
+
 			class TexturebufferObject : public AttachmentBufferObject {
 			public:
-				TexturebufferObject(uint16_t _Width, uint16_t _Height, uint8_t _Unit) {
-					auto parameters = []() {
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-						glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-					};
-					TextureObject = std::make_shared<Texture>(nullptr, _Width, _Height, GL_TEXTURE0 + _Unit, GL_RGB, parameters, GL_TEXTURE_2D);
-					this->ID = TextureObject->GetID();
-				}
-				void Bind() const {
-
-				}
-				const std::shared_ptr<Texture> GetTexture() const { return this->TextureObject; }
+				TexturebufferObject(uint16_t _Width, uint16_t _Height, uint8_t _Unit);
+				void Bind() const;
+				const std::shared_ptr<Texture> GetTexture() const;
 			private:
 				std::shared_ptr<Texture> TextureObject;
-				
 			};
 
 			enum AttachmentType {
 				TextureAttachment, StencilAttachment, DepthAttachment
 			};
 
-			FBO() {
-				glGenFramebuffers(1, &this->ID);
-				Initialised = true;
-			}
-			~FBO() {
-				if (Initialised) {
-					this->CleanUp();
-					Initialised = false;
-				}
-			}
-			void CleanUp() {
-				if (Initialised) {
-					glDeleteFramebuffers(1, &this->ID);
-					Initialised = false;
-				}
-			}
-			std::shared_ptr<AttachmentBufferObject> AddAttachment(AttachmentType _Attachment, uint16_t _Width, uint16_t _Height) {
-				glBindFramebuffer(GL_FRAMEBUFFER, this->ID);
-				glDrawBuffer(GL_COLOR_ATTACHMENT0);
-				switch (_Attachment) {
-				case TextureAttachment:{
-					std::shared_ptr<TexturebufferObject> TexObj = std::make_shared<TexturebufferObject>(_Width, _Height, TextureAttachmentCount);
-					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + TextureAttachmentCount++, GL_TEXTURE_2D, TexObj->ID, 0);
-					this->Attachments.push_back(std::move(TexObj));
-					break;
-					}
-				case StencilAttachment: {
-					std::shared_ptr<RenderbufferObject> rbo = std::make_shared<RenderbufferObject>(_Width, _Height, GL_STENCIL_INDEX8);
-					glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo->ID);
-					this->Attachments.push_back(std::move(rbo));
-					break;
-					}
-				case DepthAttachment: {
-					std::shared_ptr<RenderbufferObject> rbo = std::make_shared<RenderbufferObject>(_Width, _Height, GL_DEPTH_COMPONENT32);
-					glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, rbo->ID);
-					this->Attachments.push_back(std::move(rbo));
-					break;
-					}
-				}
-				if (glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE) {
-					this->complete = true;
-				}
-				glBindFramebuffer(GL_FRAMEBUFFER, 0);
-				std::shared_ptr<AttachmentBufferObject> abo = Attachments.back();
-				return abo;
-				
-			}
-			void Bind(uint8_t _ColourAttachment = 0) const {
-				if (!this->complete)
-					throw std::runtime_error("Attempting to bind incomplete framebuffer!\n");
-				glBindTexture(GL_TEXTURE_2D, 0);
-				glBindFramebuffer(GL_FRAMEBUFFER, this->ID);
-				glDrawBuffer(GL_COLOR_ATTACHMENT0 + _ColourAttachment);
-				glViewport(0, 0, 1280, 720);
-			}
+			FBO();
+			~FBO();
+			void CleanUp();
+			std::shared_ptr<AttachmentBufferObject> AddAttachment(AttachmentType _Attachment, uint16_t _Width, uint16_t _Height);
+			void Bind(uint8_t _ColourAttachment = 0) const;
 
-			void Bind(uint16_t _Count, const GLenum* _ColourAttachments) const {
-				if (!this->complete)
-					throw std::runtime_error("Attempting to bind incomplete framebuffer!\n");
-				glBindTexture(GL_TEXTURE_2D, 0);
-				glBindFramebuffer(GL_FRAMEBUFFER, this->ID);
-				glDrawBuffers(_Count, _ColourAttachments);
-				glViewport(0, 0, 1280, 720);
-			}
-			const GLuint GetID() const {
-				return this->ID;
-			}
-			void Unbind() const {
-				glBindFramebuffer(GL_FRAMEBUFFER, 0);
-			}
+			void Bind(uint16_t _Count, const GLenum* _ColourAttachments) const;
+			const GLuint GetID() const;
+			void Unbind() const;
 			
 
 		protected:

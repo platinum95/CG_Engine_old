@@ -10,6 +10,7 @@
 #include "Cubemap.h"
 #include "ParticleSystem.h"
 #include "Time.h"
+#include "PostProcessing.h"
 
 static GL_Engine::Properties::GLFWproperties windowProperties = {
 	1280,			//Width
@@ -96,6 +97,8 @@ private:
 	std::unique_ptr<ParticleSystem> particleSystem;
 
 	std::shared_ptr<CG_Data::Texture> waterDUDVTexture;
+
+	PostProcessing postprocessPipeline;
 };
 	
 

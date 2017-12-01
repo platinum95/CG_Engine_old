@@ -1,6 +1,8 @@
 ﻿  CG_Implementation.cpp
-x:\cg\cg_engine\cg_implementation\cg_implementation.cpp(12): warning C4838: conversion from 'double' to 'float' requires a narrowing conversion
-x:\cg\cg_engine\cg_implementation\cg_implementation.cpp(12): warning C4305: 'initializing': truncation from 'double' to 'float'
-x:\cg\cg_engine\cg_implementation\cg_implementation.cpp(118): warning C4305: '+=': truncation from 'double' to 'float'
+  Generating Code...
+x:\cg\cg_engine\cg_engine\postprocessing.h(38): warning C4715: 'GL_Engine::PostProcessing::AddAttachment': not all control paths return a value
+  Compiling...
+  main.cpp
+  Generating Code...
   CG_Implementation.vcxproj -> X:\CG\CG_Engine\x64\Debug\CG_Implementation.exe
   CG_Implementation.vcxproj -> X:\CG\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)

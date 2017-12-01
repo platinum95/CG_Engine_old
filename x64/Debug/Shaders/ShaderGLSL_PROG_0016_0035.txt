@@ -1,6 +1,6 @@
 
 //== PROGRAM LINK STATUS = TRUE
-//== PROGRAM VALIDATE STATUS = FALSE
+//== PROGRAM VALIDATE STATUS = TRUE
 
 //======================================================
 //   Vertex Shader 17 
@@ -28,9 +28,9 @@ in vec2 PassTexCoord;
 
 out vec4 FragColour;
 
-uniform sampler2D image;
+uniform sampler2D image, brightness;
 
 void main(){
-	vec2 tex = vec2(1-PassTexCoord.x, 1-PassTexCoord.y);
-	FragColour = texture(image, tex);
+	vec2 tex = vec2(PassTexCoord.x, 1-PassTexCoord.y);
+	FragColour = mix(texture(image, tex), texture(brightness, tex), 0.5);
 }

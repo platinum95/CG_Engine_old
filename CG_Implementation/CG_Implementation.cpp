@@ -111,7 +111,7 @@ int CG_Implementation::run(){
 		double second_diff = time_diff / 1.0e6;
 		double fps = 1.0 / second_diff;
 		char title[50];
-		sprintf(title, "FPS: %f", fps);
+		sprintf_s(title, "FPS: %f", fps);
 		glfwSetWindowTitle(windowProperties.window, title);
 		
 		time_millis_camera = CameraStopwatch.MeasureTime().count();
@@ -122,11 +122,10 @@ int CG_Implementation::run(){
 		sun.GetTransformMatrix();
 		particleSystem->GetTransformMatrix();
 		particleSystem->UpdateTime(second_diff);
-		time += second_diff;
+		time += (float)second_diff;
 
 		//Clear screen
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		
 		glEnable(GL_CLIP_DISTANCE0);
 		camera_ubo_data.ClippingPlane[3] = 0;
 		camera_ubo_data.ClippingPlane[1] = 1;
@@ -149,7 +148,7 @@ int CG_Implementation::run(){
 		WaterFBO->Unbind();
 		const GLenum CAttachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
 		ppFBO->Bind(2, CAttachments);
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CLIP_DISTANCE0);
 		camera_ubo_data.ClippingPlane[3] = 1000;
@@ -157,6 +156,10 @@ int CG_Implementation::run(){
 		renderer->Render();
 		ppFBO->Unbind();
 
+		postprocessPipeline.Process();
+
+		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		guiRenderer->Render();
 
 	
@@ -390,6 +393,10 @@ void CG_Implementation::initialise(){
 	FragTexture->SetUnit(GL_TEXTURE0);
 	BrightTexture->SetUnit(GL_TEXTURE1);
 
+	CG_Data::Uniform *uni = postprocessPipeline.AddAttachment(PostProcessing::GaussianBlur);
+	auto Tex = postprocessPipeline.Compile(BrightTexture, windowProperties.width, windowProperties.height);
+	Tex->SetUnit(GL_TEXTURE1);
+
 	guiVAO = std::make_shared<CG_Data::VAO>();
 	guiVAO->BindVAO();
 	vertexVBO = std::make_unique<CG_Data::VBO>(&guiVertices[0], 12 * sizeof(float), GL_STATIC_DRAW);
@@ -407,9 +414,10 @@ void CG_Implementation::initialise(){
 	auto guiRenderPass = guiRenderer->AddRenderPass(&guiShader);
 	guiRenderPass->SetDrawFunction([]() {glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); });
 	guiRenderPass->Textures.push_back(FragTexture);
-	guiRenderPass->Textures.push_back(BrightTexture);
+	guiRenderPass->Textures.push_back(Tex);
 	guiRenderPass->BatchVao = guiVAO;
 	guiRenderPass->AddBatchUnit(&gui);
+
 	
 	glEnable(GL_DEPTH_TEST);
 

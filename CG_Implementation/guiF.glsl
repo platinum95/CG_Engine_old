@@ -7,5 +7,10 @@ uniform sampler2D image, brightness;
 
 void main(){
 	vec2 tex = vec2(PassTexCoord.x, 1-PassTexCoord.y);
-	FragColour = texture(brightness, tex);
+
+	
+	if(length(texture(brightness, tex).rgb) > 0.1)
+		FragColour = texture(brightness,tex);
+	else
+		FragColour = texture(image, tex);
 }

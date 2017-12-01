@@ -1,6 +1,10 @@
 
 //== PROGRAM LINK STATUS = TRUE
 //== PROGRAM VALIDATE STATUS = TRUE
+/*== INFO LOG ==
+Validation warning! - Sampler value diffuseTexture has not been set.
+Validation successful.
+  == INFO LOG END ==*/
 
 //======================================================
 //   Vertex Shader 2 
