@@ -51,6 +51,9 @@
     <ClCompile Include="Time.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="PostProcessing.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="CG_Engine.h">
@@ -95,12 +98,21 @@
     <ClInclude Include="Time.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PostProcessing.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="ParticleSystemVShader.glsl">
       <Filter>Resource Files</Filter>
     </None>
     <None Include="ParticleSystemFShader.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="PostprocessingV.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="PostprocessingF.glsl">
       <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>

@@ -62,7 +62,7 @@ private:
 	std::unique_ptr<Renderer> renderer, guiRenderer;
 //	std::unique_ptr<Hierarchy> hierarchy;
 
-	Stopwatch<std::chrono::microseconds> CameraStopwatch;
+	Stopwatch<std::chrono::microseconds> CameraStopwatch, FramerateStopwatch;
 	
 	CG_Data::ModelAttribList barrelAttributes, kitchenAttributes, nanosuitAttributes, sunAttributes;
 	Entity barrel, kitchen, nanosuit, gui, water, sun;

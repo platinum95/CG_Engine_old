@@ -304,6 +304,15 @@ namespace GL_Engine{
 				glDrawBuffer(GL_COLOR_ATTACHMENT0 + _ColourAttachment);
 				glViewport(0, 0, 1280, 720);
 			}
+
+			void Bind(uint16_t _Count, const GLenum* _ColourAttachments) const {
+				if (!this->complete)
+					throw std::runtime_error("Attempting to bind incomplete framebuffer!\n");
+				glBindTexture(GL_TEXTURE_2D, 0);
+				glBindFramebuffer(GL_FRAMEBUFFER, this->ID);
+				glDrawBuffers(_Count, _ColourAttachments);
+				glViewport(0, 0, 1280, 720);
+			}
 			const GLuint GetID() const {
 				return this->ID;
 			}

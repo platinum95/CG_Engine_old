@@ -336,6 +336,7 @@
     <ClInclude Include="File_IO.h" />
     <ClInclude Include="InputHandler.h" />
     <ClInclude Include="ParticleSystem.h" />
+    <ClInclude Include="PostProcessing.h" />
     <ClInclude Include="Properties.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="Shader.h" />
@@ -352,6 +353,7 @@
     <ClCompile Include="glad.c" />
     <ClCompile Include="InputHandler.cpp" />
     <ClCompile Include="ParticleSystem.cpp" />
+    <ClCompile Include="PostProcessing.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="Shader.cpp" />
     <ClCompile Include="Time.cpp" />
@@ -359,6 +361,8 @@
   <ItemGroup>
     <None Include="ParticleSystemFShader.glsl" />
     <None Include="ParticleSystemVShader.glsl" />
+    <None Include="PostprocessingF.glsl" />
+    <None Include="PostprocessingV.glsl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -51,13 +51,14 @@ void CameraKeyEvent(GLuint Key, void* Parameter) {
 	float dZ = Key == GLFW_KEY_W ? -amount : Key == GLFW_KEY_S ? amount : 0;
 	camera->TranslateCamera(glm::vec4(dX, dY, dZ, 1.0));
 
+	amount *= 4;
 	float yaw = Key == GLFW_KEY_Q ? amount : Key == GLFW_KEY_E ? -amount : 0;
 	camera->YawBy(yaw);
 
 	//if (Key == GLFW_KEY_Q)
 	//	camera->ReflectCamera();
 
-	float pitch = Key == GLFW_KEY_Z ? 0.5f : Key == GLFW_KEY_X ? -0.5f : 0;
+	float pitch = Key == GLFW_KEY_Z ? amount : Key == GLFW_KEY_X ? -amount : 0;
 	camera->PitchBy(pitch);
 }
 
@@ -106,6 +107,13 @@ int CG_Implementation::run(){
 
 
 	while (!glfwWindowShouldClose(windowProperties.window)){
+		uint64_t time_diff = FramerateStopwatch.MeasureTime().count();
+		double second_diff = time_diff / 1.0e6;
+		double fps = 1.0 / second_diff;
+		char title[50];
+		sprintf(title, "FPS: %f", fps);
+		glfwSetWindowTitle(windowProperties.window, title);
+		
 		time_millis_camera = CameraStopwatch.MeasureTime().count();
 		keyHandler.Update(windowProperties.window);
 		barrel.GetTransformMatrix();
@@ -113,8 +121,8 @@ int CG_Implementation::run(){
 		nanosuit.GetTransformMatrix();
 		sun.GetTransformMatrix();
 		particleSystem->GetTransformMatrix();
-		particleSystem->UpdateTime(0.01);
-		time += 0.00001;
+		particleSystem->UpdateTime(second_diff);
+		time += second_diff;
 
 		//Clear screen
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
@@ -139,8 +147,8 @@ int CG_Implementation::run(){
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		renderer->Render();
 		WaterFBO->Unbind();
-
-		ppFBO->Bind(0);
+		const GLenum CAttachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
+		ppFBO->Bind(2, CAttachments);
 		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glDisable(GL_CLIP_DISTANCE0);
@@ -270,13 +278,14 @@ void CG_Implementation::initialise(){
 	guiShader.RegisterAttribute("vPosition", 0);
 	guiShader.RegisterAttribute("TexCoord", 1);
 	guiShader.RegisterTextureUnit("image", 0);
+	guiShader.RegisterTextureUnit("brightness", 1);
 	guiShader.CompileShader();
 
 	LoadModels();
 	
 	//Initialise camera
 	camera.SetCameraPosition(glm::vec4(0, 10, -3, 1.0));
-	camera.SetProjectionMatrix(0.01f, 100.0f, 70.0f, (float)windowProperties.width / (float)windowProperties.height);
+	camera.SetProjectionMatrix(0.01f, 1000.0f, 70.0f, (float)windowProperties.width / (float)windowProperties.height);
 
 	
 
@@ -398,6 +407,7 @@ void CG_Implementation::initialise(){
 	auto guiRenderPass = guiRenderer->AddRenderPass(&guiShader);
 	guiRenderPass->SetDrawFunction([]() {glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0); });
 	guiRenderPass->Textures.push_back(FragTexture);
+	guiRenderPass->Textures.push_back(BrightTexture);
 	guiRenderPass->BatchVao = guiVAO;
 	guiRenderPass->AddBatchUnit(&gui);
 	

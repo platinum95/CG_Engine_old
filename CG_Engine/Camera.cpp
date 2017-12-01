@@ -31,7 +31,7 @@ namespace GL_Engine {
 			0, 0, Sz, -1,
 			0, 0, Pz, 0
 		};
-		this->ProjectionMatrix = glm::make_mat4(ConstructMatrix);
+		this->ProjectionMatrix = glm::perspective(fov_radians, _AspectRatio, _NearPlane, _FarPlane);// glm::make_mat4(ConstructMatrix);
 		return this->ProjectionMatrix;
 	}
 	void Camera::SetProjectionMatrix(glm::mat4 &_Projection) {
