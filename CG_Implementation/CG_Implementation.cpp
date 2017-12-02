@@ -120,6 +120,7 @@ int CG_Implementation::run(){
 		kitchen.GetTransformMatrix();
 		nanosuit.GetTransformMatrix();
 		sun.GetTransformMatrix();
+		dragon.GetTransformMatrix();
 		particleSystem->GetTransformMatrix();
 		particleSystem->UpdateTime(second_diff);
 		time += (float)second_diff;
@@ -339,6 +340,19 @@ void CG_Implementation::initialise(){
 		nanosuitPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
 
+	nodeModelIndex = dragon.AddData((void*)glm::value_ptr(dragon.TransformMatrix));
+	dragon.SetPosition(glm::vec3(0, 0, 0));
+	for (auto &a : dragonAttributes) {
+		GLsizei dCount = (GLsizei)a->GetVertexCount();
+		RenderPass *dragonPass = renderer->AddRenderPass(&basicShader);
+		dragonPass->SetDrawFunction([dCount]() {glDrawElements(GL_TRIANGLES, dCount, GL_UNSIGNED_INT, 0); });
+		dragonPass->BatchVao = a;
+		std::move(a->ModelTextures.begin(), a->ModelTextures.end(), std::back_inserter(dragonPass->Textures));
+		dragonPass->AddBatchUnit(&dragon);
+		dragonPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+	}
+	dragon.ScaleBy(glm::vec3(0.1, 0.1, 0.1));
+	dragon.SetPosition(glm::vec3(0, 25, 0));
 	nodeModelIndex = sun.AddData((void*)glm::value_ptr(sun.TransformMatrix));
 	sun.SetPosition(glm::vec3(0, 0, 0));
 	for (auto &a : sunAttributes) {
@@ -381,7 +395,7 @@ void CG_Implementation::initialise(){
 	waterRenderPass->AddBatchUnit(&water);
 
 	particleSystem = std::make_unique<ParticleSystem>();
-	auto pRenderer = particleSystem->GenerateParticleSystem(8560, com_ubo, glm::vec3(0, 15, 0), glm::vec3(0, 1, 0));
+	auto pRenderer = particleSystem->GenerateParticleSystem(100000, com_ubo, glm::vec3(31, 26, 0), glm::vec3(1, 0.04, 0));
 	renderer->AddRenderPass(std::move(pRenderer));
 
 	ppFBO = std::make_unique<CG_Data::FBO>();
@@ -547,6 +561,11 @@ void CG_Implementation::LoadModels() {
 			aiProcess_GenSmoothNormals);
 
 		sunAttributes = mLoader.LoadModel(sun_base, sun_model, aiProcess_CalcTangentSpace |
+																aiProcess_Triangulate |
+																aiProcess_JoinIdenticalVertices |
+																aiProcess_SortByPType |
+																aiProcess_GenSmoothNormals);
+		dragonAttributes = mLoader.LoadModel(dragon_base, dragon_model, aiProcess_CalcTangentSpace |
 																aiProcess_Triangulate |
 																aiProcess_JoinIdenticalVertices |
 																aiProcess_SortByPType |

@@ -1,10 +1,1 @@
-﻿  CG_Data.cpp
-  Cubemap.cpp
-  Entity.cpp
-  ParticleSystem.cpp
-ParticleSystem.cpp(161): warning C4244: '+=': conversion from 'const double' to 'float', possible loss of data
-ParticleSystem.cpp(164): warning C4244: '=': conversion from 'const double' to 'float', possible loss of data
-  PostProcessing.cpp
-  Renderer.cpp
-  Shader.cpp
-  CG_Engine.vcxproj -> X:\CG\CG_Engine\CG_Engine\../libs/CG_Engine_x64.lib
+﻿  CG_Engine.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\CG_Engine\../libs/CG_Engine_x64.lib

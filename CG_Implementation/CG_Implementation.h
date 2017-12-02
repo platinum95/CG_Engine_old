@@ -65,8 +65,8 @@ private:
 
 	Stopwatch<std::chrono::microseconds> CameraStopwatch, FramerateStopwatch;
 	
-	CG_Data::ModelAttribList barrelAttributes, kitchenAttributes, nanosuitAttributes, sunAttributes;
-	Entity barrel, kitchen, nanosuit, gui, water, sun;
+	CG_Data::ModelAttribList barrelAttributes, kitchenAttributes, nanosuitAttributes, sunAttributes, dragonAttributes;
+	Entity barrel, kitchen, nanosuit, gui, water, sun, dragon;
 	std::string AssetBase = "./assets/";
 	std::string ModelBase = AssetBase + "models/";
 
@@ -81,6 +81,8 @@ private:
 	std::string sun_base = ModelBase + "sun/";
 	std::string sun_model = "sun.obj";
 	std::string waterDUDV_loc = ModelBase + "water/waterDUDV.png";
+	std::string dragon_base = "assets/models/dragon/";
+	std::string dragon_model = "alduin-dragon.obj";
 
 	CameraUBO_Data camera_ubo_data;
 	LightUBO_Data light_ubo_data;
