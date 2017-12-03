@@ -1,5 +1,6 @@
 #include "ParticleSystem.h"
 #include <iostream>
+#include <time.h>
 
 namespace GL_Engine {
 
@@ -12,6 +13,7 @@ namespace GL_Engine {
 	};
 	
 	ParticleSystem::ParticleSystem(){
+		
 	}
 
 
@@ -21,14 +23,15 @@ namespace GL_Engine {
 
 	std::unique_ptr<RenderPass> ParticleSystem::GenerateParticleSystem(uint32_t _ParticleCount, CG_Data::UBO * _CameraUBO, glm::vec3 _Position, glm::vec3 _BaseDir)
 	{
+		srand(123184103u);
 		//Set entity/particle initial values
 		this->ParticleCount = _ParticleCount;
 		this->Position = glm::vec4(_Position, 1.0);
 		this->CameraUBO = _CameraUBO;
-		this->Orientation = glm::quatLookAt(_BaseDir, glm::vec3(-1.0, 0.0, 0));
-		this->Forward = this->Orientation * glm::vec3(0, 0, 1);
-		this->Up = this->Orientation * glm::vec3(0, 1, 0);
-		this->Right = this->Orientation * glm::vec3(1, 0, 0);
+		this->Orientation = glm::quat(0.0, 0.0, 0.0, 1.0);
+		this->Forward = glm::vec3(0, 0, 1);
+		this->Up = glm::vec3(0, 1, 0);
+		this->Right = glm::vec3(1, 0, 0);
 		this->UpdateMatrix();
 		this->Time = 0.0;
 
@@ -67,14 +70,26 @@ namespace GL_Engine {
 			InitialColourData[j + 1] = 0.5498f + deltaG; // g
 			InitialColourData[j + 2] = 0.27f + deltaB; // b
 
+			float rands = ((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f;
+			glm::vec3 s = glm::cross(_BaseDir, glm::vec3(0, 1, 0));
+			glm::vec3 up = glm::cross(_BaseDir, s);
+			glm::quat rotation = glm::angleAxis(rands * 2.0f * 3.145f, _BaseDir);
+			glm::vec3 pusher = rotation * up;
+			float amount = ((float)rand() / (float)RAND_MAX) * 0.2f;
+			glm::quat rot = glm::angleAxis(amount, pusher);
+
 
 			// start velocity variance. randomly vary x, y and z components
-			float randx = ((float)rand() / (float)RAND_MAX) * 1.0f - 0.5f;
-			float randz = ((float)rand() / (float)RAND_MAX) * 1.0f - 0.5f;
-			float randy = ((float)rand() / (float)RAND_MAX) * 1.0f - 0.5f;
-			InitialVelocityData[j] = randx * 1.0f; // x
-			InitialVelocityData[j + 1] = randy * 1.0f; // y
-			InitialVelocityData[j + 2] = randz * 1.0f; // z
+			float randx = ((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f;
+			float randz = ((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f;
+			float randy = ((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f;
+			//glm::quat rot = glm::angleAxis(randx * 0.30f, glm::vec3(0, 1, 0));
+			glm::quat rot2 = glm::angleAxis(randy * 0.30f, glm::vec3(0, 0, 1));
+			//rot = glm::angleAxis(randx * 1.0f, rot * glm::vec3(0, 0, 1)) * rot;
+			glm::vec3 particleVelocity = pusher;// (rot)* _BaseDir;// +glm::vec3(((float)rand() / (float)RAND_MAX) * 0.5f, ((float)rand() / (float)RAND_MAX) * 0.5f, ((float)rand() / (float)RAND_MAX) * 0.5f);
+			InitialVelocityData[j] = particleVelocity.x; // x
+			InitialVelocityData[j + 1] = particleVelocity.y; // y
+			InitialVelocityData[j + 2] = particleVelocity.z; // z
 			j += 3;
 		}
 
@@ -135,7 +150,10 @@ namespace GL_Engine {
 		auto EmitterUniform = this->ParticleShader->RegisterUniform("EmitterPosition", Vec3Lambda);
 		auto DirectionUniform = this->ParticleShader->RegisterUniform("EmitterDirection", Vec3Lambda);
 		auto ModelUniform = this->ParticleShader->RegisterUniform("model", MatrixLambda);
+		auto GravityUniform = this->ParticleShader->RegisterUniform("Gravity", Vec3Lambda);
 		this->ParticleShader->CompileShader();
+
+		glUniform3f(GravityUniform->GetID(), 0, -1, 0);
 
 		auto ModelIndex = this->AddData((void*)glm::value_ptr(this->TransformMatrix));
 		auto EmitterIndex = this->AddData((void*)glm::value_ptr(this->Position));

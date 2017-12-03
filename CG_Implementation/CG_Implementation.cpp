@@ -348,7 +348,7 @@ void CG_Implementation::initialise(){
 		dragonPass->SetDrawFunction([dCount]() {glDrawElements(GL_TRIANGLES, dCount, GL_UNSIGNED_INT, 0); });
 		dragonPass->BatchVao = a;
 		std::move(a->ModelTextures.begin(), a->ModelTextures.end(), std::back_inserter(dragonPass->Textures));
-		dragonPass->AddBatchUnit(&dragon);
+	//	dragonPass->AddBatchUnit(&dragon);
 		dragonPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
 	dragon.ScaleBy(glm::vec3(0.1, 0.1, 0.1));
@@ -395,7 +395,7 @@ void CG_Implementation::initialise(){
 	waterRenderPass->AddBatchUnit(&water);
 
 	particleSystem = std::make_unique<ParticleSystem>();
-	auto pRenderer = particleSystem->GenerateParticleSystem(100000, com_ubo, glm::vec3(31, 26, 0), glm::vec3(1, 0.04, 0));
+	auto pRenderer = particleSystem->GenerateParticleSystem(8000, com_ubo, glm::vec3(10, 10, 0), glm::vec3(10.0, 5.0, 0.0));
 	renderer->AddRenderPass(std::move(pRenderer));
 
 	ppFBO = std::make_unique<CG_Data::FBO>();
