@@ -46,10 +46,10 @@ void main(){
 	vec3 velocity = Velocity + 5;
 	ePos += velocity * elapsed_time + 0.5 * a * elapsed_time * elapsed_time;
 	*/
-	vec3 ePos = vec3(10, 10, 0);
+	vec3 ePos = EmitterPosition;//vec3(10, 10, 0);
 	vec3 Position = Velocity * elapsed_time;
 	vec3 GravityOffset = Gravity * elapsed_time * elapsed_time;
-	ePos = vec3(10, 10, 0) + Position + GravityOffset;
+	ePos = ePos + Position + GravityOffset;
 
 	vec4 WorldPosition =vec4(ePos, 1.0);// model * vec4(ePos, 1.0);
 	gl_ClipDistance[0] = dot(WorldPosition, ClippingPlane);

@@ -70,25 +70,22 @@ namespace GL_Engine {
 			InitialColourData[j + 1] = 0.5498f + deltaG; // g
 			InitialColourData[j + 2] = 0.27f + deltaB; // b
 
-			float rands = ((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f;
-			glm::vec3 s = glm::cross(_BaseDir, glm::vec3(0, 1, 0));
-			glm::vec3 up = glm::cross(_BaseDir, s);
-			glm::quat rotation = glm::angleAxis(rands * 2.0f * 3.145f, _BaseDir);
-			glm::vec3 pusher = rotation * up;
-			float amount = ((float)rand() / (float)RAND_MAX) - 0.5f;
-			amount = amount * 1.0f;
-			static float t = 0.0f;
-			glm::quat rot = glm::angleAxis(t += 0.0001f, up);
+			//Get particle direction as a variation of the base direction
+			//Start by getting an "up" vector, orthogonal to the base direction
+			glm::vec3 NormalisedBase = glm::normalize(_BaseDir);
+			glm::vec3 s = glm::cross(NormalisedBase, glm::vec3(0, 1, 0));
+			glm::vec3 up = glm::cross(NormalisedBase, glm::normalize(s));
+			//Normalise the up vector
+			up = glm::normalize(up);
+			float RotationDegrees = ((float)rand() / (float)RAND_MAX) * 360.0f;
+			//Rotate this up vector by a random amount around the base direction
+			glm::vec3 RotationAxis = glm::toMat4(glm::angleAxis(glm::radians(RotationDegrees), NormalisedBase)) * glm::vec4(up, 0.0f);
+			RotationAxis = glm::normalize(RotationAxis);
+			float Variation = ((float)rand() / (float)RAND_MAX) * 22.5f;
+			glm::mat4 VariationMatrix = glm::toMat4(glm::angleAxis(glm::radians(Variation), RotationAxis));
+			//Rotate the base direction by "Variation" amount around the "RotationAxis"
+			glm::vec3 particleVelocity = VariationMatrix * glm::vec4(_BaseDir, 0.0);
 
-
-			// start velocity variance. randomly vary x, y and z components
-			float randx = ((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f;
-			float randz = ((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f;
-			float randy = ((float)rand() / (float)RAND_MAX) * 2.0f - 1.0f;
-			//glm::quat rot = glm::angleAxis(randx * 0.30f, glm::vec3(0, 1, 0));
-			glm::quat rot2 = glm::angleAxis(randy * 0.30f, glm::vec3(0, 0, 1));
-			//rot = glm::angleAxis(randx * 1.0f, rot * glm::vec3(0, 0, 1)) * rot;
-			glm::vec3 particleVelocity = glm::toMat4(rot) * glm::vec4(_BaseDir,0.0);// +glm::vec3(((float)rand() / (float)RAND_MAX) * 0.5f, ((float)rand() / (float)RAND_MAX) * 0.5f, ((float)rand() / (float)RAND_MAX) * 0.5f);
 			InitialVelocityData[j] = particleVelocity.x; // x
 			InitialVelocityData[j + 1] = particleVelocity.y; // y
 			InitialVelocityData[j + 2] = particleVelocity.z; // z
