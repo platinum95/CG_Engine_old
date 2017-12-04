@@ -12,6 +12,7 @@ namespace GL_Engine{
 		File_IO();
 		~File_IO();
 		static const char* LoadTextFile(const char* _FilePath, uint8_t *result);
+		static void FreeImageData(void* _Data);
 	//	static void* LoadPNGImage(std::string _Path, int &width, int &height);
 	//	static void* LoadRawImage(std::string _Path, int &width, int &height);
 		static void* LoadImageFile(std::string _Path, int &width, int &height, int &nChannels, bool flip);

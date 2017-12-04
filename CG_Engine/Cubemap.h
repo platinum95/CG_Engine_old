@@ -26,6 +26,7 @@ namespace GL_Engine {
 				int width, height, nChannels;
 				void *data = File_IO::LoadImageFile(str, width, height, nChannels, false);
 				glTexImage2D( type++, 0, GL_RGBA, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+				File_IO::FreeImageData(data);
 			}
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);

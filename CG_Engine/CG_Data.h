@@ -165,7 +165,7 @@ namespace GL_Engine{
 		class ModelLoader {
 		public:
 			ModelAttribList LoadModel(std::string &_PathBase, std::string&_ModelFile, unsigned int _Flags);
-
+			void CleanUp();
 			static std::vector<std::shared_ptr<Texture>> LoadMaterial(const aiMaterial *material, const aiTextureType _Type, std::string &_PathBase,
 				std::vector<std::shared_ptr<Texture>> &_Textures);
 			static std::shared_ptr<Texture> LoadTexture(std::string& _Path, GLuint _Unit);

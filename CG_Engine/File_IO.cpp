@@ -48,4 +48,8 @@ namespace GL_Engine{
 		return(FileStr->c_str());	//Return a const char array rather than std string
 	}
 
+	void File_IO::FreeImageData(void* _Data){
+		stbi_image_free(_Data);
+	}
+
 }

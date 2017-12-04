@@ -81,7 +81,7 @@ namespace GL_Engine {
 			//Rotate this up vector by a random amount around the base direction
 			glm::vec3 RotationAxis = glm::toMat4(glm::angleAxis(glm::radians(RotationDegrees), NormalisedBase)) * glm::vec4(up, 0.0f);
 			RotationAxis = glm::normalize(RotationAxis);
-			float Variation = ((float)rand() / (float)RAND_MAX) * 22.5f;
+			float Variation = ((float)rand() / (float)RAND_MAX) * 15.5f;
 			glm::mat4 VariationMatrix = glm::toMat4(glm::angleAxis(glm::radians(Variation), RotationAxis));
 			//Rotate the base direction by "Variation" amount around the "RotationAxis"
 			glm::vec3 particleVelocity = VariationMatrix * glm::vec4(_BaseDir, 0.0);
@@ -128,7 +128,12 @@ namespace GL_Engine {
 		this->ParticleVAO->AddVBO(std::move(ColourVBO));
 		this->ParticleVAO->AddVBO(std::move(OpacityVBO));
 		this->ParticleVAO->AddVBO(std::move(LifetimeVBO));
-		delete[] InitialColourData, InitialVelocityData, InitialTimeData, InitialSizeData, LifetimeData, InitialOpacityData;
+		delete[] InitialColourData;
+		delete[] InitialVelocityData;
+		delete[] InitialTimeData;
+		delete[] InitialSizeData;
+		delete[] LifetimeData;
+		delete[] InitialOpacityData;
 
 		auto MatrixLambda = [](const CG_Data::Uniform &u) {glUniformMatrix4fv(u.GetID(), 1, GL_FALSE, static_cast<const GLfloat*>(u.GetData())); };
 		auto FloatLambda = [](const CG_Data::Uniform &u) {glUniform1fv(u.GetID(), 1, static_cast<const GLfloat*>(u.GetData())); };

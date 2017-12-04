@@ -40,6 +40,7 @@ namespace GL_Engine {
 		std::shared_ptr<CG_Data::Texture> Compile(std::shared_ptr<CG_Data::Texture> _TextureInput, uint16_t _Width, uint16_t _Height){
 
 			InputTexture = _TextureInput;
+			//std::string FragmentShader;
 			std::stringstream FragmentStream(FragmentShader);
 			FragmentStream << "#version 330\n";
 			FragmentStream << AttachmentStringComponents[0];
@@ -76,6 +77,8 @@ namespace GL_Engine {
 			ProcessingFBO->AddAttachment(CG_Data::FBO::AttachmentType::DepthAttachment, _Width, _Height);
 			this->OutputColourBuffer = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(FragColAttach)->GetTexture();
 			OutputColourBuffer->SetUnit(GL_TEXTURE0);
+			FragmentShader.clear();
+			VertexShader.clear();
 
 			return this->OutputColourBuffer;
 

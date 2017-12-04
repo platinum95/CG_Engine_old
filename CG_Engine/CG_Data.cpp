@@ -134,6 +134,7 @@ namespace GL_Engine{
 			this->VBOs.push_back(std::move(indexVBO));
 			this->IndicesIndex = 0;
 			this->VertexCount = indices.size();
+			indices.clear();
 
 			std::unique_ptr<VBO> meshVBO = std::make_unique<VBO>(mesh->mVertices, mesh->mNumVertices * sizeof(aiVector3D), GL_STATIC_DRAW);
 			meshVBO->BindVBO();
@@ -165,6 +166,7 @@ namespace GL_Engine{
 				glEnableVertexAttribArray(1);
 				this->VBOs.push_back(std::move(texCoordVBO));
 				TexCoordIndex = (int) this->VBOs.size() - 1;
+				texCoords.clear();
 				i++;
 			}
 			if(mesh->HasTangentsAndBitangents()){
@@ -286,7 +288,12 @@ namespace GL_Engine{
 				std::shared_ptr<ModelAttribute> newAttrib = std::make_shared<ModelAttribute>(_Scene, i, _PathBase);
 				attributes.push_back(std::move(newAttrib));
 			}
+			aImporter.FreeScene();
 			return attributes;
+		}
+		void ModelLoader::CleanUp(){
+			aImporter.FreeScene();
+			CachedTextures.clear();
 		}
 		std::vector<std::shared_ptr<Texture>> ModelLoader::LoadMaterial(const aiMaterial *material, const aiTextureType _Type, std::string &_PathBase,
 			std::vector<std::shared_ptr<Texture>> &_Textures) {
@@ -317,6 +324,8 @@ namespace GL_Engine{
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 			};
 			std::shared_ptr<Texture> newTexture = std::make_shared<Texture>(data, width, height, _Unit, format, parameters, GL_TEXTURE_2D);
+			free(data);
+			//File_IO::FreeImageData(data);
 			return newTexture;
 		}
 

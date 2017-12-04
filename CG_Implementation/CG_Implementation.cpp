@@ -121,6 +121,9 @@ int CG_Implementation::run(){
 		particleSystem->GetTransformMatrix();
 		particleSystem->UpdateTime(second_diff);
 		time += (float)second_diff;
+
+		//particleSystem->SetPosition(glm::vec3(light_ubo_data.LightPosition[0], light_ubo_data.LightPosition[1], light_ubo_data.LightPosition[2]));
+		//std::cout << particleSystem->GetPosition().x << ", " << particleSystem->GetPosition().y << ", " << particleSystem->GetPosition().z << std::endl;
 		
 		//Clear screen
 		
@@ -392,7 +395,7 @@ void CG_Implementation::initialise(){
 	waterRenderPass->AddBatchUnit(&water);
 
 	particleSystem = std::make_unique<ParticleSystem>();
-	auto pRenderer = particleSystem->GenerateParticleSystem(50000, com_ubo, glm::vec3(32.0f, 26.0f, 0.5f), glm::vec3(20.0, -10.0, 0.0));
+	auto pRenderer = particleSystem->GenerateParticleSystem(50000, com_ubo, glm::vec3(0.0f, 69.0f, 60.0f), glm::vec3(0.0, -5.0, 20.0));
 	renderer->AddRenderPass(std::move(pRenderer));
 
 	ppFBO = std::make_unique<CG_Data::FBO>();
@@ -567,6 +570,7 @@ void CG_Implementation::LoadModels() {
 																aiProcess_JoinIdenticalVertices |
 																aiProcess_SortByPType |
 																aiProcess_GenSmoothNormals);
+		mLoader.CleanUp();
 
 }
 

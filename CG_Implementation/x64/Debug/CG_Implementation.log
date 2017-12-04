@@ -1,8 +1,3 @@
 ﻿  CG_Implementation.cpp
   Generating Code...
-x:\cg\cg_engine\cg_engine\postprocessing.h(38): warning C4715: 'GL_Engine::PostProcessing::AddAttachment': not all control paths return a value
-  Compiling...
-  main.cpp
-  Generating Code...
-  CG_Implementation.vcxproj -> X:\CG\CG_Engine\x64\Debug\CG_Implementation.exe
-  CG_Implementation.vcxproj -> X:\CG\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)
+d:\projects\c++\vs2015\cg_engine\cg_engine\postprocessing.h(38): warning C4715: 'GL_Engine::PostProcessing::AddAttachment': not all control paths return a value
