@@ -75,8 +75,10 @@ namespace GL_Engine {
 			glm::vec3 up = glm::cross(_BaseDir, s);
 			glm::quat rotation = glm::angleAxis(rands * 2.0f * 3.145f, _BaseDir);
 			glm::vec3 pusher = rotation * up;
-			float amount = ((float)rand() / (float)RAND_MAX) * 0.2f;
-			glm::quat rot = glm::angleAxis(amount, pusher);
+			float amount = ((float)rand() / (float)RAND_MAX) - 0.5f;
+			amount = amount * 1.0f;
+			static float t = 0.0f;
+			glm::quat rot = glm::angleAxis(t += 0.0001f, up);
 
 
 			// start velocity variance. randomly vary x, y and z components
@@ -86,7 +88,7 @@ namespace GL_Engine {
 			//glm::quat rot = glm::angleAxis(randx * 0.30f, glm::vec3(0, 1, 0));
 			glm::quat rot2 = glm::angleAxis(randy * 0.30f, glm::vec3(0, 0, 1));
 			//rot = glm::angleAxis(randx * 1.0f, rot * glm::vec3(0, 0, 1)) * rot;
-			glm::vec3 particleVelocity = pusher;// (rot)* _BaseDir;// +glm::vec3(((float)rand() / (float)RAND_MAX) * 0.5f, ((float)rand() / (float)RAND_MAX) * 0.5f, ((float)rand() / (float)RAND_MAX) * 0.5f);
+			glm::vec3 particleVelocity = glm::toMat4(rot) * glm::vec4(_BaseDir,0.0);// +glm::vec3(((float)rand() / (float)RAND_MAX) * 0.5f, ((float)rand() / (float)RAND_MAX) * 0.5f, ((float)rand() / (float)RAND_MAX) * 0.5f);
 			InitialVelocityData[j] = particleVelocity.x; // x
 			InitialVelocityData[j + 1] = particleVelocity.y; // y
 			InitialVelocityData[j + 2] = particleVelocity.z; // z
