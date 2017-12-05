@@ -11,6 +11,7 @@
 #include <map>
 #include "File_IO.h"
 
+
 namespace GL_Engine{
 	namespace CG_Data{
 		/*-------------VBO Class------------*/
@@ -91,28 +92,7 @@ namespace GL_Engine{
 			GLuint Unit;
 		};
 
-		/*-------------ModelAttribute Class------------*/
-		/*
-		*Handles the data loaded in from a model file.
-		*/
-		class ModelAttribute : public VAO {
-		public:
-			ModelAttribute();
-			~ModelAttribute();
-			ModelAttribute(const aiScene *_Scene, unsigned int index, std::string &_PathBase);
-
-			VBO* GetVBO(int index);
-			int MeshIndex, NormalIndex, TexCoordIndex, IndicesIndex;
-			const uint64_t GetVertexCount() const;
-			void AddTexture(std::shared_ptr<Texture> _Texture){
-				this->ModelTextures.push_back(_Texture);
-			}
-			std::vector<std::shared_ptr<Texture>> ModelTextures;
-		private:
-			uint64_t VertexCount = 0;
-			
-
-		};
+		
 		
 		/*-------------Uniform Class------------*/
 		/*
@@ -157,23 +137,7 @@ namespace GL_Engine{
 			static GLuint UBO_Count;
 		};
 
-		/*-------------ModelLoader Class------------*/
-		/*
-		*Handles the loading and memory of models from file
-		*/
-		using ModelAttribList = std::vector<std::shared_ptr<ModelAttribute>>;
-		class ModelLoader {
-		public:
-			ModelAttribList LoadModel(std::string &_PathBase, std::string&_ModelFile, unsigned int _Flags);
-			void CleanUp();
-			static std::vector<std::shared_ptr<Texture>> LoadMaterial(const aiMaterial *material, const aiTextureType _Type, std::string &_PathBase,
-				std::vector<std::shared_ptr<Texture>> &_Textures);
-			static std::shared_ptr<Texture> LoadTexture(std::string& _Path, GLuint _Unit);
-
-		private:
-			Assimp::Importer aImporter;
-			static std::map <std::string, std::shared_ptr<Texture>> CachedTextures;
-		};
+		
 
 		/*-------------FBO Class------------*/
 		/*

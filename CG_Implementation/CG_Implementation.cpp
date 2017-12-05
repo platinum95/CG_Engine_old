@@ -374,7 +374,7 @@ void CG_Implementation::initialise(){
 	reflectionTexture->SetUnit(GL_TEXTURE0);
 	refractionTexture->SetUnit(GL_TEXTURE1);
 
-	waterDUDVTexture = CG_Data::ModelLoader::LoadTexture(waterDUDV_loc, GL_TEXTURE2);
+	waterDUDVTexture = ModelLoader::LoadTexture(waterDUDV_loc, GL_TEXTURE2);
 	waterVAO = std::make_shared<CG_Data::VAO>();
 	waterVAO->BindVAO();
 	auto vertexVBO = std::make_unique<CG_Data::VBO>(&waterPlaneVert[0], 12 * sizeof(float), GL_STATIC_DRAW);

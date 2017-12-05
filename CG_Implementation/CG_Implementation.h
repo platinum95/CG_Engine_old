@@ -2,15 +2,14 @@
 
 #include "CG_Engine.h"
 #include "Shader.h"
-#include "CG_Data.h"
 #include "Camera.h"
 #include "InputHandler.h"
-#include "Entity.h"
 #include "Renderer.h"
 #include "Cubemap.h"
 #include "ParticleSystem.h"
 #include "Time.h"
 #include "PostProcessing.h"
+#include "ModelLoader.h"
 
 static GL_Engine::Properties::GLFWproperties windowProperties = {
 	1280,			//Width
@@ -54,7 +53,7 @@ private:
 	Camera camera;
 	KeyHandler keyHandler;
 	float time{0};
-	CG_Data::ModelLoader mLoader;
+	ModelLoader mLoader;
 	std::unique_ptr<CG_Data::FBO> WaterFBO, ppFBO;
 
 //	Hierarchy::HNode nodes[5];
@@ -64,8 +63,8 @@ private:
 //	std::unique_ptr<Hierarchy> hierarchy;
 
 	Stopwatch<std::chrono::microseconds> CameraStopwatch, FramerateStopwatch;
-	
-	CG_Data::ModelAttribList barrelAttributes, kitchenAttributes, nanosuitAttributes, sunAttributes, dragonAttributes;
+	std::unique_ptr<Hierarchy> DragonHierarchy;
+	ModelAttribList barrelAttributes, kitchenAttributes, nanosuitAttributes, sunAttributes, dragonAttributes;
 	Entity barrel, kitchen, nanosuit, gui, water, sun, dragon;
 	std::string AssetBase = "./assets/";
 	std::string ModelBase = AssetBase + "models/";
@@ -82,7 +81,7 @@ private:
 	std::string sun_model = "sun.obj";
 	std::string waterDUDV_loc = ModelBase + "water/waterDUDV.png";
 	std::string dragon_base = "assets/models/dragon/";
-	std::string dragon_model = "dragon.dae";
+	std::string dragon_model = "dragon.obj";
 
 	CameraUBO_Data camera_ubo_data;
 	LightUBO_Data light_ubo_data;
