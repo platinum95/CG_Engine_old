@@ -16,6 +16,7 @@ namespace GL_Engine {
 		//2 - Normals
 		//3 - Tangents
 		//4 - Bitangents
+		//5 - Bones
 		this->BindVAO();
 		MeshIndex = TexCoordIndex = NormalIndex = IndicesIndex = -1;
 		auto mesh = _Scene->mMeshes[index];
@@ -78,6 +79,9 @@ namespace GL_Engine {
 
 			this->VBOs.push_back(std::move(tangeantVBO));
 			this->VBOs.push_back(std::move(bitangeantVBO));
+		}
+		for (uint16_t i = 0; i < mesh->mNumBones; i++) {
+			std::cout << std::string(mesh->mBones[i]->mName.C_Str()) << std::endl;
 		}
 		if (mesh->mMaterialIndex != -1) {
 			aiMaterial *material = _Scene->mMaterials[mesh->mMaterialIndex];
@@ -145,28 +149,43 @@ namespace GL_Engine {
 		aImporter.FreeScene();
 		return attributes;
 	}
-	void LoadNode(const aiScene* Scene, aiNode* Node, Hierarchy *hierarchy, std::string &_PathBase) {
+	Hierarchy::HJoint* LoadNode(const aiScene* Scene, aiNode* Node, Hierarchy *hierarchy, std::vector<AttribNodePair> &Attribs, std::string &_PathBase) {
+
 		aiMatrix4x4 nodeTransformation = Node->mTransformation;
 		auto glmTransformation = aMatToGMat(nodeTransformation);
 		glm::vec4 NodePos(0.0f, 0.0f, 0.0f, 1.0f);
 		NodePos = glmTransformation * NodePos;
-		auto joint = new Hierarchy::HJoint(glm::vec3(NodePos));
-		for (unsigned int i = 0; i < Node->mNumMeshes; ++i) {
+		auto joint = new Hierarchy::HJoint(glmTransformation);// glm::vec3(NodePos));
+		hierarchy->AddJoint(std::string(Node->mName.C_Str()), joint);
+		for (unsigned int i = 0; i < Node->mNumMeshes; i++) {
 			std::shared_ptr<ModelAttribute> newAttrib = std::make_shared<ModelAttribute>(Scene, Node->mMeshes[i], _PathBase);
-			
+			auto node = new Hierarchy::HNode;
+			joint->AddNode(node);
+			Attribs.push_back({ newAttrib, node });
 		}
-		
+		for (unsigned int i = 0; i < Node->mNumChildren; i++) {
+			auto childNode = Node->mChildren[i];
+			if (childNode->mNumChildren == 0 && childNode->mNumMeshes == 0) {
+				continue;
+			}
+			joint->AddChild(LoadNode(Scene, childNode, hierarchy, Attribs, _PathBase));
+		}
+		return joint;
 	}
 
-	std::unique_ptr<Hierarchy> ModelLoader::LoadHierarchyModel(std::string &_PathBase, std::string & _ModelFile, unsigned int _Flags) {
+	std::pair<std::unique_ptr<Hierarchy>, std::vector<AttribNodePair>> ModelLoader::LoadHierarchyModel(std::string &_PathBase, std::string & _ModelFile, unsigned int _Flags) {
 		auto hierarchy = std::make_unique<Hierarchy>();
+		std::vector<AttribNodePair> attributes;
 		const aiScene* _Scene = aImporter.ReadFile(_PathBase + _ModelFile, _Flags);
 		if (!_Scene) {
 			throw std::runtime_error("Error loading model " + _PathBase + _ModelFile + "\n" + aImporter.GetErrorString() + "\n");
 		}
 		auto rootNode = _Scene->mRootNode;
-		LoadNode(_Scene, rootNode, hierarchy.get(), _PathBase);
-
+		auto rootJoint = LoadNode(_Scene, rootNode, hierarchy.get(), attributes, _PathBase);
+		hierarchy->SetRoot(rootJoint);
+		hierarchy->InitialiseHierarchy();
+		auto p = std::make_pair(std::move(hierarchy), attributes);
+		return p;
 	}
 
 	void ModelLoader::CleanUp() {

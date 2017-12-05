@@ -9,7 +9,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/mat4x4.hpp>
-
+#include <map>
 
 namespace GL_Engine {
 	class Entity {
@@ -82,15 +82,17 @@ namespace GL_Engine {
 			glm::mat4* GetGlobalMatrix();
 			void SetPosition(const glm::vec3 _Pos);
 			void SetPosition(const float x, const float y, const float z);
+			glm::mat4 LocalMatrix, GlobalMatrix;
 		private:
 			glm::vec3 eRelativePosition;
 			glm::quat eRelativeOrientation;
-			glm::mat4 LocalMatrix, GlobalMatrix;
+			//glm::mat4 LocalMatrix, GlobalMatrix;
 		};
 
 		class HJoint {
 		public:
 			HJoint(glm::vec3 _RelativePosition, glm::quat _Orientation = glm::quat(1, 0, 0, 0));
+			HJoint(glm::mat4 _LocalMatrix);
 			void InitialiseJoint(glm::mat4 parent);
 			void AddChild(HJoint *_Child);
 			void AddNode(HNode *_Node);
@@ -100,23 +102,29 @@ namespace GL_Engine {
 			void RollBy(float _Degrees);
 			void PitchBy(float _Degrees);
 			std::vector<HJoint*> *GetChilder();
-			
+			void UpdateJoint(glm::mat4 _ParentMatrix);
+
 		private:
 			glm::vec3 JointRelativePosition;
 			glm::quat NodeOrientation;
 			glm::mat4 LocalMatrix, GlobalMatrix, ParentMatrix, TranslationMatrix, RotationMatrix;
 			std::vector<HNode*> nodes;
 			std::vector<HJoint*> childer;
-			void UpdateJoint(glm::mat4 _ParentMatrix);
+			
 		};
 
 		Hierarchy();
 		void InitialiseHierarchy();
 		void SetRoot(HJoint *root);
 		HJoint *GetRoot() const;
+		HJoint* GetJoint(std::string _Name) { return JointMap[_Name]; }
+		void AddJoint(std::string _Name, HJoint* _Joint) { JointMap[_Name] = _Joint; }
+		void Update() { root->UpdateJoint(glm::mat4(1.0)); }
+		std::map<std::string, HJoint*> JointMap;
 
 	private:
 		HJoint* root;
+		
 	};
 
 }

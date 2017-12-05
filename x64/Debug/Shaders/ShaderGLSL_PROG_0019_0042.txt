@@ -52,12 +52,7 @@ void main(){
 		PassOpacity = max(decay_time/lifetime_decay, 0);
 	}
 	PassTime = elapsed_time;
-	/*
-	vec3 ePos = vec3(0, 0, 0);//vec3(emitter_position.xyz);
-	vec3 a = vec3(0, -1, 1);
-	vec3 velocity = Velocity + 5;
-	ePos += velocity * elapsed_time + 0.5 * a * elapsed_time * elapsed_time;
-	*/
+
 	vec3 ePos = EmitterPosition;//vec3(10, 10, 0);
 	vec3 Position = Velocity * elapsed_time;
 	vec3 GravityOffset = Gravity * elapsed_time * elapsed_time;

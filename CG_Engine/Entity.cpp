@@ -5,6 +5,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/matrix_decompose.hpp>
 
 namespace GL_Engine {
 #pragma region ENTITY
@@ -156,10 +157,11 @@ namespace GL_Engine {
 
 	glm::mat4 Hierarchy::HNode::UpdateMatrix(glm::mat4 _JointMatrix) {
 		LocalMatrix = glm::mat4(1.0);
+		glm::mat4 scale = glm::scale(glm::mat4(1.0f), this->Scale);
 		glm::mat4 R = glm::mat4(1.0);
 		glm::mat4 T = glm::translate(glm::mat4(1.0), eRelativePosition);
-		LocalMatrix = T;
-		GlobalMatrix = _JointMatrix;
+		LocalMatrix = T * scale;
+		GlobalMatrix = _JointMatrix;// *scale;
 		return GlobalMatrix;
 	}
 
@@ -180,8 +182,14 @@ namespace GL_Engine {
 		this->LocalMatrix = this->TranslationMatrix * this->RotationMatrix;
 	}
 
-	void Hierarchy::HJoint::InitialiseJoint(glm::mat4 parent) {
+	Hierarchy::HJoint::HJoint(glm::mat4 _LocalMatrix) {
+		this->LocalMatrix = _LocalMatrix;
+		glm::decompose(_LocalMatrix, glm::vec3(), this->NodeOrientation, this->JointRelativePosition, glm::vec3(), glm::vec4());
+		this->TranslationMatrix = glm::translate(glm::mat4(1.0), this->JointRelativePosition);
+		this->RotationMatrix = glm::inverse(glm::toMat4(this->NodeOrientation));
+	}
 
+	void Hierarchy::HJoint::InitialiseJoint(glm::mat4 parent) {
 		this->GlobalMatrix = parent * this->LocalMatrix;
 		this->ParentMatrix = parent;
 
@@ -195,7 +203,6 @@ namespace GL_Engine {
 
 
 	void Hierarchy::HJoint::UpdateJoint(glm::mat4 _ParentMatrix) {
-
 		this->GlobalMatrix = _ParentMatrix * this->LocalMatrix;
 		this->ParentMatrix = _ParentMatrix;
 		for (auto a : nodes) {
@@ -217,8 +224,7 @@ namespace GL_Engine {
 		glm::quat orient = glm::angleAxis(glm::radians(_Degrees), axis);
 		NodeOrientation = orient * NodeOrientation;
 		this->RotationMatrix = glm::inverse(glm::toMat4(this->NodeOrientation));
-		this->LocalMatrix = this->TranslationMatrix
-			* this->RotationMatrix;
+		this->LocalMatrix = this->TranslationMatrix * this->RotationMatrix;
 
 		UpdateJoint(ParentMatrix);
 	}

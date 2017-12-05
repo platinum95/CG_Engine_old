@@ -59,9 +59,9 @@ private:
 //	Hierarchy::HNode nodes[5];
 
 //	Entity entityList[5];
-	std::unique_ptr<Renderer> renderer, guiRenderer;
+	std::unique_ptr<Renderer> renderer, guiRenderer, DragonRenderer;
 //	std::unique_ptr<Hierarchy> hierarchy;
-
+	std::pair<std::unique_ptr<Hierarchy>, std::vector<AttribNodePair>> dragonHierarchy;
 	Stopwatch<std::chrono::microseconds> CameraStopwatch, FramerateStopwatch;
 	std::unique_ptr<Hierarchy> DragonHierarchy;
 	ModelAttribList barrelAttributes, kitchenAttributes, nanosuitAttributes, sunAttributes, dragonAttributes;
@@ -81,7 +81,7 @@ private:
 	std::string sun_model = "sun.obj";
 	std::string waterDUDV_loc = ModelBase + "water/waterDUDV.png";
 	std::string dragon_base = "assets/models/dragon/";
-	std::string dragon_model = "dragon.obj";
+	std::string dragon_model = "dragon.dae";
 
 	CameraUBO_Data camera_ubo_data;
 	LightUBO_Data light_ubo_data;

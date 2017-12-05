@@ -121,7 +121,12 @@ int CG_Implementation::run(){
 		particleSystem->GetTransformMatrix();
 		particleSystem->UpdateTime(second_diff);
 		time += (float)second_diff;
+		//dragonHierarchy.first->GetRoot()->GetChilder()->at(0)->GetChilder()->at(0)->RollBy(0.1f);
+		dragonHierarchy.first->Update();
 
+	//	dragonHierarchy.first->GetJoint("wingFinger_2")->YawBy(0.1f);
+	//	dragonHierarchy.first->GetJoint("wingFinger_2_L")->YawBy(0.1f);
+	//	dragonHierarchy.first->GetJoint("wingFinger_2_R")->YawBy(0.1f);
 		//particleSystem->SetPosition(glm::vec3(light_ubo_data.LightPosition[0], light_ubo_data.LightPosition[1], light_ubo_data.LightPosition[2]));
 		//std::cout << particleSystem->GetPosition().x << ", " << particleSystem->GetPosition().y << ", " << particleSystem->GetPosition().z << std::endl;
 		
@@ -213,6 +218,7 @@ void CG_Implementation::initialise(){
 	memcpy(light_ubo_data.LightColour, glm::value_ptr(glm::vec3(1, 1, 1)), sizeof(float) * 3);
 
 	renderer = std::make_unique<Renderer>();
+	DragonRenderer = std::make_unique<Renderer>();
 	guiRenderer = std::make_unique<Renderer>();
 	renderer->AddUBO(com_ubo);
 	renderer->AddUBO(light_ubo);
@@ -228,7 +234,7 @@ void CG_Implementation::initialise(){
 	basicShader.RegisterTextureUnit("normalTexture", 1);
 	basicShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
 	basicShader.RegisterUBO(std::string("LightData"), light_ubo);
-	translate_ubo = basicShader.RegisterUniform("model");
+	auto translate_uboBasic = basicShader.RegisterUniform("model");
 	basicShader.CompileShader();
 
 	waterShader.RegisterShaderStageFromFile(waterVLoc.c_str(), GL_VERTEX_SHADER);
@@ -297,6 +303,7 @@ void CG_Implementation::initialise(){
 	auto FloatLambda = [](const CG_Data::Uniform &u) {glUniform1fv(u.GetID(), 1, static_cast<const GLfloat*>(u.GetData())); };
 	auto MatrixLambda = [](const CG_Data::Uniform &u) {glUniformMatrix4fv(u.GetID(), 1, GL_FALSE, static_cast<const GLfloat*>(u.GetData())); };
 	translate_ubo->SetUpdateCallback(MatrixLambda);
+	translate_uboBasic->SetUpdateCallback(MatrixLambda);
 	waterTimeUniform->SetUpdateCallback(FloatLambda);
 
 	const auto width = windowProperties.width, height = windowProperties.height;
@@ -340,17 +347,38 @@ void CG_Implementation::initialise(){
 		nanosuitPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
 
-	nodeModelIndex = dragon.AddData((void*)glm::value_ptr(dragon.TransformMatrix));
-	dragon.SetPosition(glm::vec3(0, 0, 0));
+	//nodeModelIndex = dragon.AddData((void*)glm::value_ptr(dragon.TransformMatrix));
+	//dragon.SetPosition(glm::vec3(0, 0, 0));
 	for (auto &a : dragonAttributes) {
-		GLsizei dCount = (GLsizei)a->GetVertexCount();
+		//GLsizei dCount = (GLsizei)a->GetVertexCount();
+		//RenderPass *dragonPass = renderer->AddRenderPass(&basicShader);
+		//dragonPass->SetDrawFunction([dCount]() {glDrawElements(GL_TRIANGLES, dCount, GL_UNSIGNED_INT, 0); });
+		//dragonPass->BatchVao = a;
+		//std::move(a->ModelTextures.begin(), a->ModelTextures.end(), std::back_inserter(dragonPass->Textures));
+	//	dragonPass->AddBatchUnit(&dragon);
+		//dragonPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+	}
+
+	auto anps = dragonHierarchy.second;
+	for (auto &anp : anps) {
+		auto a = anp.Attribute;
+		auto node = anp.Node;
+//		node->SetScale(glm::vec3(0.1, 0.1, 0.1));
+		nodeModelIndex = node->AddData((void*)glm::value_ptr(node->GlobalMatrix));
+		GLsizei nCount = (GLsizei)a->GetVertexCount();
 		RenderPass *dragonPass = renderer->AddRenderPass(&basicShader);
-		dragonPass->SetDrawFunction([dCount]() {glDrawElements(GL_TRIANGLES, dCount, GL_UNSIGNED_INT, 0); });
+		dragonPass->SetDrawFunction([nCount]() {glDrawElements(GL_TRIANGLES, nCount, GL_UNSIGNED_INT, 0); });
 		dragonPass->BatchVao = a;
 		std::move(a->ModelTextures.begin(), a->ModelTextures.end(), std::back_inserter(dragonPass->Textures));
-		dragonPass->AddBatchUnit(&dragon);
-		dragonPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+		dragonPass->AddBatchUnit(node);
+		dragonPass->AddDataLink(translate_uboBasic, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
+	dragonHierarchy.first->GetRoot()->Translate(glm::vec3(0, 15, 0));
+
+	for (auto p : dragonHierarchy.first->JointMap) {
+		std::cout << p.first << std::endl;
+	}
+
 	dragon.ScaleBy(glm::vec3(0.1, 0.1, 0.1));
 	dragon.SetPosition(glm::vec3(0, 25, 0));
 	nodeModelIndex = sun.AddData((void*)glm::value_ptr(sun.TransformMatrix));
@@ -364,6 +392,8 @@ void CG_Implementation::initialise(){
 		sunPass->AddBatchUnit(&sun);
 		sunPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
+
+
 	
 	WaterFBO = std::make_unique<CG_Data::FBO>();
 	auto reflectColAttach = WaterFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
@@ -566,6 +596,11 @@ void CG_Implementation::LoadModels() {
 																aiProcess_SortByPType |
 																aiProcess_GenSmoothNormals);
 		dragonAttributes = mLoader.LoadModel(dragon_base, dragon_model, aiProcess_CalcTangentSpace |
+																aiProcess_Triangulate |
+																aiProcess_JoinIdenticalVertices |
+																aiProcess_SortByPType |
+																aiProcess_GenSmoothNormals);
+		dragonHierarchy = mLoader.LoadHierarchyModel(dragon_base, dragon_model, aiProcess_CalcTangentSpace |
 																aiProcess_Triangulate |
 																aiProcess_JoinIdenticalVertices |
 																aiProcess_SortByPType |
