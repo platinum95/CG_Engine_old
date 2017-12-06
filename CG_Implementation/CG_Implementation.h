@@ -81,7 +81,7 @@ private:
 	std::string sun_model = "sun.obj";
 	std::string waterDUDV_loc = ModelBase + "water/waterDUDV.png";
 	std::string dragon_base = "assets/models/dragon/";
-	std::string dragon_model = "dragon.dae";
+	std::string dragon_model = "dragon_blender.dae";
 
 	CameraUBO_Data camera_ubo_data;
 	LightUBO_Data light_ubo_data;

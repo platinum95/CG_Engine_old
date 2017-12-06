@@ -121,7 +121,7 @@ int CG_Implementation::run(){
 		particleSystem->GetTransformMatrix();
 		particleSystem->UpdateTime(second_diff);
 		time += (float)second_diff;
-		//dragonHierarchy.first->GetRoot()->GetChilder()->at(0)->GetChilder()->at(0)->RollBy(0.1f);
+		dragonHierarchy.first->GetRoot()->GetChilder()->at(0)->RollBy(0.1f);
 		dragonHierarchy.first->Update();
 
 	//	dragonHierarchy.first->GetJoint("wingFinger_2")->YawBy(0.1f);
@@ -379,8 +379,6 @@ void CG_Implementation::initialise(){
 		std::cout << p.first << std::endl;
 	}
 
-	dragon.ScaleBy(glm::vec3(0.1, 0.1, 0.1));
-	dragon.SetPosition(glm::vec3(0, 25, 0));
 	nodeModelIndex = sun.AddData((void*)glm::value_ptr(sun.TransformMatrix));
 	sun.SetPosition(glm::vec3(0, 0, 0));
 	for (auto &a : sunAttributes) {

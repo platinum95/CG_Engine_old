@@ -72,6 +72,67 @@ namespace GL_Engine {
 		bool MatrixNeedsUpdating{ true };
 	};
 
+	static glm::mat4 AiToGLMMat4(const aiMatrix4x4& in_mat){
+		glm::mat4 tmp;
+		tmp[0][0] = in_mat.a1;	tmp[1][0] = in_mat.b1;
+		tmp[2][0] = in_mat.c1;	tmp[3][0] = in_mat.d1;
+		tmp[0][1] = in_mat.a2;	tmp[1][1] = in_mat.b2;
+		tmp[2][1] = in_mat.c2;	tmp[3][1] = in_mat.d2;
+		tmp[0][2] = in_mat.a3;	tmp[1][2] = in_mat.b3;
+		tmp[2][2] = in_mat.c3;	tmp[3][2] = in_mat.d3;
+		tmp[0][3] = in_mat.a4;	tmp[1][3] = in_mat.b4;
+		tmp[2][3] = in_mat.c4;	tmp[3][3] = in_mat.d4;
+		return tmp;
+	}
+
+	class Bone {
+	public:
+		Bone(const aiBone *_aiBone, std::shared_ptr<Bone> _ParentBone, std::shared_ptr<Skeleton> _ParentSkeleton) {
+			this->Name = _aiBone->mName.data;
+			this->OffsetMatrix = AiToGLMMat4(_aiBone->mOffsetMatrix);
+			this->ParentBone = _ParentBone;
+			this->ParentSkeleton = _ParentSkeleton;
+		}
+		
+		void SetNode(aiNode *_Node) { this->BoneNode = _Node; }
+		void SetAnimationNode(aiNodeAnim* _AnimNode) { this->AnimationNode = _AnimNode; }
+		const std::string &GetName() const { return this->Name; }
+		const glm::mat4 &GetTransformation() const { return this->UpstreamTransformations; };
+	protected:
+		glm::mat4 UpstreamTransformations;
+		glm::mat4 OffsetMatrix;
+		
+	private:
+		std::string Name;
+		aiNode *BoneNode;
+		aiNodeAnim *AnimationNode;
+		std::shared_ptr<Bone> ParentBone;
+		std::vector<std::shared_ptr<Bone>> ChildBones;
+		std::shared_ptr<Skeleton> ParentSkeleton;
+	};
+
+	class Skeleton {
+	public:
+
+	protected:
+
+	private:
+		
+	};
+
+	class RiggedModel {
+	public:
+		RiggedModel();
+		~RiggedModel();
+		std::unique_ptr<RenderPass> GenerateRenderpass();
+	protected:
+		Entity ModelEntity;
+		Skeleton ModelRig;
+
+	private:
+		static void RiggedModelRenderPass(RenderPass &_Pass, void* _Data);
+	};
+
 
 	class Hierarchy {
 	public:
