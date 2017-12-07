@@ -10,6 +10,7 @@
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/mat4x4.hpp>
 #include <map>
+#include "Shader.h"
 
 namespace GL_Engine {
 	class Entity {
@@ -72,6 +73,33 @@ namespace GL_Engine {
 		bool MatrixNeedsUpdating{ true };
 	};
 
+	struct BatchUnit {
+		Entity* entity;
+		bool active{ true };
+	};
+	struct eDataUniLink {
+		CG_Data::Uniform *uniform;
+		uint16_t eDataIndex;
+	};
+	struct RenderPass {
+		~RenderPass();
+		BatchUnit* AddBatchUnit(Entity* _Entity);
+		void SetDrawFunction(std::function<void(void)> _dFunc);
+		void AddDataLink(CG_Data::Uniform *_Uniform, uint16_t _DataIndex) {
+			eDataUniLink link = { _Uniform, _DataIndex };
+			this->dataLink.push_back(link);
+		}
+
+		std::vector<eDataUniLink> dataLink;
+		void* Data;
+		Shader* shader;
+		std::vector<std::unique_ptr<BatchUnit>> batchUnits;
+		std::shared_ptr<CG_Data::VAO> BatchVao;
+		std::function<void(RenderPass&, void*)> renderFunction;
+		std::function<void(void)> DrawFunction;
+		std::vector<std::shared_ptr<CG_Data::Texture>> Textures;
+	};
+
 	static glm::mat4 AiToGLMMat4(const aiMatrix4x4& in_mat){
 		glm::mat4 tmp;
 		tmp[0][0] = in_mat.a1;	tmp[1][0] = in_mat.b1;
@@ -84,50 +112,72 @@ namespace GL_Engine {
 		tmp[2][3] = in_mat.c4;	tmp[3][3] = in_mat.d4;
 		return tmp;
 	}
+	class MeshNode {
+	public:
+		MeshNode(const aiNode* _Node) {
+			this->TranformationMatrix = AiToGLMMat4(_Node->mTransformation);
+			this->Name = _Node->mName.data;
+		}
+
+		void SetParent(std::shared_ptr<MeshNode> _ParentNode) {
+			this->ParentNode = _ParentNode;
+		}
+	protected:
+	private:
+		glm::mat4 TranformationMatrix;
+		std::string Name;
+		std::shared_ptr<MeshNode> ParentNode;
+	};
 
 	class Bone {
 	public:
-		Bone(const aiBone *_aiBone, std::shared_ptr<Bone> _ParentBone, std::shared_ptr<Skeleton> _ParentSkeleton) {
+		Bone(const aiBone *_aiBone, std::shared_ptr<MeshNode> _Node) {
 			this->Name = _aiBone->mName.data;
 			this->OffsetMatrix = AiToGLMMat4(_aiBone->mOffsetMatrix);
-			this->ParentBone = _ParentBone;
-			this->ParentSkeleton = _ParentSkeleton;
+			this->BoneNode = _Node;
 		}
-		
-		void SetNode(aiNode *_Node) { this->BoneNode = _Node; }
+
+		void SetParents(std::shared_ptr<Bone> _ParentBone) {
+			this->ParentBone = _ParentBone;
+			this->BoneNode->SetParent(_ParentBone->BoneNode);
+		}
+		void SetNode(std::shared_ptr<MeshNode> _Node) { this->BoneNode = _Node; }
 		void SetAnimationNode(aiNodeAnim* _AnimNode) { this->AnimationNode = _AnimNode; }
 		const std::string &GetName() const { return this->Name; }
 		const glm::mat4 &GetTransformation() const { return this->UpstreamTransformations; };
 	protected:
 		glm::mat4 UpstreamTransformations;
 		glm::mat4 OffsetMatrix;
-		
+
 	private:
 		std::string Name;
-		aiNode *BoneNode;
+		std::shared_ptr<MeshNode> BoneNode;
 		aiNodeAnim *AnimationNode;
 		std::shared_ptr<Bone> ParentBone;
 		std::vector<std::shared_ptr<Bone>> ChildBones;
-		std::shared_ptr<Skeleton> ParentSkeleton;
 	};
 
 	class Skeleton {
 	public:
-
+		Skeleton(std::map<std::string, std::shared_ptr<Bone>> &&BoneList) { this->Bones = std::move(BoneList); }
 	protected:
 
 	private:
-		
+		std::map<std::string, std::shared_ptr<Bone>> Bones;
 	};
 
-	class RiggedModel {
+	class RiggedModel : public Entity {
 	public:
-		RiggedModel();
-		~RiggedModel();
+		RiggedModel(std::unique_ptr<Skeleton> _Rig, aiMatrix4x4 &_GlobalInverseMatrix) {
+			this->ModelRig = std::move(_Rig);
+			this->GlobalInverseTransform = AiToGLMMat4(_GlobalInverseMatrix);
+		}
+		~RiggedModel() {};
 		std::unique_ptr<RenderPass> GenerateRenderpass();
 	protected:
 		Entity ModelEntity;
-		Skeleton ModelRig;
+		std::unique_ptr<Skeleton> ModelRig;
+		glm::mat4 GlobalInverseTransform;
 
 	private:
 		static void RiggedModelRenderPass(RenderPass &_Pass, void* _Data);

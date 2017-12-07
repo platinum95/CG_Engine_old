@@ -598,7 +598,12 @@ void CG_Implementation::LoadModels() {
 																aiProcess_JoinIdenticalVertices |
 																aiProcess_SortByPType |
 																aiProcess_GenSmoothNormals);
-		dragonHierarchy = mLoader.LoadHierarchyModel(dragon_base, dragon_model, aiProcess_CalcTangentSpace |
+//		dragonHierarchy = mLoader.LoadHierarchyModel(dragon_base, dragon_model, aiProcess_CalcTangentSpace |
+	//															aiProcess_Triangulate |
+		//														aiProcess_JoinIdenticalVertices |
+			//													aiProcess_SortByPType |
+				//												aiProcess_GenSmoothNormals);
+		DragonRiggedModel = mLoader.LoadRiggedModel(dragon_base, dragon_model, aiProcess_CalcTangentSpace |
 																aiProcess_Triangulate |
 																aiProcess_JoinIdenticalVertices |
 																aiProcess_SortByPType |

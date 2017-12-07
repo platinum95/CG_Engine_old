@@ -149,6 +149,7 @@ namespace GL_Engine {
 		aImporter.FreeScene();
 		return attributes;
 	}
+	
 	Hierarchy::HJoint* LoadNode(const aiScene* Scene, aiNode* Node, Hierarchy *hierarchy, std::vector<AttribNodePair> &Attribs, std::string &_PathBase) {
 
 		aiMatrix4x4 nodeTransformation = Node->mTransformation;
@@ -186,6 +187,42 @@ namespace GL_Engine {
 		hierarchy->InitialiseHierarchy();
 		auto p = std::make_pair(std::move(hierarchy), attributes);
 		return p;
+	}
+
+	void LoadNodeRecursive(std::map<std::string, aiNode*> &NodeList, aiNode* node) {
+		NodeList[node->mName.data] = node;
+		for (auto i = 0; i < node->mNumChildren; i++) {
+			LoadNodeRecursive(NodeList, node->mChildren[i]);
+		}
+	}
+
+	std::unique_ptr<RiggedModel> ModelLoader::LoadRiggedModel(std::string &_PathBase, std::string &_ModelFile, unsigned int _Flags) {
+		const aiScene* _Scene = aImporter.ReadFile(_PathBase + _ModelFile, _Flags);
+		if (!_Scene) {
+			throw std::runtime_error("Error loading model " + _PathBase + _ModelFile + "\n" + aImporter.GetErrorString() + "\n");
+		}
+		std::map<std::string, aiNode*> Nodes;
+		LoadNodeRecursive(Nodes, _Scene->mRootNode);
+		auto numMeshes = _Scene->mNumMeshes;
+		ModelAttribList attributes;
+		attributes.reserve(numMeshes);
+		std::map<std::string, std::shared_ptr<Bone>> Bones;
+		for (unsigned int i = 0; i < _Scene->mNumMeshes; i++) {
+			auto mesh = _Scene->mMeshes[i];
+			std::shared_ptr<ModelAttribute> newAttrib = std::make_shared<ModelAttribute>(_Scene, i, _PathBase);
+			attributes.push_back(std::move(newAttrib));
+			for (auto bi = 0; bi < mesh->mNumBones; bi++) {
+				aiBone *mBone = mesh->mBones[bi];
+				Bones[mBone->mName.data] = std::make_shared<Bone>(mBone, std::make_shared<MeshNode>(Nodes[mBone->mName.data]));
+			}
+		}
+		for (auto bone : Bones) {
+			bone.second->SetParents(Bones[bone.first]);
+			std::cout << bone.first << std::endl;
+		}
+		aImporter.FreeScene();
+
+		return std::make_unique<RiggedModel>(std::make_unique<Skeleton>(std::move(Bones)), _Scene->mRootNode->mTransformation);
 	}
 
 	void ModelLoader::CleanUp() {
