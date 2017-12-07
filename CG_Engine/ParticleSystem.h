@@ -10,9 +10,9 @@ namespace GL_Engine {
 		ParticleSystem();
 		~ParticleSystem();
 		std::unique_ptr<RenderPass> GenerateParticleSystem(uint32_t _ParticleCount, CG_Data::UBO *_CameraUBO, glm::vec3 _Position, glm::vec3 _BaseDir);
-		void UpdateTime(const double &_Diff);
-		void SetTime(const double& _CurrentTime);
-		const double& GetTime() const;
+		void UpdateTime(const float &_Diff);
+		void SetTime(const float &_CurrentTime);
+		const float& GetTime() const;
 
 	private:
 		static void ParticleRenderer(RenderPass &_Pass, void *_Data);

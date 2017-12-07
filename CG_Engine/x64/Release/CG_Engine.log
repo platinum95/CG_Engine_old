@@ -1,11 +1,4 @@
-﻿  Cubemap.cpp
-  Entity.cpp
-  ModelLoader.cpp
-ModelLoader.cpp(194): warning C4018: '<': signed/unsigned mismatch
-ModelLoader.cpp(214): warning C4018: '<': signed/unsigned mismatch
-  ParticleSystem.cpp
-ParticleSystem.cpp(183): warning C4244: '+=': conversion from 'const double' to 'float', possible loss of data
-ParticleSystem.cpp(186): warning C4244: '=': conversion from 'const double' to 'float', possible loss of data
-  Renderer.cpp
-  Terrain.cpp
-  CG_Engine.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\CG_Engine\../libs/CG_Engine_x64.lib
+﻿  Entity.cpp
+Entity.cpp(279): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+Entity.cpp(281): warning C4244: 'argument': conversion from 'uint64_t' to 'GLsizei', possible loss of data
+  CG_Engine.vcxproj -> X:\CG\CG_Engine\CG_Engine\../libs/CG_Engine_x64.lib

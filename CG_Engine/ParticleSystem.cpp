@@ -179,13 +179,13 @@ namespace GL_Engine {
 		return std::move(ParticlePass);
 	}
 
-	void ParticleSystem::UpdateTime(const double &_Diff) {
+	void ParticleSystem::UpdateTime(const float &_Diff) {
 		this->Time += _Diff;
 	}
-	void ParticleSystem::SetTime(const double& _CurrentTime) {
+	void ParticleSystem::SetTime(const float& _CurrentTime) {
 		this->Time = _CurrentTime;
 	}
-	const double& ParticleSystem::GetTime() const {
+	const float& ParticleSystem::GetTime() const {
 		return this->Time;
 	}
 

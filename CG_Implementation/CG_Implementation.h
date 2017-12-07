@@ -46,7 +46,7 @@ private:
 	void initialise();
 	void LoadModels();
 	void UpdateCameraUBO();
-	Shader basicShader, SkyboxShader, kitchenShader, nanosuitShader, guiShader, waterShader;
+	Shader basicShader, SkyboxShader, kitchenShader, nanosuitShader, guiShader, waterShader, RiggedDragonShader;
 	CG_Engine engine;
 	std::shared_ptr<CG_Data::VAO> VAO, guiVAO, waterVAO;
 	CG_Data::Uniform *translate_ubo;
@@ -92,6 +92,7 @@ private:
 	std::string guiVLoc = "guiV.glsl", guiFLoc = "guiF.glsl";
 	std::string kitchenVLoc = "kitchenV.glsl", kitchenFLoc = "kitchenF.glsl";
 	std::string nanosuitVShader = "nanosuitV.glsl", nanosuitFShader = "nanosuitF.glsl";
+	std::string RiggedDragonVShader = "RiggedDragonV.glsl", RiggedDragonFShader = "RiggedDragonF.glsl";
 	std::vector<std::string> SkyboxTexLoc{ "./assets/skybox/right.png", "./assets/skybox/left.png", "./assets/skybox/top.jpg",
 		"./assets/skybox/bottom.png", "./assets/skybox/back.png", "./assets/skybox/front.png" };
 	std::unique_ptr<Cubemap> Skybox;

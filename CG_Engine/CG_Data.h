@@ -72,6 +72,7 @@ namespace GL_Engine{
 			bool initialised{ false };
 		};
 
+
 		/*-------------Texture Class------------*/
 		/*
 		*Handles everything to do with textures
@@ -137,7 +138,6 @@ namespace GL_Engine{
 			static GLuint UBO_Count;
 		};
 
-		
 
 		/*-------------FBO Class------------*/
 		/*
@@ -193,4 +193,26 @@ namespace GL_Engine{
 		};
 		
 	}
+	/*-------------ModelAttribute Class------------*/
+	/*
+	*Handles the data loaded in from a model file.
+	*/
+	class ModelAttribute : public CG_Data::VAO {
+	public:
+		ModelAttribute();
+		~ModelAttribute();
+		ModelAttribute(const aiScene *_Scene, unsigned int index, std::string &_PathBase);
+
+		CG_Data::VBO* GetVBO(int index);
+		int MeshIndex, NormalIndex, TexCoordIndex, IndicesIndex;
+		const uint64_t GetVertexCount() const;
+		void AddTexture(std::shared_ptr<CG_Data::Texture> _Texture) {
+			this->ModelTextures.push_back(_Texture);
+		}
+		std::vector<std::shared_ptr<CG_Data::Texture>> ModelTextures;
+		std::vector<std::string> BoneNames;
+	private:
+		uint64_t VertexCount = 0;
+	};
+	using ModelAttribList = std::vector<std::shared_ptr<ModelAttribute>>;
 }

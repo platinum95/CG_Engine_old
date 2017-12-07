@@ -49,6 +49,10 @@ namespace GL_Engine{
 		CG_Data::Uniform* GetUniform(uint8_t index) const {
 			return Uniforms[index]->UniformObject;
 		}
+		CG_Data::Uniform* GetUniform(std::string _uName) {
+			return UniformMap[_uName];
+		}
+
 
 		void UpdateUniforms() {
 			for (auto u : this->Uniforms) {
@@ -79,6 +83,7 @@ namespace GL_Engine{
 		std::vector<ShaderStage*> shaderStages;
 		std::vector<Attribute*> Attributes;
 		std::vector<UniformStruct*> Uniforms;
+		std::map<std::string, CG_Data::Uniform*> UniformMap;
 		std::map<std::string, UBO_Struct> UBO_BlockIndices;
 		std::map<std::string, GLuint> TextureLocations;
 

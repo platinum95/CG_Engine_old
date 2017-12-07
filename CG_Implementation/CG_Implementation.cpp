@@ -121,14 +121,7 @@ int CG_Implementation::run(){
 		particleSystem->GetTransformMatrix();
 		particleSystem->UpdateTime(second_diff);
 		time += (float)second_diff;
-		dragonHierarchy.first->GetRoot()->GetChilder()->at(0)->RollBy(0.1f);
-		dragonHierarchy.first->Update();
 
-	//	dragonHierarchy.first->GetJoint("wingFinger_2")->YawBy(0.1f);
-	//	dragonHierarchy.first->GetJoint("wingFinger_2_L")->YawBy(0.1f);
-	//	dragonHierarchy.first->GetJoint("wingFinger_2_R")->YawBy(0.1f);
-		//particleSystem->SetPosition(glm::vec3(light_ubo_data.LightPosition[0], light_ubo_data.LightPosition[1], light_ubo_data.LightPosition[2]));
-		//std::cout << particleSystem->GetPosition().x << ", " << particleSystem->GetPosition().y << ", " << particleSystem->GetPosition().z << std::endl;
 		
 		//Clear screen
 		
@@ -263,6 +256,24 @@ void CG_Implementation::initialise(){
 	translate_ubo = nanosuitShader.RegisterUniform("model");
 	nanosuitShader.CompileShader();
 
+	RiggedDragonShader.RegisterShaderStageFromFile(RiggedDragonVShader.c_str(), GL_VERTEX_SHADER);
+	RiggedDragonShader.RegisterShaderStageFromFile(RiggedDragonFShader.c_str(), GL_FRAGMENT_SHADER);
+	RiggedDragonShader.RegisterAttribute("vPosition", 0);
+	RiggedDragonShader.RegisterAttribute("vNormal", 2);
+	RiggedDragonShader.RegisterAttribute("TexCoord", 1);
+	RiggedDragonShader.RegisterAttribute("vTangeant", 3);
+	RiggedDragonShader.RegisterAttribute("vBitangeant", 4);
+	RiggedDragonShader.RegisterAttribute("BoneWeights", 4);
+	RiggedDragonShader.RegisterTextureUnit("diffuseTexture", 0);
+	RiggedDragonShader.RegisterTextureUnit("normalTexture", 1);
+	RiggedDragonShader.RegisterTextureUnit("specularTexture", 2);
+	RiggedDragonShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
+	RiggedDragonShader.RegisterUBO(std::string("LightData"), light_ubo);
+	RiggedDragonShader.RegisterUniform("model");
+	RiggedDragonShader.RegisterUniform("BoneMatrices");
+	RiggedDragonShader.CompileShader();
+	
+
 	kitchenShader.RegisterShaderStageFromFile(kitchenVLoc.c_str(), GL_VERTEX_SHADER);
 	kitchenShader.RegisterShaderStageFromFile(kitchenFLoc.c_str(), GL_FRAGMENT_SHADER);
 	kitchenShader.RegisterAttribute("vPosition", 0);
@@ -359,25 +370,8 @@ void CG_Implementation::initialise(){
 		//dragonPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
 
-	auto anps = dragonHierarchy.second;
-	for (auto &anp : anps) {
-		auto a = anp.Attribute;
-		auto node = anp.Node;
-//		node->SetScale(glm::vec3(0.1, 0.1, 0.1));
-		nodeModelIndex = node->AddData((void*)glm::value_ptr(node->GlobalMatrix));
-		GLsizei nCount = (GLsizei)a->GetVertexCount();
-		RenderPass *dragonPass = renderer->AddRenderPass(&basicShader);
-		dragonPass->SetDrawFunction([nCount]() {glDrawElements(GL_TRIANGLES, nCount, GL_UNSIGNED_INT, 0); });
-		dragonPass->BatchVao = a;
-		std::move(a->ModelTextures.begin(), a->ModelTextures.end(), std::back_inserter(dragonPass->Textures));
-		dragonPass->AddBatchUnit(node);
-		dragonPass->AddDataLink(translate_uboBasic, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
-	}
-	dragonHierarchy.first->GetRoot()->Translate(glm::vec3(0, 15, 0));
+	renderer->AddRenderPass(std::move(DragonRiggedModel->GenerateRenderpass(&RiggedDragonShader)));
 
-	for (auto p : dragonHierarchy.first->JointMap) {
-		std::cout << p.first << std::endl;
-	}
 
 	nodeModelIndex = sun.AddData((void*)glm::value_ptr(sun.TransformMatrix));
 	sun.SetPosition(glm::vec3(0, 0, 0));

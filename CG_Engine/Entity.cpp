@@ -14,7 +14,6 @@ namespace GL_Engine {
 		eData.push_back(glm::value_ptr(this->TransformMatrix));
 	}
 
-
 	Entity::~Entity() {
 	}
 
@@ -254,5 +253,34 @@ namespace GL_Engine {
 
 
 #pragma endregion
+
+	void RiggedModel::RiggedModelRenderer(RenderPass& _Pass, void* _Data) {
+		
+		RiggedModel *Model = static_cast<RiggedModel*>(_Data);
+		for (auto l : _Pass.dataLink) {
+			l.uniform->SetData(Model->GetData(l.eDataIndex));
+			l.uniform->Update();
+		}
+		Model->UpdateUniforms();
+
+		auto Rig = Model->GetRig();
+		_Pass.shader->UseShader();
+		for (auto attrib : Model->ModelAttributes) {
+			attrib->BindVAO();
+			for (auto tex : attrib->ModelTextures) {
+				tex->Bind();
+			}
+			std::vector<glm::mat4> boneMatrices;
+			int i = 0;
+			for (auto boneName : attrib->BoneNames) {
+				boneMatrices.push_back(Rig->Bones[boneName]->GetTransformation());
+			}
+			auto boneMatLoc = glGetUniformLocation(_Pass.shader->GetShaderID(), "BoneMatrices");
+			glUniformMatrix4fv(boneMatLoc, boneMatrices.size(), GL_FALSE, glm::value_ptr(boneMatrices[0]));
+
+			glDrawElements(GL_TRIANGLES, attrib->GetVertexCount(), GL_UNSIGNED_INT, 0);
+		}
+		
+	}
 
 }

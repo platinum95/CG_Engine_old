@@ -297,6 +297,8 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="RiggedDragonV.glsl" />
+    <None Include="RiggedDragonF.glsl" />
     <None Include="waterF.glsl" />
     <None Include="waterV.glsl" />
     <Text Include="f.glsl">

@@ -61,6 +61,12 @@
     <None Include="waterF.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="RiggedDragonV.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="RiggedDragonF.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="f.glsl">

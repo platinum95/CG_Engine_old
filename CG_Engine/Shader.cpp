@@ -59,6 +59,7 @@ namespace GL_Engine{
 
 		for (auto uni : Uniforms) {
 			uni->UniformObject->SetID(glGetUniformLocation(ShaderID, uni->Name));
+			UniformMap[uni->Name] = uni->UniformObject;
 			//delete uni;
 		}
 		for (auto &ubo : UBO_BlockIndices) {
