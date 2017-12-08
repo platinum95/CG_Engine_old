@@ -112,6 +112,7 @@ namespace GL_Engine {
 		tmp[2][3] = in_mat.c4;	tmp[3][3] = in_mat.d4;
 		return tmp;
 	}
+	/*
 	class MeshNode {
 	public:
 		MeshNode(const aiNode* _Node, std::shared_ptr<MeshNode> _ParentNode) {
@@ -147,12 +148,13 @@ namespace GL_Engine {
 //			this->BoneNode->SetParent(_ParentBone->BoneNode);
 //		}
 		void SetTransformation(glm::mat4 _GlobalInverseTransform) {
-			this->Transformation = _GlobalInverseTransform * UpstreamTransformations * BoneNode->GetTransformationMatrix() * this->OffsetMatrix;
+			glm::mat4 upMat = GetUpstreamMatrix();
+			this->Transformation = _GlobalInverseTransform * upMat * BoneNode->GetTransformationMatrix() * this->OffsetMatrix;
 		}
 		void SetNode(std::shared_ptr<MeshNode> _Node) { this->BoneNode = _Node; }
 		void SetAnimationNode(aiNodeAnim* _AnimNode) { this->AnimationNode = _AnimNode; }
 		const std::string &GetName() const { return this->Name; }
-		const glm::mat4 &GetTransformation() const { return this->UpstreamTransformations; };
+		const glm::mat4 &GetTransformation() const { return this->Transformation; };
 	protected:
 		glm::mat4 UpstreamTransformations;
 		glm::mat4 OffsetMatrix, Transformation;
@@ -161,12 +163,11 @@ namespace GL_Engine {
 		std::string Name;
 		std::shared_ptr<MeshNode> BoneNode;
 		aiNodeAnim *AnimationNode;
-//		std::shared_ptr<Bone> ParentBone;
 		std::vector<std::shared_ptr<Bone>> ChildBones;
 
 		glm::mat4& GetUpstreamMatrix() {
 
-			auto n = BoneNode;		//maybe parent here
+			auto n = BoneNode->ParentNode;
 			std::vector<glm::mat4> mats;
 
 			while (n != nullptr){
@@ -181,20 +182,84 @@ namespace GL_Engine {
 			}
 	//		for (int i = mats.size() - 1; i >= 0; i--)
 	//			concatenated_transforms *= mats.at(i);
-
-			return concatenated_transforms;
+			this->UpstreamTransformations = concatenated_transforms;
+			return this->UpstreamTransformations;
 		}
+	};
+
+	
+
+	*/
+
+	class MeshBone {
+	public:
+		MeshBone(const aiBone* _Bone) {
+			this->OffsetMatrix = AiToGLMMat4(_Bone->mOffsetMatrix);
+			this->Name = _Bone->mName.data;
+		}
+		const glm::mat4 &GetFinalTransform(const glm::mat4 &_GlobalInverse, const glm::mat4& nodeGlobalTransform) {
+			this->FinalTransformation = _GlobalInverse * nodeGlobalTransform * this->OffsetMatrix;
+			return this->FinalTransformation;
+		}
+		glm::mat4 OffsetMatrix;
+		glm::mat4 FinalTransformation;
+		std::string Name;
+	};
+
+	class SceneBone {
+	public:
+		SceneBone(const aiBone *_Bone) {
+			this->Name = _Bone->mName.data;
+		}
+		void AddMeshBone(std::shared_ptr<MeshBone> _mBone) {
+			this->meshBones.push_back(_mBone);
+		}
+		void UpdateBone(const glm::mat4 &GlobalInverse, const glm::mat4 &_GlobalTransform) {
+			this->GlobalTransformation = _GlobalTransform;
+			for (auto mb : meshBones) {
+				mb->GetFinalTransform(GlobalInverse, this->GlobalTransformation);
+			}
+		}
+		glm::mat4 GlobalTransformation{ 1.0f };
+		std::string Name;
+		std::vector<std::shared_ptr<MeshBone>> meshBones;
+	};
+
+	class SceneNode {
+		public:
+			SceneNode(const aiNode* _node) {
+				this->NodeTransform = AiToGLMMat4(_node->mTransformation);
+				this->Name = _node->mName.data;
+			}
+			void AddChild(std::shared_ptr<SceneNode> _node) {
+				this->ChildNodes.push_back(_node);
+			}
+			void Update(const glm::mat4 &ParentTransform, const glm::mat4 &GlobalInverse) {
+				this->GlobalTransform = ParentTransform * this->NodeTransform;
+				for (auto sb : SceneBones) {
+					sb->UpdateBone(GlobalInverse, this->GlobalTransform);
+				}
+				for (auto cn : ChildNodes) {
+					cn->Update(this->GlobalTransform, GlobalInverse);
+				}
+			}
+
+
+			std::vector<std::shared_ptr<SceneBone>> SceneBones;
+			std::vector<std::shared_ptr<SceneNode>> ChildNodes;
+			glm::mat4 NodeTransform, GlobalTransform;
+			std::string Name;
 	};
 
 	class Skeleton {
 	public:
-		Skeleton(std::map<std::string, std::shared_ptr<Bone>> &&BoneList) { this->Bones = std::move(BoneList); }
-		std::map<std::string, std::shared_ptr<Bone>> Bones;
-
+		Skeleton(std::shared_ptr<SceneNode> _Root){
+			this->rootNode = _Root;
+			this->GlobalInverseMatrix = _Root->NodeTransform;
+		}
+		std::shared_ptr<SceneNode> rootNode;
 		void Update() {
-			for (auto bone : Bones) {
-				bone.second->SetTransformation(this->GlobalInverseMatrix);
-			}
+			rootNode->Update(glm::mat4(1.0), GlobalInverseMatrix);
 		}
 		glm::mat4 GlobalInverseMatrix;
 	protected:
@@ -221,7 +286,7 @@ namespace GL_Engine {
 		}
 		std::vector<std::shared_ptr<CG_Data::Texture>> ModelTextures;
 		std::vector<std::string> BoneNames;
-		std::vector<std::shared_ptr<Bone>> Bones;
+		std::vector<std::shared_ptr<MeshBone>> meshBones;
 		std::map<std::string, unsigned int> BoneIndex;
 	private:
 		uint64_t VertexCount = 0;
@@ -231,13 +296,14 @@ namespace GL_Engine {
 	//Shader can take max 5 bones. Weight is 0 if bone not used
 	class RiggedModel : public Entity {
 	public:
-		RiggedModel(std::unique_ptr<Skeleton> _Rig, aiMatrix4x4 &_GlobalInverseMatrix, ModelAttribList &&_AttributeList) {
+		RiggedModel(std::unique_ptr<Skeleton> _Rig, ModelAttribList &&_AttributeList) {
 			this->ModelRig = std::move(_Rig);
-			this->GlobalInverseTransform = AiToGLMMat4(_GlobalInverseMatrix);
+
 			this->ModelAttributes = std::forward<ModelAttribList>(_AttributeList);
-			this->ModelRig->GlobalInverseMatrix = this->GlobalInverseTransform;
+
 			Orientation = glm::quat(1, 0, 0, 0);
 			eData.push_back(glm::value_ptr(this->TransformMatrix));
+			this->ModelRig->Update();
 		}
 		~RiggedModel() {};
 		std::unique_ptr<RenderPass> GenerateRenderpass(Shader* _Shader) {
@@ -246,6 +312,9 @@ namespace GL_Engine {
 			renderPass->shader = _Shader;
 			renderPass->Data = (void*)this;
 			return std::move(renderPass);
+		}
+		void Update() {
+			this->ModelRig->Update();
 		}
 		Skeleton *GetRig() const { return this->ModelRig.get(); }
 	protected:

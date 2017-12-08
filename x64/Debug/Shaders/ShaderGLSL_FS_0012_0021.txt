@@ -1,13 +1,13 @@
 #version 330                                                                        
-layout(location=0) out vec4 FragColour;
+out vec4 FragColour;
 
 in mat3 models;
 varying vec3 Pos_ViewSpace;
 varying vec4 LightPosition_Viewspace;
-in vec3 norms;
-in vec2 TexCoords;
 
 uniform sampler2D diffuseTexture;
+uniform sampler2D normalTexture;
+uniform sampler2D specularTexture;
 
 layout (std140) uniform LightData
 { 
@@ -16,14 +16,21 @@ layout (std140) uniform LightData
 	float Brightness;
 };
 
+in VS_OUT {
+    vec3 FragPos;
+    vec2 TexCoords;
+    mat3 TBN;
+} fs_in; 
+
 void main(){
 	// ambient
     float ambientStrength = 0.1;
     vec3 ambient = ambientStrength * LightColour; 
 
 	//Diffuse
-	vec3 norm = normalize(norms);   
-	norm = normalize(models * norm); 
+	vec3 norm = texture(normalTexture, fs_in.TexCoords).rgb;
+	norm = normalize(norm * 2.0 - 1.0);   
+	norm = normalize(fs_in.TBN * norm); 
 
 	vec3 lightDir = vec3(normalize(LightPosition_Viewspace.xyz - Pos_ViewSpace));
 	float diff = max(dot(norm, lightDir), 0.0);
@@ -34,12 +41,13 @@ void main(){
 	vec3 CamDir = normalize(vec3(0,0,0) - Pos_ViewSpace);
 	vec3 ReflectDir = reflect(-lightDir, norm);
 	float SpecAmount = pow(max(dot(CamDir, ReflectDir), 0.0), 16);
-	vec3 SpecularComponent = 0.99 * SpecAmount * LightColour;  
+	float SpecWeight = texture(specularTexture, fs_in.TexCoords).x;
+	vec3 SpecularComponent = SpecWeight * SpecAmount * LightColour;  
 
 
 
 	//Output
-	vec3 result = (ambient + diffuse + SpecularComponent) * texture(diffuseTexture, TexCoords).xyz;
+	vec3 result = (ambient + diffuse + SpecularComponent) * texture(diffuseTexture, fs_in.TexCoords).xyz;
 	FragColour = vec4(result, 1.0);
 
 }

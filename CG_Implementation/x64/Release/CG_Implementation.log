@@ -1,7 +1,7 @@
 ﻿  Generating code
-  42 of 4018 functions ( 1.0%) were compiled, the rest were copied from previous compilation.
-    1 functions were new in current compilation
-    12 functions had inline decision re-evaluated but remain unchanged
+  125 of 4175 functions ( 3.0%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    48 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Release\CG_Implementation.exe
   CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Release\CG_Implementation.pdb (Full PDB)

@@ -1,13 +1,13 @@
-﻿  ModelLoader.cpp
-  Entity.cpp
+﻿  Cubemap.cpp
   Generating Code...
   Compiling...
+  Entity.cpp
+d:\projects\c++\vs2015\cg_engine\cg_engine\entity.cpp(280): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
+d:\projects\c++\vs2015\cg_engine\cg_engine\entity.cpp(287): warning C4244: 'argument': conversion from 'uint64_t' to 'GLsizei', possible loss of data
+  Generating Code...
+  Skipping... (no relevant changes detected)
   Terrain.cpp
   Renderer.cpp
   ParticleSystem.cpp
-x:\cg\cg_engine\cg_engine\particlesystem.cpp(183): warning C4244: '+=': conversion from 'const double' to 'float', possible loss of data
-x:\cg\cg_engine\cg_engine\particlesystem.cpp(186): warning C4244: '=': conversion from 'const double' to 'float', possible loss of data
-  Cubemap.cpp
-  Generating Code...
-x:\cg\cg_engine\cg_engine\particlesystem.cpp(189): warning C4172: returning address of local variable or temporary
-  CG_Engine.vcxproj -> X:\CG\CG_Engine\CG_Engine\../libs/CG_Engined_x64.lib
+  ModelLoader.cpp
+  CG_Engine.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\CG_Engine\../libs/CG_Engined_x64.lib

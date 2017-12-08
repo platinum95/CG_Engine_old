@@ -2,6 +2,7 @@
 out vec4 FragColour;
 
 in mat3 models;
+in vec4 col;
 varying vec3 Pos_ViewSpace;
 varying vec4 LightPosition_Viewspace;
 

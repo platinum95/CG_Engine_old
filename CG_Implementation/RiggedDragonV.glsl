@@ -25,25 +25,32 @@ in vec2 TexCoord;
 in vec4 BoneWeights;
 in ivec4 BoneIDs;
 out mat3 models;
-
+out vec4 col;
 out VS_OUT {
     vec3 FragPos;
     vec2 TexCoords;
     mat3 TBN;
 } vs_out;  
 
+uniform mat4 BoneMatrices[55];
 uniform mat4 model;
 varying vec3 Pos_ViewSpace;
 varying vec4 LightPosition_Viewspace;
-uniform mat4 BoneMatrices[55];
+//uniform mat4 BoneMatrices;
+
 
 
 void main(){
 
-	mat4 BMatrix = BoneMatrices[BoneIDs[0]] * 0.8f;//;BoneWeights.x;
-    BMatrix += BoneMatrices[BoneIDs[1]] * 0.2f;//;BoneWeights.y;
-    BMatrix += BoneMatrices[BoneIDs[2]] * 0.0f;//;BoneWeights.z;
-//    BMatrix += BoneMatrices[3] * BoneWeights.w;
+	mat4 BMatrix = mat4(1.0);
+	
+	BMatrix = BoneMatrices[BoneIDs.x] * BoneWeights.x;
+	BMatrix += BoneMatrices[BoneIDs.y] * BoneWeights.y;
+	BMatrix += BoneMatrices[BoneIDs.z] * BoneWeights.z;
+	BMatrix += BoneMatrices[BoneIDs.w] * BoneWeights.w;
+	
+	float val = float(BoneIDs.x) / 55.0;
+	col = vec4(val, val, val, 1.0);
 	mat4 TrueModel = model * BMatrix;
 
 	models = mat3(transpose(inverse( ViewMatrix * TrueModel)));

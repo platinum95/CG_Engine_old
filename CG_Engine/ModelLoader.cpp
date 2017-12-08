@@ -187,12 +187,15 @@ namespace GL_Engine {
 		return p;
 	}
 
-	void LoadNodeRecursive(std::map<std::string, std::shared_ptr<MeshNode>> &NodeList, std::shared_ptr<MeshNode> parent, aiNode* node) {
-		NodeList[node->mName.data] = std::make_shared<MeshNode>(node, parent);
+	std::shared_ptr<SceneNode> LoadNodes(std::map<std::string, std::shared_ptr<SceneNode>> &NodeList, aiNode* node) {
+		auto newNode = std::make_shared<SceneNode>(node);
+		NodeList[node->mName.data] = newNode;
 		for (unsigned int i = 0; i < node->mNumChildren; i++) {
-			LoadNodeRecursive(NodeList, NodeList[node->mName.data], node->mChildren[i]);
+			newNode->AddChild(LoadNodes(NodeList, node->mChildren[i]));
 		}
+		return newNode;
 	}
+
 	struct VertexBoneData {
 		unsigned int IDs[4] = { 0,0,0,0 };
 		float Weights[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -202,8 +205,10 @@ namespace GL_Engine {
 		int minPos = 0;
 		int i;
 		for (i = 0; i < 4; i++) {
-			if (vbd[loc].Weights[i] == 0.0f)
+			if (vbd[loc].Weights[i] == 0.0f) {
+				minPos = i;
 				break;
+			}
 			if (vbd[loc].Weights[i] < minWeight) {
 				minWeight = vbd[loc].Weights[i];
 				minPos = i;
@@ -218,14 +223,17 @@ namespace GL_Engine {
 			throw std::runtime_error("Error loading model " + _PathBase + _ModelFile + "\n" + aImporter.GetErrorString() + "\n");
 		}
 		//Load in the scene's nodes
-		std::map<std::string, std::shared_ptr<MeshNode>> Nodes;
-		LoadNodeRecursive(Nodes, nullptr, _Scene->mRootNode);
+		std::map<std::string, std::shared_ptr<SceneNode>> Nodes;
+		auto rootNode = LoadNodes(Nodes, _Scene->mRootNode);
+
 		auto numMeshes = _Scene->mNumMeshes;
 		ModelAttribList attributes;
 		attributes.reserve(numMeshes);
-		std::map<std::string, std::shared_ptr<Bone>> BoneListScene;
+
+		std::map<std::string, std::shared_ptr<SceneBone>> SceneBoneMap;
 		//Load in the scene's meshes, as well as the bones for each mesh
 		for (unsigned int i = 0; i < _Scene->mNumMeshes; i++) {
+			std::map<std::string, std::shared_ptr<MeshBone>> MeshBoneMap;
 			auto mesh = _Scene->mMeshes[i];
 			std::shared_ptr<ModelAttribute> newAttrib = std::make_shared<ModelAttribute>(_Scene, i, _PathBase);
 			std::vector<VertexBoneData> WeightVBOData;
@@ -233,16 +241,22 @@ namespace GL_Engine {
 			for (unsigned int bi = 0; bi < mesh->mNumBones; bi++) {
 				unsigned int BoneIndex = 0;
 				aiBone *mBone = mesh->mBones[bi];
-				if (newAttrib->BoneIndex.count(mBone->mName.data) == 0) {
-					auto newBone = std::make_shared<Bone>(mBone, Nodes[mBone->mName.data]);
-					BoneListScene[mBone->mName.data] = newBone;
-					newAttrib->Bones.push_back(newBone);
-					BoneIndex = newAttrib->Bones.size() - 1;
-					newAttrib->BoneIndex[mBone->mName.data] = BoneIndex;
+				auto newMeshBone = std::make_shared<MeshBone>(mBone);
+				std::shared_ptr<SceneBone> sceneBone;
+				if (SceneBoneMap.count(mBone->mName.data) == 0) {
+					sceneBone = std::make_shared<SceneBone>(mBone);
+					SceneBoneMap[mBone->mName.data] = sceneBone;
+					Nodes[mBone->mName.data]->SceneBones.push_back(sceneBone);
 				}
 				else {
-					BoneIndex = BoneIndex[mBone->mName.data];
+					sceneBone = SceneBoneMap[mBone->mName.data];
 				}
+				sceneBone->AddMeshBone(newMeshBone);
+
+				newAttrib->meshBones.push_back(newMeshBone);
+				BoneIndex = newAttrib->meshBones.size() - 1;
+				newAttrib->BoneIndex[mBone->mName.data] = BoneIndex;
+
 				for (unsigned int bwi = 0; bwi < mBone->mNumWeights; bwi++) {
 					auto weightData = mBone->mWeights[bwi];
 					auto vertexID = weightData.mVertexId;
@@ -250,20 +264,21 @@ namespace GL_Engine {
 					insertVertexData(WeightVBOData,vertexID, weight, BoneIndex);
 				}
 			}
+			newAttrib->BindVAO();
 			std::unique_ptr<VBO> boneDataVBO = std::make_unique<VBO>();
 			boneDataVBO->BindVBO();
-			glBufferData(GL_ARRAY_BUFFER, WeightVBOData.size() * sizeof(VertexBoneData), &WeightVBOData[0], GL_STATIC_DRAW);
-			glVertexAttribPointer(5, 4, GL_INT, GL_FALSE, 0, nullptr);
+			glBufferData(GL_ARRAY_BUFFER, WeightVBOData.size() * sizeof(WeightVBOData[0]), &WeightVBOData[0], GL_STATIC_DRAW);
+			glVertexAttribIPointer(5, 4, GL_INT, sizeof(VertexBoneData), nullptr);
 			glEnableVertexAttribArray(5);
-			glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 0, (const GLvoid*)(4 * sizeof(GLint)));
+			glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData), (const GLvoid*)(4 * sizeof(GLint)));
 			glEnableVertexAttribArray(6);
-			
+			newAttrib->AddVBO(std::move(boneDataVBO));
 			attributes.push_back(std::move(newAttrib));
 		}
 
 		aImporter.FreeScene();
 
-		return std::make_unique<RiggedModel>(std::make_unique<Skeleton>(std::move(BoneListScene)), _Scene->mRootNode->mTransformation, std::move(attributes));
+		return std::make_unique<RiggedModel>(std::make_unique<Skeleton>(rootNode), std::move(attributes));
 	}
 
 	void ModelLoader::CleanUp() {

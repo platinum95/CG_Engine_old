@@ -251,33 +251,55 @@ namespace GL_Engine {
 	}
 
 
+	void sanityCheck(glm::mat4 &matrix) {
+		for (int i = 0; i < 4; i++) {
+			for (int j = 0; j < 4; j++) {
+				if (matrix[i][j] > 100 || matrix[i][j] < -100) {
+					std::cout << "sanity failed, value " << matrix[i][j] << std::endl;
+				}
+			}
+		}
+	}
 
 #pragma endregion
 
 	void RiggedModel::RiggedModelRenderer(RenderPass& _Pass, void* _Data) {
 		
 		RiggedModel *Model = static_cast<RiggedModel*>(_Data);
+		auto Rig = Model->GetRig();
+		_Pass.shader->UseShader();
+
 		for (auto l : _Pass.dataLink) {
 			l.uniform->SetData(Model->GetData(l.eDataIndex));
 			l.uniform->Update();
 		}
 		Model->UpdateUniforms();
 
-		auto Rig = Model->GetRig();
-		_Pass.shader->UseShader();
+		glm::mat4 t(1.0f);
+		auto modelMatLoc = glGetUniformLocation(_Pass.shader->GetShaderID(), "model");
+		glUniformMatrix4fv(modelMatLoc, 1, GL_FALSE, glm::value_ptr(Model->GetTransformMatrix()));
+
+		
 		for (auto attrib : Model->ModelAttributes) {
 			attrib->BindVAO();
 			for (auto tex : attrib->ModelTextures) {
 				tex->Bind();
 			}
-			std::vector<glm::mat4> boneMatrices;
-			int i = 0;
-			for (auto boneName : attrib->BoneNames) {
-				boneMatrices.push_back(Rig->Bones[boneName]->GetTransformation());
-			}
 			auto boneMatLoc = glGetUniformLocation(_Pass.shader->GetShaderID(), "BoneMatrices");
-			glUniformMatrix4fv(boneMatLoc, boneMatrices.size(), GL_FALSE, glm::value_ptr(boneMatrices[0]));
-
+			std::vector<glm::mat4> boneMatrices((const size_t) 55, glm::mat4(1.0));
+			int i = 0;
+			if (attrib->meshBones.size() > 0) {
+				for (auto bone : attrib->meshBones) {
+				//	boneMatrices.push_back(bone->FinalTransformation);
+					sanityCheck(bone->FinalTransformation);
+				}
+				glUniformMatrix4fv(boneMatLoc, 55, GL_FALSE, glm::value_ptr(boneMatrices[0]));
+			}
+			else {
+				glm::mat4 id(1.0);
+				auto boneMatLoc = glGetUniformLocation(_Pass.shader->GetShaderID(), "BoneMatrices");
+				glUniformMatrix4fv(boneMatLoc, 1, GL_FALSE, glm::value_ptr(id));
+			}
 			glDrawElements(GL_TRIANGLES, attrib->GetVertexCount(), GL_UNSIGNED_INT, 0);
 		}
 		

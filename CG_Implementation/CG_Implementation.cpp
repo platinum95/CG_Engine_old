@@ -118,6 +118,8 @@ int CG_Implementation::run(){
 		nanosuit.GetTransformMatrix();
 		sun.GetTransformMatrix();
 		dragon.GetTransformMatrix();
+		DragonRiggedModel->GetTransformMatrix();
+		DragonRiggedModel->Update();
 		particleSystem->GetTransformMatrix();
 		particleSystem->UpdateTime(second_diff);
 		time += (float)second_diff;
@@ -263,8 +265,8 @@ void CG_Implementation::initialise(){
 	RiggedDragonShader.RegisterAttribute("TexCoord", 1);
 	RiggedDragonShader.RegisterAttribute("vTangeant", 3);
 	RiggedDragonShader.RegisterAttribute("vBitangeant", 4);
-	RiggedDragonShader.RegisterAttribute("BoneWeights", 5);
-	RiggedDragonShader.RegisterAttribute("BoneIDs", 6);
+	RiggedDragonShader.RegisterAttribute("BoneIDs", 5);
+	RiggedDragonShader.RegisterAttribute("BoneWeights", 6);
 	RiggedDragonShader.RegisterTextureUnit("diffuseTexture", 0);
 	RiggedDragonShader.RegisterTextureUnit("normalTexture", 1);
 	RiggedDragonShader.RegisterTextureUnit("specularTexture", 2);
@@ -370,8 +372,8 @@ void CG_Implementation::initialise(){
 	//	dragonPass->AddBatchUnit(&dragon);
 		//dragonPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
-
 	renderer->AddRenderPass(std::move(DragonRiggedModel->GenerateRenderpass(&RiggedDragonShader)));
+	DragonRiggedModel->SetPosition(glm::vec3(0, 10, 0));
 
 
 	nodeModelIndex = sun.AddData((void*)glm::value_ptr(sun.TransformMatrix));
