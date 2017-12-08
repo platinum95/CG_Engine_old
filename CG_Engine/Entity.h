@@ -114,9 +114,10 @@ namespace GL_Engine {
 	}
 	class MeshNode {
 	public:
-		MeshNode(const aiNode* _Node) {
+		MeshNode(const aiNode* _Node, std::shared_ptr<MeshNode> _ParentNode) {
 			this->TranformationMatrix = AiToGLMMat4(_Node->mTransformation);
 			this->Name = _Node->mName.data;
+			this->ParentNode = _ParentNode;
 		}
 
 		void SetParent(std::shared_ptr<MeshNode> _ParentNode) {
@@ -125,11 +126,12 @@ namespace GL_Engine {
 		const glm::mat4 GetTransformationMatrix() const {
 			return this->TranformationMatrix;
 		}
+		std::shared_ptr<MeshNode> ParentNode;
 	protected:
 	private:
 		glm::mat4 TranformationMatrix;
 		std::string Name;
-		std::shared_ptr<MeshNode> ParentNode;
+		
 	};
 
 	class Bone {
@@ -140,10 +142,10 @@ namespace GL_Engine {
 			this->BoneNode = _Node;
 		}
 
-		void SetParents(std::shared_ptr<Bone> _ParentBone) {
-			this->ParentBone = _ParentBone;
-			this->BoneNode->SetParent(_ParentBone->BoneNode);
-		}
+//		void SetParents(std::shared_ptr<Bone> _ParentBone) {
+//			this->ParentBone = _ParentBone;
+//			this->BoneNode->SetParent(_ParentBone->BoneNode);
+//		}
 		void SetTransformation(glm::mat4 _GlobalInverseTransform) {
 			this->Transformation = _GlobalInverseTransform * UpstreamTransformations * BoneNode->GetTransformationMatrix() * this->OffsetMatrix;
 		}
@@ -159,18 +161,18 @@ namespace GL_Engine {
 		std::string Name;
 		std::shared_ptr<MeshNode> BoneNode;
 		aiNodeAnim *AnimationNode;
-		std::shared_ptr<Bone> ParentBone;
+//		std::shared_ptr<Bone> ParentBone;
 		std::vector<std::shared_ptr<Bone>> ChildBones;
 
 		glm::mat4& GetUpstreamMatrix() {
 
-			auto b = ParentBone; 
+			auto n = BoneNode;		//maybe parent here
 			std::vector<glm::mat4> mats;
 
-			while (b != nullptr){
-				glm::mat4 tmp_mat = b->BoneNode->GetTransformationMatrix();
+			while (n != nullptr){
+				glm::mat4 tmp_mat = n->GetTransformationMatrix();
 				mats.push_back(tmp_mat);
-				b = b->ParentBone;
+				n = n->ParentNode;
 			}
 
 			glm::mat4 concatenated_transforms(1.0f);
@@ -181,7 +183,6 @@ namespace GL_Engine {
 	//			concatenated_transforms *= mats.at(i);
 
 			return concatenated_transforms;
-			
 		}
 	};
 
@@ -201,6 +202,31 @@ namespace GL_Engine {
 	private:
 		
 	};
+
+	/*-------------ModelAttribute Class------------*/
+	/*
+	*Handles the data loaded in from a model file.
+	*/
+	class ModelAttribute : public CG_Data::VAO {
+	public:
+		ModelAttribute();
+		~ModelAttribute();
+		ModelAttribute(const aiScene *_Scene, unsigned int index, std::string &_PathBase);
+
+		CG_Data::VBO* GetVBO(int index);
+		int MeshIndex, NormalIndex, TexCoordIndex, IndicesIndex;
+		const uint64_t GetVertexCount() const;
+		void AddTexture(std::shared_ptr<CG_Data::Texture> _Texture) {
+			this->ModelTextures.push_back(_Texture);
+		}
+		std::vector<std::shared_ptr<CG_Data::Texture>> ModelTextures;
+		std::vector<std::string> BoneNames;
+		std::vector<std::shared_ptr<Bone>> Bones;
+		std::map<std::string, unsigned int> BoneIndex;
+	private:
+		uint64_t VertexCount = 0;
+	};
+	using ModelAttribList = std::vector<std::shared_ptr<ModelAttribute>>;
 
 	//Shader can take max 5 bones. Weight is 0 if bone not used
 	class RiggedModel : public Entity {

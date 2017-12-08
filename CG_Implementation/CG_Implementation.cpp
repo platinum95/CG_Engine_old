@@ -263,7 +263,8 @@ void CG_Implementation::initialise(){
 	RiggedDragonShader.RegisterAttribute("TexCoord", 1);
 	RiggedDragonShader.RegisterAttribute("vTangeant", 3);
 	RiggedDragonShader.RegisterAttribute("vBitangeant", 4);
-	RiggedDragonShader.RegisterAttribute("BoneWeights", 4);
+	RiggedDragonShader.RegisterAttribute("BoneWeights", 5);
+	RiggedDragonShader.RegisterAttribute("BoneIDs", 6);
 	RiggedDragonShader.RegisterTextureUnit("diffuseTexture", 0);
 	RiggedDragonShader.RegisterTextureUnit("normalTexture", 1);
 	RiggedDragonShader.RegisterTextureUnit("specularTexture", 2);

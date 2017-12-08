@@ -23,6 +23,7 @@ in vec3 vTangeant;
 in vec3 vBitangeant;
 in vec2 TexCoord;
 in vec4 BoneWeights;
+in ivec4 BoneIDs;
 out mat3 models;
 
 out VS_OUT {
@@ -34,14 +35,14 @@ out VS_OUT {
 uniform mat4 model;
 varying vec3 Pos_ViewSpace;
 varying vec4 LightPosition_Viewspace;
-uniform mat4 BoneMatrices[5];
+uniform mat4 BoneMatrices[55];
 
 
 void main(){
 
-	mat4 BMatrix = BoneMatrices[0] * 0.8f;//;BoneWeights.x;
-    BMatrix += BoneMatrices[1] * 0.2f;//;BoneWeights.y;
-    BMatrix += BoneMatrices[2] * 0.0f;//;BoneWeights.z;
+	mat4 BMatrix = BoneMatrices[BoneIDs[0]] * 0.8f;//;BoneWeights.x;
+    BMatrix += BoneMatrices[BoneIDs[1]] * 0.2f;//;BoneWeights.y;
+    BMatrix += BoneMatrices[BoneIDs[2]] * 0.0f;//;BoneWeights.z;
 //    BMatrix += BoneMatrices[3] * BoneWeights.w;
 	mat4 TrueModel = model * BMatrix;
 
