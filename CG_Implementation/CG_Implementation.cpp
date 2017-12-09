@@ -123,7 +123,7 @@ int CG_Implementation::run(){
 
 		DragonRiggedModel->GetTransformMatrix();
 		DragonRiggedModel->Update(1, time);
-		float circleRadius = 300;
+		float circleRadius = 5;
 		float xPos = circleRadius * cos(time);
 		float zPos = circleRadius * sin(time);
 		DragonRiggedModel->SetPosition(glm::vec3(xPos, 25, zPos));
@@ -383,7 +383,7 @@ void CG_Implementation::initialise(){
 	renderer->AddRenderPass(std::move(DragonRiggedModel->GenerateRenderpass(&RiggedDragonShader)));
 	DragonRiggedModel->SetPosition(glm::vec3(0, 25, 0));
 	DragonRiggedModel->PitchBy(90.0f);
-	DragonRiggedModel->ScaleBy(glm::vec3(10, 10, 10));
+	DragonRiggedModel->ScaleBy(glm::vec3(1, 1, 1));
 
 	nodeModelIndex = sun.AddData((void*)glm::value_ptr(sun.TransformMatrix));
 	sun.SetPosition(glm::vec3(0, 0, 0));
@@ -429,7 +429,7 @@ void CG_Implementation::initialise(){
 	waterRenderPass->AddBatchUnit(&water);
 
 	particleSystem = std::make_unique<ParticleSystem>();
-	auto pRenderer = particleSystem->GenerateParticleSystem(50000, com_ubo, glm::vec3(0.0f, 69.0f, 60.0f), glm::vec3(0.0, -5.0, 20.0));
+	auto pRenderer = particleSystem->GenerateParticleSystem(500000, com_ubo, glm::vec3(0.0f, 69.0f, 60.0f), glm::vec3(0.0, -20.0, 80.0));
 	renderer->AddRenderPass(std::move(pRenderer));
 
 	ppFBO = std::make_unique<CG_Data::FBO>();
