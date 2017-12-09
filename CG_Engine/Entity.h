@@ -100,6 +100,8 @@ namespace GL_Engine {
 		std::vector<std::shared_ptr<CG_Data::Texture>> Textures;
 	};
 
+
+
 	static glm::mat4 AiToGLMMat4(const aiMatrix4x4& in_mat){
 		glm::mat4 tmp;
 		tmp[0][0] = in_mat.a1;	tmp[1][0] = in_mat.b1;
@@ -110,86 +112,9 @@ namespace GL_Engine {
 		tmp[2][2] = in_mat.c3;	tmp[3][2] = in_mat.d3;
 		tmp[0][3] = in_mat.a4;	tmp[1][3] = in_mat.b4;
 		tmp[2][3] = in_mat.c4;	tmp[3][3] = in_mat.d4;
-		return tmp;
+		return glm::transpose(tmp);
 	}
-	/*
-	class MeshNode {
-	public:
-		MeshNode(const aiNode* _Node, std::shared_ptr<MeshNode> _ParentNode) {
-			this->TranformationMatrix = AiToGLMMat4(_Node->mTransformation);
-			this->Name = _Node->mName.data;
-			this->ParentNode = _ParentNode;
-		}
 
-		void SetParent(std::shared_ptr<MeshNode> _ParentNode) {
-			this->ParentNode = _ParentNode;
-		}
-		const glm::mat4 GetTransformationMatrix() const {
-			return this->TranformationMatrix;
-		}
-		std::shared_ptr<MeshNode> ParentNode;
-	protected:
-	private:
-		glm::mat4 TranformationMatrix;
-		std::string Name;
-		
-	};
-
-	class Bone {
-	public:
-		Bone(const aiBone *_aiBone, std::shared_ptr<MeshNode> _Node) {
-			this->Name = _aiBone->mName.data;
-			this->OffsetMatrix = AiToGLMMat4(_aiBone->mOffsetMatrix);
-			this->BoneNode = _Node;
-		}
-
-//		void SetParents(std::shared_ptr<Bone> _ParentBone) {
-//			this->ParentBone = _ParentBone;
-//			this->BoneNode->SetParent(_ParentBone->BoneNode);
-//		}
-		void SetTransformation(glm::mat4 _GlobalInverseTransform) {
-			glm::mat4 upMat = GetUpstreamMatrix();
-			this->Transformation = _GlobalInverseTransform * upMat * BoneNode->GetTransformationMatrix() * this->OffsetMatrix;
-		}
-		void SetNode(std::shared_ptr<MeshNode> _Node) { this->BoneNode = _Node; }
-		void SetAnimationNode(aiNodeAnim* _AnimNode) { this->AnimationNode = _AnimNode; }
-		const std::string &GetName() const { return this->Name; }
-		const glm::mat4 &GetTransformation() const { return this->Transformation; };
-	protected:
-		glm::mat4 UpstreamTransformations;
-		glm::mat4 OffsetMatrix, Transformation;
-
-	private:
-		std::string Name;
-		std::shared_ptr<MeshNode> BoneNode;
-		aiNodeAnim *AnimationNode;
-		std::vector<std::shared_ptr<Bone>> ChildBones;
-
-		glm::mat4& GetUpstreamMatrix() {
-
-			auto n = BoneNode->ParentNode;
-			std::vector<glm::mat4> mats;
-
-			while (n != nullptr){
-				glm::mat4 tmp_mat = n->GetTransformationMatrix();
-				mats.push_back(tmp_mat);
-				n = n->ParentNode;
-			}
-
-			glm::mat4 concatenated_transforms(1.0f);
-			for (auto mat = mats.rbegin(); mat != mats.rend(); mat++) {
-				concatenated_transforms *= *mat;
-			}
-	//		for (int i = mats.size() - 1; i >= 0; i--)
-	//			concatenated_transforms *= mats.at(i);
-			this->UpstreamTransformations = concatenated_transforms;
-			return this->UpstreamTransformations;
-		}
-	};
-
-	
-
-	*/
 
 	class MeshBone {
 	public:
@@ -225,6 +150,38 @@ namespace GL_Engine {
 		std::vector<std::shared_ptr<MeshBone>> meshBones;
 	};
 
+	class NodeAnimation {
+	public:
+		std::string Name;
+		std::vector<std::pair<glm::vec3, double>> Positions, Scalings;
+		std::vector < std::pair < glm::quat, double>> Rotations;
+		double AnimationLength;
+		NodeAnimation(const aiNodeAnim *animNode, double _Length) {
+			this->Name = animNode->mNodeName.data;
+			this->AnimationLength = _Length;
+			for (auto i = 0; i < animNode->mNumPositionKeys; i++) {
+				aiVector3D pos = animNode->mPositionKeys[i].mValue;
+				double time = animNode->mPositionKeys[i].mTime;
+				this->Positions.push_back(std::make_pair(glm::vec3(pos.x, pos.y, pos.z), time));
+			}
+			for (auto i = 0; i < animNode->mNumScalingKeys; i++) {
+				aiVector3D scale = animNode->mScalingKeys[i].mValue;
+				double time = animNode->mScalingKeys[i].mTime;
+				this->Scalings.push_back(std::make_pair(glm::vec3(scale.x, scale.y, scale.z), time));
+			}
+			for (auto i = 0; i < animNode->mNumRotationKeys; i++) {
+				auto rot = animNode->mRotationKeys[i];
+				double time = animNode->mPositionKeys[i].mTime;
+				glm::quat rotQuat;
+				rotQuat.x = rot.mValue.x;
+				rotQuat.y = rot.mValue.y;
+				rotQuat.z = rot.mValue.z;
+				rotQuat.w = rot.mValue.w;
+				this->Rotations.push_back(std::make_pair(rotQuat, time));
+			}
+		}
+	};
+
 	class SceneNode {
 		public:
 			SceneNode(const aiNode* _node) {
@@ -243,10 +200,87 @@ namespace GL_Engine {
 					cn->Update(this->GlobalTransform, GlobalInverse);
 				}
 			}
+			void Update(const glm::mat4 &ParentTransform, const glm::mat4 &GlobalInverse, unsigned int AnimationID, double Time) {
+				auto LocalMatrix = this->NodeTransform;
+				if (Animation) {
+					Time = fmod(Time, Animation->AnimationLength);
+					glm::mat4 ScaleMatrix, RotateMatrix, TranslateMatrix;
 
+					ScaleMatrix = this->GetInterpolatedScale(Animation->Scalings, Time);
+					TranslateMatrix = this->GetInterpolatedTranslate(Animation->Positions, Time);
+					RotateMatrix = this->GetInterpolatedRotate(Animation->Rotations, Time);
+
+					LocalMatrix = TranslateMatrix * RotateMatrix * ScaleMatrix;
+				}
+				this->GlobalTransform = ParentTransform * LocalMatrix;
+				for (auto sb : SceneBones) {
+					sb->UpdateBone(GlobalInverse, this->GlobalTransform);
+				}
+				for (auto cn : ChildNodes) {
+					cn->Update(this->GlobalTransform, GlobalInverse, AnimationID, Time);
+				}
+			}
+			glm::mat4 GetInterpolatedScale(std::vector<std::pair<glm::vec3, double>> Scalings, double time) {
+				std::pair<glm::vec3, double> LowerScale, UpperScale;
+				for (int i = 0; i < Scalings.size() - 1; i++) {
+					if (time > Scalings[i].second && time < Scalings[i + 1].second) {
+						LowerScale = Scalings[i];
+						UpperScale = Scalings[i + 1];
+						break;
+					}
+					if (i == Scalings.size() - 2) {
+						return glm::scale(glm::mat4(1.0), Scalings[i + 1].first);
+					}
+				}
+
+				double timeDiff = UpperScale.second - LowerScale.second;
+				double timeNorm = time - LowerScale.second;
+				double ratio = timeNorm / timeDiff;
+				glm::vec3 interpolatedScale = (LowerScale.first * (float)(1.0 - ratio)) + (UpperScale.first * (float)ratio);
+				return glm::scale(glm::mat4(1.0), interpolatedScale);
+
+			}
+			glm::mat4 GetInterpolatedTranslate(std::vector<std::pair<glm::vec3, double>> Translations, double time) {
+				std::pair<glm::vec3, double> LowerScale, UpperScale;
+				for (int i = 0; i < Translations.size() - 1; i++) {
+					if (time > Translations[i].second && time < Translations[i + 1].second) {
+						LowerScale = Translations[i];
+						UpperScale = Translations[i + 1];
+						break;
+					}
+					if (i == Translations.size() - 2) {
+						return glm::translate(glm::mat4(1.0), Translations[i + 1].first);
+					}
+				}
+
+				double timeDiff = UpperScale.second - LowerScale.second;
+				double timeNorm = time - LowerScale.second;
+				double ratio = timeNorm / timeDiff;
+				glm::vec3 interpolatedTranslate = (LowerScale.first * (float)(1.0 - ratio)) + (UpperScale.first * (float)ratio);
+				return glm::translate (glm::mat4(1.0), interpolatedTranslate);
+			}
+			glm::mat4 GetInterpolatedRotate(std::vector<std::pair<glm::quat, double>> Rotations, double time) {
+				std::pair<glm::quat, double> LowerScale, UpperScale;
+				for (int i = 0; i < Rotations.size() - 1; i++) {
+					if (time > Rotations[i].second && time < Rotations[i + 1].second) {
+						LowerScale = Rotations[i];
+						UpperScale = Rotations[i + 1];
+						break;
+					}
+					if (i == Rotations.size() - 2) {
+						return glm::toMat4(Rotations[i + 1].first);
+					}
+				}
+				double timeDiff = UpperScale.second - LowerScale.second;
+				double timeNorm = time - LowerScale.second;
+				double ratio = timeNorm / timeDiff;
+				glm::quat interp = glm::slerp(LowerScale.first, UpperScale.first, (float)ratio);
+				return glm::toMat4(interp);
+			}
 
 			std::vector<std::shared_ptr<SceneBone>> SceneBones;
 			std::vector<std::shared_ptr<SceneNode>> ChildNodes;
+			std::shared_ptr<NodeAnimation> Animation{ nullptr };
 			glm::mat4 NodeTransform, GlobalTransform;
 			std::string Name;
 	};
@@ -254,13 +288,17 @@ namespace GL_Engine {
 	class Skeleton {
 	public:
 		Skeleton(std::shared_ptr<SceneNode> _Root, std::map<std::string, std::shared_ptr<SceneNode>> SkeletonNodeMap){
+
 			this->rootNode = _Root;
-			this->GlobalInverseMatrix = _Root->NodeTransform;
+			this->GlobalInverseMatrix = glm::inverse(_Root->NodeTransform);
 			this->NodeMap = SkeletonNodeMap;
 		}
 		std::shared_ptr<SceneNode> rootNode;
 		void Update() {
-			rootNode->Update(glm::mat4(1.0), GlobalInverseMatrix);
+			rootNode->Update(glm::mat4(1.0f), GlobalInverseMatrix);
+		}
+		void Update(unsigned int AnimationID, double Time) {
+			rootNode->Update(glm::mat4(1.0f), GlobalInverseMatrix, AnimationID, Time);
 		}
 		glm::mat4 GlobalInverseMatrix;
 		std::map<std::string, std::shared_ptr<SceneNode>> NodeMap;
@@ -318,6 +356,9 @@ namespace GL_Engine {
 		void Update() {
 			this->ModelRig->Update();
 		}
+		void Update(unsigned int AnimationID, double Time) {
+			this->ModelRig->Update(AnimationID, Time);
+		}
 		Skeleton *GetRig() const { return this->ModelRig.get(); }
 	protected:
 		Entity ModelEntity;
@@ -329,59 +370,5 @@ namespace GL_Engine {
 		ModelAttribList ModelAttributes;
 	};
 
-
-	class Hierarchy {
-	public:
-		class HNode : public Entity {
-		public:
-			HNode();
-			glm::mat4 UpdateMatrix(glm::mat4 _JointMatrix);
-			glm::mat4* GetGlobalMatrix();
-			void SetPosition(const glm::vec3 _Pos);
-			void SetPosition(const float x, const float y, const float z);
-			glm::mat4 LocalMatrix, GlobalMatrix;
-		private:
-			glm::vec3 eRelativePosition;
-			glm::quat eRelativeOrientation;
-			//glm::mat4 LocalMatrix, GlobalMatrix;
-		};
-
-		class HJoint {
-		public:
-			HJoint(glm::vec3 _RelativePosition, glm::quat _Orientation = glm::quat(1, 0, 0, 0));
-			HJoint(glm::mat4 _LocalMatrix);
-			void InitialiseJoint(glm::mat4 parent);
-			void AddChild(HJoint *_Child);
-			void AddNode(HNode *_Node);
-			void Translate(glm::vec3 _Translation);
-			void rotate(float _Degrees, glm::vec3 axis);
-			void YawBy(float _Degrees);
-			void RollBy(float _Degrees);
-			void PitchBy(float _Degrees);
-			std::vector<HJoint*> *GetChilder();
-			void UpdateJoint(glm::mat4 _ParentMatrix);
-
-		private:
-			glm::vec3 JointRelativePosition;
-			glm::quat NodeOrientation;
-			glm::mat4 LocalMatrix, GlobalMatrix, ParentMatrix, TranslationMatrix, RotationMatrix;
-			std::vector<HNode*> nodes;
-			std::vector<HJoint*> childer;
-			
-		};
-
-		Hierarchy();
-		void InitialiseHierarchy();
-		void SetRoot(HJoint *root);
-		HJoint *GetRoot() const;
-		HJoint* GetJoint(std::string _Name) { return JointMap[_Name]; }
-		void AddJoint(std::string _Name, HJoint* _Joint) { JointMap[_Name] = _Joint; }
-		void Update() { root->UpdateJoint(glm::mat4(1.0)); }
-		std::map<std::string, HJoint*> JointMap;
-
-	private:
-		HJoint* root;
-		
-	};
 
 }

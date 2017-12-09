@@ -23,7 +23,8 @@ in vec3 vTangeant;
 in vec3 vBitangeant;
 in vec2 TexCoord;
 in vec4 BoneWeights;
-in ivec4 BoneIDs;
+in uvec4 BoneIDs;
+
 out mat3 models;
 out vec4 col;
 out VS_OUT {
@@ -62,12 +63,15 @@ vec4 sanityCheckVec(vec4 checkit){
 vec4 checkWeight(vec4 w){
 	float sum = BoneWeights.x + BoneWeights.y + BoneWeights.z + BoneWeights.w;
 	sum = sum - 1.0;
-	if(abs(sum) < 0.01)
+	if(abs(sum) < 0.001)
 		return vec4(0.5, 0.5, 0.5, 1.0);
 	if(sum > 0)
 		return vec4(1, 1, 1, 1.0);
-	else
-		return vec4(abs(sum), abs(sum), abs(sum), 1.0);
+	else{
+		sum = BoneWeights.z + BoneWeights.y + BoneWeights.x + BoneWeights.w;
+		return vec4(sum, sum, sum, 1.0);
+
+	}
 }
 
 void main(){
@@ -75,14 +79,14 @@ void main(){
 	mat4 BMatrix = mat4(1.0);
 	
 	BMatrix = BoneMatrices[BoneIDs.x] * BoneWeights.x;
-//	BMatrix += BoneMatrices[BoneIDs.y] * BoneWeights.y;
-//	BMatrix += BoneMatrices[BoneIDs.z] * BoneWeights.z;
-//	BMatrix += BoneMatrices[BoneIDs.w] * BoneWeights.w;
+	BMatrix += BoneMatrices[BoneIDs.y] * BoneWeights.y;
+	BMatrix += BoneMatrices[BoneIDs.z] * BoneWeights.z;
+	BMatrix += BoneMatrices[BoneIDs.w] * BoneWeights.w;
 	
 	float val = float(BoneIDs.x) / 56.0;
-	mat4 TrueModel = model;//BMatrix;
+	mat4 TrueModel = model * BMatrix;
 	mat4 test =  BMatrix;
-	col = checkWeight(BoneWeights);
+	col = sanityCheck(test);
 
 	models = mat3(transpose(inverse( ViewMatrix * TrueModel)));
 	vec3 T = normalize(models * vTangeant);

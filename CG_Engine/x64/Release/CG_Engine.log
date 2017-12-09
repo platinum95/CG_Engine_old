@@ -1,4 +1,29 @@
-﻿  ModelLoader.cpp
-ModelLoader.cpp(241): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-ModelLoader.cpp(288): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+﻿  Cubemap.cpp
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(162): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(167): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(172): warning C4018: '<': signed/unsigned mismatch
+  Entity.cpp
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(162): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(167): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(172): warning C4018: '<': signed/unsigned mismatch
+Entity.cpp(188): warning C4244: 'argument': conversion from 'uint64_t' to 'GLsizei', possible loss of data
+  ModelLoader.cpp
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(162): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(167): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(172): warning C4018: '<': signed/unsigned mismatch
+ModelLoader.cpp(153): warning C4018: '<': signed/unsigned mismatch
+ModelLoader.cpp(213): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+ModelLoader.cpp(260): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
+  ParticleSystem.cpp
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(162): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(167): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(172): warning C4018: '<': signed/unsigned mismatch
+  Renderer.cpp
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(162): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(167): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(172): warning C4018: '<': signed/unsigned mismatch
+  Terrain.cpp
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(162): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(167): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Entity.h(172): warning C4018: '<': signed/unsigned mismatch
   CG_Engine.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\CG_Engine\../libs/CG_Engine_x64.lib

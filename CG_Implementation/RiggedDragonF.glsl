@@ -49,6 +49,6 @@ void main(){
 
 	//Output
 	vec3 result = (ambient + diffuse + SpecularComponent) * texture(diffuseTexture, fs_in.TexCoords).xyz;
-	FragColour = col;//vec4(result, 1.0);
+	FragColour = vec4(result, 1.0);
 
 }

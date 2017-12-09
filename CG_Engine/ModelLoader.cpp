@@ -148,43 +148,13 @@ namespace GL_Engine {
 		return attributes;
 	}
 	
-	Hierarchy::HJoint* LoadNode(const aiScene* Scene, aiNode* Node, Hierarchy *hierarchy, std::vector<AttribNodePair> &Attribs, std::string &_PathBase) {
+	void LoadAnimations(std::map<std::string, std::shared_ptr<SceneNode>> &NodeList, const aiScene *_Scene) {
+		aiAnimation* anim = _Scene->mAnimations[0];
+		for (int i = 0; i < anim->mNumChannels; i++) {
+			aiNodeAnim *animNode = anim->mChannels[i];
+			NodeList[animNode->mNodeName.data]->Animation = std::make_shared<NodeAnimation>(animNode, anim->mDuration);
+		}
 
-		aiMatrix4x4 nodeTransformation = Node->mTransformation;
-		auto glmTransformation = aMatToGMat(nodeTransformation);
-		glm::vec4 NodePos(0.0f, 0.0f, 0.0f, 1.0f);
-		NodePos = glmTransformation * NodePos;
-		auto joint = new Hierarchy::HJoint(glmTransformation);// glm::vec3(NodePos));
-		hierarchy->AddJoint(std::string(Node->mName.C_Str()), joint);
-		for (unsigned int i = 0; i < Node->mNumMeshes; i++) {
-			std::shared_ptr<ModelAttribute> newAttrib = std::make_shared<ModelAttribute>(Scene, Node->mMeshes[i], _PathBase);
-			auto node = new Hierarchy::HNode;
-			joint->AddNode(node);
-			Attribs.push_back({ newAttrib, node });
-		}
-		for (unsigned int i = 0; i < Node->mNumChildren; i++) {
-			auto childNode = Node->mChildren[i];
-			if (childNode->mNumChildren == 0 && childNode->mNumMeshes == 0) {
-				continue;
-			}
-			joint->AddChild(LoadNode(Scene, childNode, hierarchy, Attribs, _PathBase));
-		}
-		return joint;
-	}
-
-	std::pair<std::unique_ptr<Hierarchy>, std::vector<AttribNodePair>> ModelLoader::LoadHierarchyModel(std::string &_PathBase, std::string & _ModelFile, unsigned int _Flags) {
-		auto hierarchy = std::make_unique<Hierarchy>();
-		std::vector<AttribNodePair> attributes;
-		const aiScene* _Scene = aImporter.ReadFile(_PathBase + _ModelFile, _Flags);
-		if (!_Scene) {
-			throw std::runtime_error("Error loading model " + _PathBase + _ModelFile + "\n" + aImporter.GetErrorString() + "\n");
-		}
-		auto rootNode = _Scene->mRootNode;
-		auto rootJoint = LoadNode(_Scene, rootNode, hierarchy.get(), attributes, _PathBase);
-		hierarchy->SetRoot(rootJoint);
-		hierarchy->InitialiseHierarchy();
-		auto p = std::make_pair(std::move(hierarchy), attributes);
-		return p;
 	}
 
 	std::shared_ptr<SceneNode> LoadNodes(std::map<std::string, std::shared_ptr<SceneNode>> &NodeList, aiNode* node) {
@@ -197,7 +167,7 @@ namespace GL_Engine {
 	}
 
 	struct VertexBoneData {
-		unsigned int IDs[4] = { 0,0,0,0 };
+		GLuint IDs[4] = { 0,0,0,0 };
 		float Weights[4] = { 0.0f, 0.0f, 0.0f, 0.0f };
 	};
 	void insertVertexData(std::vector<VertexBoneData> &vbd, unsigned int loc, float weight, unsigned int matID) {
@@ -219,19 +189,21 @@ namespace GL_Engine {
 	}
 
 	void normaliseVertexData(std::vector<VertexBoneData> &vbd) {
-		for (auto data : vbd) {
+		for (int vi = 0; vi < vbd.size(); vi++) {
+			auto data = vbd.at(vi);
 			float sum = data.Weights[0] + data.Weights[1] + data.Weights[2] + data.Weights[3];
-			sum = sum - 1.0f;
-			if (sum > 0.000001f || sum < -0.0001f) {
-				data.IDs[0] = 55;
-				data.Weights[0] = 1.0f;
-				for (int i = 1; i < 4; i++) {
-					data.Weights[i] = 0.0f;
-				}
-				continue;
-			}
+	//		if (sum < 0.001f && sum > -0.001f) {
+	//			data.IDs[0] = 55;
+	//			data.Weights[0] = 1.0f;
+	//			for (int i = 1; i < 4; i++) {
+	//				data.Weights[i] = 0.0f;
+	//			}
+	//			vbd[vi] = data;
+	//			continue;
+	//		}
 			for (int i = 0; i < 4; i++) {
 				data.Weights[i] = data.Weights[i] / sum;
+				vbd[vi] = data;
 			}
 		}
 	}
@@ -239,7 +211,7 @@ namespace GL_Engine {
 		for (auto data : vbd) {
 			float sum = data.Weights[0] + data.Weights[1] + data.Weights[2] + data.Weights[3];
 			sum = sum - 1.0;
-			if (abs(sum) < 0.01)
+			if (abs(sum) < 0.000000001)
 				return;// std::cout << "Its ok2" << std::endl;
 			else if (sum > 0)
 				std::cout << "WHITEY SCUM" << std::endl;
@@ -255,7 +227,7 @@ namespace GL_Engine {
 		//Load in the scene's nodes
 		std::map<std::string, std::shared_ptr<SceneNode>> Nodes;
 		auto rootNode = LoadNodes(Nodes, _Scene->mRootNode);
-
+		LoadAnimations(Nodes, _Scene);
 		auto numMeshes = _Scene->mNumMeshes;
 		ModelAttribList attributes;
 		attributes.reserve(numMeshes);
@@ -295,17 +267,38 @@ namespace GL_Engine {
 					insertVertexData(WeightVBOData,vertexID, weight, BoneIndex);
 				}
 			}
-			newAttrib->BindVAO();
-			std::unique_ptr<VBO> boneDataVBO = std::make_unique<VBO>();
-			boneDataVBO->BindVBO();
+			
 			normaliseVertexData(WeightVBOData);
 			sanityW(WeightVBOData);
-			glBufferData(GL_ARRAY_BUFFER, WeightVBOData.size() * sizeof(WeightVBOData[0]), &WeightVBOData[0], GL_STATIC_DRAW);
-			glVertexAttribIPointer(5, 4, GL_INT, sizeof(VertexBoneData), nullptr);
+			std::vector<float> Weights;
+			std::vector<GLuint> IDs;
+			for (auto data : WeightVBOData) {
+				Weights.insert(Weights.end(), { data.Weights[0],data.Weights[1], data.Weights[2], data.Weights[3] });
+				IDs.insert(IDs.end(), { data.IDs[0],data.IDs[1], data.IDs[2], data.IDs[3] });
+			}
+			newAttrib->BindVAO();
+
+			std::unique_ptr<VBO> IDVBO = std::make_unique<VBO>();
+			IDVBO->BindVBO();
+			glBufferData(GL_ARRAY_BUFFER, IDs.size() * sizeof(GLuint), &IDs[0], GL_STATIC_DRAW);
+			glVertexAttribIPointer(5, 4, GL_UNSIGNED_INT, 0, nullptr);
 			glEnableVertexAttribArray(5);
-			glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBoneData), (const GLvoid*)(4 * sizeof(GLint)));
+			newAttrib->AddVBO(std::move(IDVBO));
+
+			std::unique_ptr<VBO> WeightsVBO = std::make_unique<VBO>();
+			WeightsVBO->BindVBO();
+			glBufferData(GL_ARRAY_BUFFER, Weights.size() * sizeof(float), &Weights[0], GL_STATIC_DRAW);
+			glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 0, nullptr);
 			glEnableVertexAttribArray(6);
-			newAttrib->AddVBO(std::move(boneDataVBO));
+			newAttrib->AddVBO(std::move(WeightsVBO));
+
+			for (int i = 0; i < Weights.size(); i+=4) {
+				float sum = Weights[i] + Weights[i + 1] + Weights[i + 2] + Weights[i + 3];
+				if (sum > 1.01 || sum < 0.99) {
+					std::cout << sum << std::endl;
+				}
+			}
+
 			attributes.push_back(std::move(newAttrib));
 		}
 

@@ -101,7 +101,9 @@ CG_Implementation::CG_Implementation(){
 int CG_Implementation::run(){
 	
 	initialise();
-	auto nodeT = DragonRiggedModel->GetRig()->rootNode->NodeTransform;
+	auto nodeT = DragonRiggedModel->GetRig()->NodeMap["R_Shoulder"]->NodeTransform;
+
+
 
 	while (!glfwWindowShouldClose(windowProperties.window)){
 		uint64_t time_diff = FramerateStopwatch.MeasureTime().count();
@@ -120,7 +122,12 @@ int CG_Implementation::run(){
 		dragon.GetTransformMatrix();
 
 		DragonRiggedModel->GetTransformMatrix();
-		DragonRiggedModel->Update();
+		DragonRiggedModel->Update(1, time);
+		float circleRadius = 300;
+		float xPos = circleRadius * cos(time);
+		float zPos = circleRadius * sin(time);
+		DragonRiggedModel->SetPosition(glm::vec3(xPos, 25, zPos));
+		DragonRiggedModel->YawBy(glm::degrees(second_diff));
 		particleSystem->GetTransformMatrix();
 		particleSystem->UpdateTime(second_diff);
 		time += (float)second_diff;
@@ -374,9 +381,9 @@ void CG_Implementation::initialise(){
 		//dragonPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
 	renderer->AddRenderPass(std::move(DragonRiggedModel->GenerateRenderpass(&RiggedDragonShader)));
-	DragonRiggedModel->SetPosition(glm::vec3(0, 10, 0));
+	DragonRiggedModel->SetPosition(glm::vec3(0, 25, 0));
 	DragonRiggedModel->PitchBy(90.0f);
-
+	DragonRiggedModel->ScaleBy(glm::vec3(10, 10, 10));
 
 	nodeModelIndex = sun.AddData((void*)glm::value_ptr(sun.TransformMatrix));
 	sun.SetPosition(glm::vec3(0, 0, 0));

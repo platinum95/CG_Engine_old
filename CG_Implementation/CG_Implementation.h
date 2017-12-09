@@ -61,10 +61,8 @@ private:
 //	Entity entityList[5];
 	std::unique_ptr<Renderer> renderer, guiRenderer, DragonRenderer;
 //	std::unique_ptr<Hierarchy> hierarchy;
-	std::pair<std::unique_ptr<Hierarchy>, std::vector<AttribNodePair>> dragonHierarchy;
 	std::unique_ptr<RiggedModel> DragonRiggedModel;
 	Stopwatch<std::chrono::microseconds> CameraStopwatch, FramerateStopwatch;
-	std::unique_ptr<Hierarchy> DragonHierarchy;
 	ModelAttribList barrelAttributes, kitchenAttributes, nanosuitAttributes, sunAttributes, dragonAttributes;
 	Entity barrel, kitchen, nanosuit, gui, water, sun, dragon;
 	std::string AssetBase = "./assets/";
