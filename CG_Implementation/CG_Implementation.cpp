@@ -101,7 +101,7 @@ CG_Implementation::CG_Implementation(){
 int CG_Implementation::run(){
 	
 	initialise();
-
+	auto nodeT = DragonRiggedModel->GetRig()->rootNode->NodeTransform;
 
 	while (!glfwWindowShouldClose(windowProperties.window)){
 		uint64_t time_diff = FramerateStopwatch.MeasureTime().count();
@@ -118,6 +118,7 @@ int CG_Implementation::run(){
 		nanosuit.GetTransformMatrix();
 		sun.GetTransformMatrix();
 		dragon.GetTransformMatrix();
+
 		DragonRiggedModel->GetTransformMatrix();
 		DragonRiggedModel->Update();
 		particleSystem->GetTransformMatrix();
@@ -374,6 +375,7 @@ void CG_Implementation::initialise(){
 	}
 	renderer->AddRenderPass(std::move(DragonRiggedModel->GenerateRenderpass(&RiggedDragonShader)));
 	DragonRiggedModel->SetPosition(glm::vec3(0, 10, 0));
+	DragonRiggedModel->PitchBy(90.0f);
 
 
 	nodeModelIndex = sun.AddData((void*)glm::value_ptr(sun.TransformMatrix));

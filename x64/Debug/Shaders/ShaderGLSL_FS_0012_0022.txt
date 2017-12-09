@@ -4,6 +4,7 @@
 out vec4 FragColour;
 
 in mat3 models;
+in vec4 col;
 varying vec3 Pos_ViewSpace;
 varying vec4 LightPosition_Viewspace;
 
@@ -50,6 +51,6 @@ void main(){
 
 	//Output
 	vec3 result = (ambient + diffuse + SpecularComponent) * texture(diffuseTexture, fs_in.TexCoords).xyz;
-	FragColour = vec4(result, 1.0);
+	FragColour = col;//vec4(result, 1.0);
 
 }

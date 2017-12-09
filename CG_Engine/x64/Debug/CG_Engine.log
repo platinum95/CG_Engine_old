@@ -1,13 +1,4 @@
-﻿  Cubemap.cpp
-  Generating Code...
-  Compiling...
-  Entity.cpp
-d:\projects\c++\vs2015\cg_engine\cg_engine\entity.cpp(280): warning C4267: 'argument': conversion from 'size_t' to 'GLsizei', possible loss of data
-d:\projects\c++\vs2015\cg_engine\cg_engine\entity.cpp(287): warning C4244: 'argument': conversion from 'uint64_t' to 'GLsizei', possible loss of data
-  Generating Code...
-  Skipping... (no relevant changes detected)
-  Terrain.cpp
-  Renderer.cpp
-  ParticleSystem.cpp
-  ModelLoader.cpp
+﻿  ModelLoader.cpp
+d:\projects\c++\vs2015\cg_engine\cg_engine\modelloader.cpp(241): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+d:\projects\c++\vs2015\cg_engine\cg_engine\modelloader.cpp(288): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
   CG_Engine.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\CG_Engine\../libs/CG_Engined_x64.lib

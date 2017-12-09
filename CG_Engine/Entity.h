@@ -253,15 +253,17 @@ namespace GL_Engine {
 
 	class Skeleton {
 	public:
-		Skeleton(std::shared_ptr<SceneNode> _Root){
+		Skeleton(std::shared_ptr<SceneNode> _Root, std::map<std::string, std::shared_ptr<SceneNode>> SkeletonNodeMap){
 			this->rootNode = _Root;
 			this->GlobalInverseMatrix = _Root->NodeTransform;
+			this->NodeMap = SkeletonNodeMap;
 		}
 		std::shared_ptr<SceneNode> rootNode;
 		void Update() {
 			rootNode->Update(glm::mat4(1.0), GlobalInverseMatrix);
 		}
 		glm::mat4 GlobalInverseMatrix;
+		std::map<std::string, std::shared_ptr<SceneNode>> NodeMap;
 	protected:
 		
 	private:

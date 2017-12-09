@@ -261,6 +261,14 @@ namespace GL_Engine {
 		}
 	}
 
+	void sanityCheck(glm::vec4 vect) {
+		for (int i = 0; i < 4; i++) {
+			if (vect[i] > 100 || vect[i] < -100) {
+				std::cout << "sanity failed, value " << vect[i] << std::endl;
+			}
+		}
+	}
+
 #pragma endregion
 
 	void RiggedModel::RiggedModelRenderer(RenderPass& _Pass, void* _Data) {
@@ -286,14 +294,15 @@ namespace GL_Engine {
 				tex->Bind();
 			}
 			auto boneMatLoc = glGetUniformLocation(_Pass.shader->GetShaderID(), "BoneMatrices");
-			std::vector<glm::mat4> boneMatrices((const size_t) 55, glm::mat4(1.0));
+			std::vector<glm::mat4> boneMatrices((const size_t)56, glm::mat4(1.0));
 			int i = 0;
 			if (attrib->meshBones.size() > 0) {
+				int i = 0;
 				for (auto bone : attrib->meshBones) {
-				//	boneMatrices.push_back(bone->FinalTransformation);
-					sanityCheck(bone->FinalTransformation);
+					boneMatrices.at(i++) = bone->FinalTransformation;
+			//		sanityCheck(bone->FinalTransformation * glm::vec4(10, 10, 10, 1));
 				}
-				glUniformMatrix4fv(boneMatLoc, 55, GL_FALSE, glm::value_ptr(boneMatrices[0]));
+				glUniformMatrix4fv(boneMatLoc, 56, GL_FALSE, glm::value_ptr(boneMatrices[0]));
 			}
 			else {
 				glm::mat4 id(1.0);

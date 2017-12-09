@@ -217,6 +217,36 @@ namespace GL_Engine {
 		vbd[loc].IDs[minPos] = matID;
 		vbd[loc].Weights[minPos] = weight;
 	}
+
+	void normaliseVertexData(std::vector<VertexBoneData> &vbd) {
+		for (auto data : vbd) {
+			float sum = data.Weights[0] + data.Weights[1] + data.Weights[2] + data.Weights[3];
+			sum = sum - 1.0f;
+			if (sum > 0.000001f || sum < -0.0001f) {
+				data.IDs[0] = 55;
+				data.Weights[0] = 1.0f;
+				for (int i = 1; i < 4; i++) {
+					data.Weights[i] = 0.0f;
+				}
+				continue;
+			}
+			for (int i = 0; i < 4; i++) {
+				data.Weights[i] = data.Weights[i] / sum;
+			}
+		}
+	}
+	void sanityW(std::vector<VertexBoneData> &vbd) {
+		for (auto data : vbd) {
+			float sum = data.Weights[0] + data.Weights[1] + data.Weights[2] + data.Weights[3];
+			sum = sum - 1.0;
+			if (abs(sum) < 0.01)
+				return;// std::cout << "Its ok2" << std::endl;
+			else if (sum > 0)
+				std::cout << "WHITEY SCUM" << std::endl;
+			else
+				std::cout << "Its ok" << std::endl;
+		}
+	}
 	std::unique_ptr<RiggedModel> ModelLoader::LoadRiggedModel(std::string &_PathBase, std::string &_ModelFile, unsigned int _Flags) {
 		const aiScene* _Scene = aImporter.ReadFile(_PathBase + _ModelFile, _Flags);
 		if (!_Scene) {
@@ -246,6 +276,7 @@ namespace GL_Engine {
 				if (SceneBoneMap.count(mBone->mName.data) == 0) {
 					sceneBone = std::make_shared<SceneBone>(mBone);
 					SceneBoneMap[mBone->mName.data] = sceneBone;
+				//	std::cout << mBone->mName.data << std::endl;
 					Nodes[mBone->mName.data]->SceneBones.push_back(sceneBone);
 				}
 				else {
@@ -267,6 +298,8 @@ namespace GL_Engine {
 			newAttrib->BindVAO();
 			std::unique_ptr<VBO> boneDataVBO = std::make_unique<VBO>();
 			boneDataVBO->BindVBO();
+			normaliseVertexData(WeightVBOData);
+			sanityW(WeightVBOData);
 			glBufferData(GL_ARRAY_BUFFER, WeightVBOData.size() * sizeof(WeightVBOData[0]), &WeightVBOData[0], GL_STATIC_DRAW);
 			glVertexAttribIPointer(5, 4, GL_INT, sizeof(VertexBoneData), nullptr);
 			glEnableVertexAttribArray(5);
@@ -278,7 +311,7 @@ namespace GL_Engine {
 
 		aImporter.FreeScene();
 
-		return std::make_unique<RiggedModel>(std::make_unique<Skeleton>(rootNode), std::move(attributes));
+		return std::make_unique<RiggedModel>(std::make_unique<Skeleton>(rootNode, Nodes), std::move(attributes));
 	}
 
 	void ModelLoader::CleanUp() {
