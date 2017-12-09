@@ -67,6 +67,12 @@
     <None Include="RiggedDragonF.glsl">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="groundV.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="groundF.glsl">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Text Include="f.glsl">

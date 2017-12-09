@@ -107,7 +107,7 @@ namespace GL_Engine {
 			ProcessingFBO->Unbind();
 
 		}
-
+		const CG_Data::FBO *GetFBO() const { return this->ProcessingFBO.get(); }
 
 
 	private:

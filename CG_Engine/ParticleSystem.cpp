@@ -21,12 +21,12 @@ namespace GL_Engine {
 	{
 	}
 
-	std::unique_ptr<RenderPass> ParticleSystem::GenerateParticleSystem(uint32_t _ParticleCount, CG_Data::UBO * _CameraUBO, glm::vec3 _Position, glm::vec3 _BaseDir)
+	std::unique_ptr<RenderPass> ParticleSystem::GenerateParticleSystem(const ParticleStats &stats, CG_Data::UBO *_CameraUBO)
 	{
 		srand(123184103u);
 		//Set entity/particle initial values
-		this->ParticleCount = _ParticleCount;
-		this->Position = glm::vec4(_Position, 1.0);
+		this->ParticleCount = stats.ParticleCount;
+		this->Position = glm::vec4(stats.Position, 1.0);
 		this->CameraUBO = _CameraUBO;
 		this->Orientation = glm::quat(0.0, 0.0, 0.0, 1.0);
 		this->Forward = glm::vec3(0, 0, 1);
@@ -47,32 +47,38 @@ namespace GL_Engine {
 		float TimeAccumulator = 0.0f;
 		int j = 0;
 		for (unsigned int i = 0; i < this->ParticleCount; i++) {
+
+			auto RandFloat = [](float max) {return ((float)rand() / (float)RAND_MAX) * max; };
 			// start times
 			InitialTimeData[i] = TimeAccumulator;
 			TimeAccumulator += 0.01f;
 
 			//size
-			float size = ((float)rand() / (float)RAND_MAX) * 3.0f;
+			auto SizeRangeDiff = stats.SizeRange[1] - stats.SizeRange[0];
+			float size = RandFloat(SizeRangeDiff) + stats.SizeRange[0];
 			InitialSizeData[i] = size;
 
 			//opacity
-			float opacity = std::max(0.3f, (((float)rand() / (float)RAND_MAX)));
+			auto OpacityRangeDiff = stats.OpacityRange[1] - stats.OpacityRange[0];
+			float opacity = RandFloat(OpacityRangeDiff) + stats.OpacityRange[0];
 			InitialOpacityData[i] = opacity;
 
 			//lifetime
-			float lifetime = std::max(1.0f, (((float)rand() / (float)RAND_MAX)) * 5.0f);
+			auto LifetimeRangeDiff = stats.LifetimeRange[1] - stats.LifetimeRange[0];
+			float lifetime = RandFloat(LifetimeRangeDiff) + stats.LifetimeRange[0];
 			LifetimeData[i] = lifetime;
 
 			//colour
-			float deltaG = (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.2f;
-			float deltaB = (((float)rand() / (float)RAND_MAX) - 0.5f) * 0.2f;
-			InitialColourData[j] = 1.0f;	//r
-			InitialColourData[j + 1] = 0.5498f + deltaG; // g
-			InitialColourData[j + 2] = 0.27f + deltaB; // b
+			glm::vec3 ColourRangeDiff = stats.ColourRange[1] - stats.ColourRange[0];
+			glm::vec3 Colour = glm::vec3(RandFloat(ColourRangeDiff.x), RandFloat(ColourRangeDiff.y), RandFloat(ColourRangeDiff.z));
+			Colour += stats.ColourRange[0];
+			InitialColourData[j] = Colour.x;	//r
+			InitialColourData[j + 1] = Colour.y; // g
+			InitialColourData[j + 2] = Colour.z; // b
 
 			//Get particle direction as a variation of the base direction
 			//Start by getting an "up" vector, orthogonal to the base direction
-			glm::vec3 NormalisedBase = glm::normalize(_BaseDir);
+			glm::vec3 NormalisedBase = glm::normalize(stats.BaseDirection);
 			glm::vec3 s = glm::cross(NormalisedBase, glm::vec3(0, 1, 0));
 			glm::vec3 up = glm::cross(NormalisedBase, glm::normalize(s));
 			//Normalise the up vector
@@ -81,10 +87,11 @@ namespace GL_Engine {
 			//Rotate this up vector by a random amount around the base direction
 			glm::vec3 RotationAxis = glm::toMat4(glm::angleAxis(glm::radians(RotationDegrees), NormalisedBase)) * glm::vec4(up, 0.0f);
 			RotationAxis = glm::normalize(RotationAxis);
-			float Variation = ((float)rand() / (float)RAND_MAX) * 15.5f;
+			float Variation = RandFloat(stats.DirectionVariation);
 			glm::mat4 VariationMatrix = glm::toMat4(glm::angleAxis(glm::radians(Variation), RotationAxis));
 			//Rotate the base direction by "Variation" amount around the "RotationAxis"
-			glm::vec3 particleVelocity = VariationMatrix * glm::vec4(_BaseDir, 0.0);
+			glm::vec3 particleVelocity = VariationMatrix * glm::vec4(stats.BaseDirection, 0.0);
+			particleVelocity = particleVelocity * stats.SpeedVariation;
 
 			InitialVelocityData[j] = particleVelocity.x; // x
 			InitialVelocityData[j + 1] = particleVelocity.y; // y
@@ -159,7 +166,7 @@ namespace GL_Engine {
 
 		glUniform3f(GravityUniform->GetID(), 0, -1, 0);
 
-		auto ModelIndex = this->AddData((void*)glm::value_ptr(this->TransformMatrix));
+	//	auto ModelIndex = this->AddData((void*)glm::value_ptr(this->TransformMatrix));
 		auto EmitterIndex = this->AddData((void*)glm::value_ptr(this->Position));
 		auto DirectionIndex = this->AddData((void*)glm::value_ptr(this->Forward));
 		auto TimeIndex = this->AddData((void*)&(this->Time));
@@ -171,10 +178,11 @@ namespace GL_Engine {
 		ParticlePass->SetDrawFunction([count]() {glDrawArrays(GL_POINTS, 0, count); });
 		ParticlePass->BatchVao = this->ParticleVAO;
 		ParticlePass->AddBatchUnit(this);
+		ParticlePass->AddDataLink(ModelUniform, 0);
 		ParticlePass->AddDataLink(TimeUniform, TimeIndex);
 		ParticlePass->AddDataLink(EmitterUniform, EmitterIndex);
 		ParticlePass->AddDataLink(DirectionUniform, DirectionIndex);
-		ParticlePass->AddDataLink(ModelUniform, ModelIndex);
+		
 
 		return std::move(ParticlePass);
 	}

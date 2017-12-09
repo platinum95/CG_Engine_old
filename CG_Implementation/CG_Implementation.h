@@ -10,6 +10,7 @@
 #include "Time.h"
 #include "PostProcessing.h"
 #include "ModelLoader.h"
+#include "Terrain.h"
 
 static GL_Engine::Properties::GLFWproperties windowProperties = {
 	1280,			//Width
@@ -46,7 +47,7 @@ private:
 	void initialise();
 	void LoadModels();
 	void UpdateCameraUBO();
-	Shader basicShader, SkyboxShader, kitchenShader, nanosuitShader, guiShader, waterShader, RiggedDragonShader;
+	Shader basicShader, SkyboxShader, kitchenShader, nanosuitShader, guiShader, waterShader, RiggedDragonShader, groundShader;
 	CG_Engine engine;
 	std::shared_ptr<CG_Data::VAO> VAO, guiVAO, waterVAO;
 	CG_Data::Uniform *translate_ubo;
@@ -56,18 +57,15 @@ private:
 	ModelLoader mLoader;
 	std::unique_ptr<CG_Data::FBO> WaterFBO, ppFBO;
 
-//	Hierarchy::HNode nodes[5];
 
-//	Entity entityList[5];
 	std::unique_ptr<Renderer> renderer, guiRenderer, DragonRenderer;
-//	std::unique_ptr<Hierarchy> hierarchy;
 	std::unique_ptr<RiggedModel> DragonRiggedModel;
 	Stopwatch<std::chrono::microseconds> CameraStopwatch, FramerateStopwatch;
 	ModelAttribList barrelAttributes, kitchenAttributes, nanosuitAttributes, sunAttributes, dragonAttributes;
-	Entity barrel, kitchen, nanosuit, gui, water, sun, dragon;
+	Entity barrel, kitchen, nanosuit, gui, water, sun;
 	std::string AssetBase = "./assets/";
 	std::string ModelBase = AssetBase + "models/";
-
+	glm::mat4 pTransform;
 	std::string barrel_base = ModelBase + "barrel/";
 	std::string barrel_model = "barrel.obj";
 	std::string barrel_diff_name = barrel_base + "textures/barrel.png";
@@ -82,10 +80,13 @@ private:
 	std::string dragon_base = "assets/models/dragon/";
 	std::string dragon_model = "dragon_blender2.dae";
 
+	std::unique_ptr<Terrain> terrain;
+
 	CameraUBO_Data camera_ubo_data;
 	LightUBO_Data light_ubo_data;
 
 	std::string skyboxVLoc = "skyboxV.glsl", skyboxFLoc = "skyboxF.glsl";
+	std::string groundVLoc = "groundV.glsl", groundFLoc = "groundF.glsl";
 	std::string waterVLoc = "waterV.glsl", waterFLoc = "waterF.glsl";
 	std::string guiVLoc = "guiV.glsl", guiFLoc = "guiF.glsl";
 	std::string kitchenVLoc = "kitchenV.glsl", kitchenFLoc = "kitchenF.glsl";

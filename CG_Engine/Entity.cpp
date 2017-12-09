@@ -122,30 +122,205 @@ namespace GL_Engine {
 	}
 #pragma endregion
 
-#pragma region HIERARCHY
+#pragma region RiggedModel
+#pragma region MeshBone
 
-	/*-----------------Hierarchy---------------*/
+	MeshBone::MeshBone(const aiBone* _Bone) {
+		this->OffsetMatrix = AiToGLMMat4(_Bone->mOffsetMatrix);
+		this->Name = _Bone->mName.data;
+	}
+	const glm::mat4 &MeshBone::GetFinalTransform(const glm::mat4 &_GlobalInverse, const glm::mat4& nodeGlobalTransform) {
+		this->FinalTransformation = _GlobalInverse * nodeGlobalTransform * this->OffsetMatrix;
+		return this->FinalTransformation;
+	}
 
+
+#pragma region SceneBone
+
+	SceneBone::SceneBone(const aiBone *_Bone) {
+		this->Name = _Bone->mName.data;
+	}
+	void SceneBone::AddMeshBone(std::shared_ptr<MeshBone> _mBone) {
+		this->meshBones.push_back(_mBone);
+	}
+	void SceneBone::UpdateBone(const glm::mat4 &GlobalInverse, const glm::mat4 &_GlobalTransform) {
+		this->GlobalTransformation = _GlobalTransform;
+		for (auto mb : meshBones) {
+			mb->GetFinalTransform(GlobalInverse, this->GlobalTransformation);
+		}
+	}
+
+#pragma region NodeAnimation
+	NodeAnimation::NodeAnimation(const aiNodeAnim *animNode, double _Length) {
+		this->Name = animNode->mNodeName.data;
+		this->AnimationLength = _Length;
+		for (unsigned int i = 0; i < animNode->mNumPositionKeys; i++) {
+			aiVector3D pos = animNode->mPositionKeys[i].mValue;
+			double time = animNode->mPositionKeys[i].mTime;
+			this->Positions.push_back(std::make_pair(glm::vec3(pos.x, pos.y, pos.z), time));
+		}
+		for (unsigned int i = 0; i < animNode->mNumScalingKeys; i++) {
+			aiVector3D scale = animNode->mScalingKeys[i].mValue;
+			double time = animNode->mScalingKeys[i].mTime;
+			this->Scalings.push_back(std::make_pair(glm::vec3(scale.x, scale.y, scale.z), time));
+		}
+		for (unsigned int i = 0; i < animNode->mNumRotationKeys; i++) {
+			auto rot = animNode->mRotationKeys[i];
+			double time = animNode->mPositionKeys[i].mTime;
+			glm::quat rotQuat;
+			rotQuat.x = rot.mValue.x;
+			rotQuat.y = rot.mValue.y;
+			rotQuat.z = rot.mValue.z;
+			rotQuat.w = rot.mValue.w;
+			this->Rotations.push_back(std::make_pair(rotQuat, time));
+		}
+	}
 	
-	void sanityCheck(glm::mat4 &matrix) {
-		for (int i = 0; i < 4; i++) {
-			for (int j = 0; j < 4; j++) {
-				if (matrix[i][j] > 100 || matrix[i][j] < -100) {
-					std::cout << "sanity failed, value " << matrix[i][j] << std::endl;
-				}
-			}
+
+#pragma region SceneNode
+	SceneNode::SceneNode(const aiNode* _node) {
+		this->NodeTransform = AiToGLMMat4(_node->mTransformation);
+		this->Name = _node->mName.data;
+	}
+	void SceneNode::AddChild(std::shared_ptr<SceneNode> _node) {
+		this->ChildNodes.push_back(_node);
+	}
+	void SceneNode::Update(const glm::mat4 &ParentTransform, const glm::mat4 &GlobalInverse) {
+		this->GlobalTransform = ParentTransform * this->NodeTransform;
+		if(sceneBone)
+			sceneBone->UpdateBone(GlobalInverse, this->GlobalTransform);
+		
+		for (auto cn : ChildNodes) {
+			cn->Update(this->GlobalTransform, GlobalInverse);
 		}
 	}
+	void SceneNode::Update(const glm::mat4 &ParentTransform, const glm::mat4 &GlobalInverse, unsigned int AnimationID, double Time) {
+		auto LocalMatrix = this->NodeTransform;
+		if (Animation) {
+			Time = fmod(Time, Animation->AnimationLength);
+			glm::mat4 ScaleMatrix, RotateMatrix, TranslateMatrix;
 
-	void sanityCheck(glm::vec4 vect) {
-		for (int i = 0; i < 4; i++) {
-			if (vect[i] > 100 || vect[i] < -100) {
-				std::cout << "sanity failed, value " << vect[i] << std::endl;
-			}
+			ScaleMatrix = this->GetInterpolatedScale(Animation->Scalings, Time);
+			TranslateMatrix = this->GetInterpolatedTranslate(Animation->Positions, Time);
+			RotateMatrix = this->GetInterpolatedRotate(Animation->Rotations, Time);
+
+			LocalMatrix = TranslateMatrix * RotateMatrix * ScaleMatrix;
+		}
+		this->GlobalTransform = ParentTransform * LocalMatrix;
+		if(sceneBone)
+			sceneBone->UpdateBone(GlobalInverse, this->GlobalTransform);
+		
+		for (auto cn : ChildNodes) {
+			cn->Update(this->GlobalTransform, GlobalInverse, AnimationID, Time);
 		}
 	}
+	glm::mat4 SceneNode::GetInterpolatedScale(std::vector<std::pair<glm::vec3, double>> Scalings, double time) {
+		std::pair<glm::vec3, double> LowerScale, UpperScale;
+		for (int i = 0; i < Scalings.size() - 1; i++) {
+			if (time > Scalings[i].second && time < Scalings[i + 1].second) {
+				LowerScale = Scalings[i];
+				UpperScale = Scalings[i + 1];
+				break;
+			}
+			if (i == Scalings.size() - 2) {
+				return glm::scale(glm::mat4(1.0), Scalings[i + 1].first);
+			}
+		}
 
-#pragma endregion
+		double timeDiff = UpperScale.second - LowerScale.second;
+		double timeNorm = time - LowerScale.second;
+		double ratio = timeNorm / timeDiff;
+		glm::vec3 interpolatedScale = (LowerScale.first * (float)(1.0 - ratio)) + (UpperScale.first * (float)ratio);
+		return glm::scale(glm::mat4(1.0), interpolatedScale);
+
+	}
+	glm::mat4 SceneNode::GetInterpolatedTranslate(std::vector<std::pair<glm::vec3, double>> Translations, double time) {
+		std::pair<glm::vec3, double> LowerScale, UpperScale;
+		for (int i = 0; i < Translations.size() - 1; i++) {
+			if (time > Translations[i].second && time < Translations[i + 1].second) {
+				LowerScale = Translations[i];
+				UpperScale = Translations[i + 1];
+				break;
+			}
+			if (i == Translations.size() - 2) {
+				return glm::translate(glm::mat4(1.0), Translations[i + 1].first);
+			}
+		}
+
+		double timeDiff = UpperScale.second - LowerScale.second;
+		double timeNorm = time - LowerScale.second;
+		double ratio = timeNorm / timeDiff;
+		glm::vec3 interpolatedTranslate = (LowerScale.first * (float)(1.0 - ratio)) + (UpperScale.first * (float)ratio);
+		return glm::translate(glm::mat4(1.0), interpolatedTranslate);
+	}
+	glm::mat4 SceneNode::GetInterpolatedRotate(std::vector<std::pair<glm::quat, double>> Rotations, double time) {
+		std::pair<glm::quat, double> LowerScale, UpperScale;
+		for (int i = 0; i < Rotations.size() - 1; i++) {
+			if (time > Rotations[i].second && time < Rotations[i + 1].second) {
+				LowerScale = Rotations[i];
+				UpperScale = Rotations[i + 1];
+				break;
+			}
+			if (i == Rotations.size() - 2) {
+				return glm::toMat4(Rotations[i + 1].first);
+			}
+		}
+		double timeDiff = UpperScale.second - LowerScale.second;
+		double timeNorm = time - LowerScale.second;
+		double ratio = timeNorm / timeDiff;
+		glm::quat interp = glm::slerp(LowerScale.first, UpperScale.first, (float)ratio);
+		return glm::toMat4(interp);
+	}
+
+
+
+#pragma region Skeleton
+
+	Skeleton::Skeleton(std::shared_ptr<SceneNode> _Root, std::map<std::string, std::shared_ptr<SceneNode>> SkeletonNodeMap) {
+		this->rootNode = _Root;
+		this->GlobalInverseMatrix = glm::inverse(_Root->NodeTransform);
+		this->NodeMap = SkeletonNodeMap;
+	}
+
+	void Skeleton::Update() {
+		rootNode->Update(glm::mat4(1.0f), GlobalInverseMatrix);
+	}
+	void Skeleton::Update(unsigned int AnimationID, double Time) {
+		rootNode->Update(glm::mat4(1.0f), GlobalInverseMatrix, AnimationID, Time);
+	}
+
+#pragma region RiggedModel
+
+
+	RiggedModel::RiggedModel(std::unique_ptr<Skeleton> _Rig, ModelAttribList &&_AttributeList) {
+		this->ModelRig = std::move(_Rig);
+
+		this->ModelAttributes = std::forward<ModelAttribList>(_AttributeList);
+
+		Orientation = glm::quat(1, 0, 0, 0);
+		eData.push_back(glm::value_ptr(this->TransformMatrix));
+		this->ModelRig->Update();
+	}
+	RiggedModel::~RiggedModel() {};
+
+	std::unique_ptr<RenderPass> RiggedModel::GenerateRenderpass(Shader* _Shader) {
+		std::unique_ptr<RenderPass> renderPass = std::make_unique<RenderPass>();
+		renderPass->renderFunction = RiggedModelRenderer;
+		renderPass->shader = _Shader;
+		renderPass->Data = (void*)this;
+		return std::move(renderPass);
+	}
+	void RiggedModel::Update() {
+		this->ModelRig->Update();
+	}
+	void RiggedModel::Update(unsigned int AnimationID, double Time) {
+		this->ModelRig->Update(AnimationID, Time);
+	}
+	Skeleton *RiggedModel::GetRig() const { 
+		return this->ModelRig.get(); 
+	}
+
+
 
 	void RiggedModel::RiggedModelRenderer(RenderPass& _Pass, void* _Data) {
 		
@@ -176,7 +351,6 @@ namespace GL_Engine {
 				int i = 0;
 				for (auto bone : attrib->meshBones) {
 					boneMatrices.at(i++) = bone->FinalTransformation;
-					sanityCheck(bone->FinalTransformation * glm::vec4(10, 10, 10, 1));
 				}
 				glUniformMatrix4fv(boneMatLoc, 56, GL_FALSE, glm::value_ptr(boneMatrices[0]));
 			}
@@ -185,9 +359,11 @@ namespace GL_Engine {
 				auto boneMatLoc = glGetUniformLocation(_Pass.shader->GetShaderID(), "BoneMatrices");
 				glUniformMatrix4fv(boneMatLoc, 1, GL_FALSE, glm::value_ptr(id));
 			}
-			glDrawElements(GL_TRIANGLES, attrib->GetVertexCount(), GL_UNSIGNED_INT, 0);
+			glDrawElements(GL_TRIANGLES, (GLsizei)attrib->GetVertexCount(), GL_UNSIGNED_INT, 0);
 		}
 		
 	}
 
 }
+
+#pragma endregion

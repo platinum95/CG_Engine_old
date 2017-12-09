@@ -88,6 +88,11 @@ void CubeKeyEvent(GLuint Key, void* Parameter) {
 	}
 }
 
+bool FlameOn{ false };
+void DragonKeyEvent(GLuint Key, void* Parameter) {
+	FlameOn = !FlameOn;
+}
+
 static bool wireframe = false;
 void WireframeEvent(GLuint Key, void *Parameter) {
 	wireframe = !wireframe;
@@ -102,7 +107,7 @@ int CG_Implementation::run(){
 	
 	initialise();
 	auto nodeT = DragonRiggedModel->GetRig()->NodeMap["R_Shoulder"]->NodeTransform;
-
+	glm::mat4 ParticleMat(1.0f);
 
 
 	while (!glfwWindowShouldClose(windowProperties.window)){
@@ -119,22 +124,23 @@ int CG_Implementation::run(){
 		kitchen.GetTransformMatrix();
 		nanosuit.GetTransformMatrix();
 		sun.GetTransformMatrix();
-		dragon.GetTransformMatrix();
+
 
 		DragonRiggedModel->GetTransformMatrix();
 		DragonRiggedModel->Update(1, time);
-		float circleRadius = 5;
+		float circleRadius = 250;
 		float xPos = circleRadius * cos(time);
 		float zPos = circleRadius * sin(time);
 		DragonRiggedModel->SetPosition(glm::vec3(xPos, 25, zPos));
-		DragonRiggedModel->YawBy(glm::degrees(second_diff));
-		particleSystem->GetTransformMatrix();
-		particleSystem->UpdateTime(second_diff);
+		DragonRiggedModel->YawBy(glm::degrees((float)second_diff));
+		pTransform = DragonRiggedModel->GetTransformMatrix() * particleSystem->GetTransformMatrix();
+		particleSystem->UpdateTime((float)second_diff);
+		particleSystem->SetActive(FlameOn);
 		time += (float)second_diff;
 
 		
-		//Clear screen
 		
+		//Water reflection render pass
 		glEnable(GL_CLIP_DISTANCE0);
 		camera_ubo_data.ClippingPlane[3] = 0;
 		camera_ubo_data.ClippingPlane[1] = 1;
@@ -146,6 +152,7 @@ int CG_Implementation::run(){
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		renderer->Render();
 
+		//Water refraction render pass
 		camera_ubo_data.ClippingPlane[1] = -1;
 		camera.ReflectCamera();
 		UpdateCameraUBO();
@@ -155,6 +162,8 @@ int CG_Implementation::run(){
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		renderer->Render();
 		WaterFBO->Unbind();
+
+		//Main render pass to post processing FBO
 		const GLenum CAttachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
 		ppFBO->Bind(2, CAttachments);
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
@@ -165,8 +174,10 @@ int CG_Implementation::run(){
 		renderer->Render();
 		ppFBO->Unbind();
 
+		//Process the FBO
 		postprocessPipeline.Process();
 
+		//Output final image to screen
 		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		guiRenderer->Render();
@@ -239,6 +250,15 @@ void CG_Implementation::initialise(){
 	basicShader.RegisterUBO(std::string("LightData"), light_ubo);
 	auto translate_uboBasic = basicShader.RegisterUniform("model");
 	basicShader.CompileShader();
+
+	groundShader.RegisterShaderStageFromFile(groundVLoc.c_str(), GL_VERTEX_SHADER);
+	groundShader.RegisterShaderStageFromFile(groundFLoc.c_str(), GL_FRAGMENT_SHADER);
+	groundShader.RegisterAttribute("MeshXZ", 0);
+	groundShader.RegisterAttribute("Height", 1);
+	groundShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
+	groundShader.RegisterUBO(std::string("LightData"), light_ubo);
+	auto ground_translation_uni = groundShader.RegisterUniform("GroundTranslation");
+	groundShader.CompileShader();
 
 	waterShader.RegisterShaderStageFromFile(waterVLoc.c_str(), GL_VERTEX_SHADER);
 	waterShader.RegisterShaderStageFromFile(waterFLoc.c_str(), GL_FRAGMENT_SHADER);
@@ -369,21 +389,11 @@ void CG_Implementation::initialise(){
 		nanosuitPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
 
-	//nodeModelIndex = dragon.AddData((void*)glm::value_ptr(dragon.TransformMatrix));
-	//dragon.SetPosition(glm::vec3(0, 0, 0));
-	for (auto &a : dragonAttributes) {
-		//GLsizei dCount = (GLsizei)a->GetVertexCount();
-		//RenderPass *dragonPass = renderer->AddRenderPass(&basicShader);
-		//dragonPass->SetDrawFunction([dCount]() {glDrawElements(GL_TRIANGLES, dCount, GL_UNSIGNED_INT, 0); });
-		//dragonPass->BatchVao = a;
-		//std::move(a->ModelTextures.begin(), a->ModelTextures.end(), std::back_inserter(dragonPass->Textures));
-	//	dragonPass->AddBatchUnit(&dragon);
-		//dragonPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
-	}
+
 	renderer->AddRenderPass(std::move(DragonRiggedModel->GenerateRenderpass(&RiggedDragonShader)));
 	DragonRiggedModel->SetPosition(glm::vec3(0, 25, 0));
 	DragonRiggedModel->PitchBy(90.0f);
-	DragonRiggedModel->ScaleBy(glm::vec3(1, 1, 1));
+	DragonRiggedModel->ScaleBy(glm::vec3(10, 10, 10));
 
 	nodeModelIndex = sun.AddData((void*)glm::value_ptr(sun.TransformMatrix));
 	sun.SetPosition(glm::vec3(0, 0, 0));
@@ -428,9 +438,18 @@ void CG_Implementation::initialise(){
 	waterRenderPass->AddDataLink(waterTimeUniform, waterTimeIndex);
 	waterRenderPass->AddBatchUnit(&water);
 
+	ParticleSystem::ParticleStats pStats;
+	pStats.BaseDirection = glm::vec3(0.0, 20.0, 80.0);
+	pStats.Position = glm::vec3(0.2f, -6.4f, 4.3f);
+	pStats.ParticleCount = 500000;
+	pStats.ColourRange[0] = glm::vec3(1.0f, 0.4498f, 0.17f);
+	pStats.ColourRange[1] = glm::vec3(1.0f, 0.6498f, 0.37);
+
 	particleSystem = std::make_unique<ParticleSystem>();
-	auto pRenderer = particleSystem->GenerateParticleSystem(500000, com_ubo, glm::vec3(0.0f, 69.0f, 60.0f), glm::vec3(0.0, -20.0, 80.0));
+	auto pRenderer = particleSystem->GenerateParticleSystem(pStats, com_ubo);
+	particleSystem->SetData(0, static_cast<void*>(glm::value_ptr(pTransform)));
 	renderer->AddRenderPass(std::move(pRenderer));
+	particleSystem->PitchBy(-90.0f);
 
 	ppFBO = std::make_unique<CG_Data::FBO>();
 	auto FragColAttach = ppFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
@@ -466,52 +485,13 @@ void CG_Implementation::initialise(){
 	guiRenderPass->BatchVao = guiVAO;
 	guiRenderPass->AddBatchUnit(&gui);
 
+	terrain = std::make_unique<Terrain>(256, 256);
+	auto tRenderPass = terrain->GetRenderPass(&groundShader);
+	renderer->AddRenderPass(std::move(tRenderPass));
 	
 	glEnable(GL_DEPTH_TEST);
 
 	
-	
-	
-	/*
-	
-	|_|_|	hand and fingers
-	  |		arm
-	  ^		root
-	  
-	*/
-	/*
-	hierarchy = std::make_unique<Hierarchy>();
-	//Initialise joints
-	auto *root_joint = new Hierarchy::HJoint(glm::vec3(0, 0, 0));
-	auto *wrist_joint = new Hierarchy::HJoint(glm::vec3(0, 20, 0));
-	auto *leftKnuckle_joint = new Hierarchy::HJoint(glm::vec3(20, 20, 0));
-	auto *middleKnuckle_joint = new Hierarchy::HJoint(glm::vec3(0, 20, 0));
-	auto *rightKnuckle_joint = new Hierarchy::HJoint(glm::vec3(-20, 20, 0));
-
-	//Set up joint hierarchy
-	root_joint->AddChild(wrist_joint);
-	wrist_joint->AddChild(leftKnuckle_joint);
-	wrist_joint->AddChild(middleKnuckle_joint);
-	wrist_joint->AddChild(rightKnuckle_joint);
-
-	//set root join
-	hierarchy->SetRoot(root_joint);
-
-
-	nodes[0].SetPosition(glm::vec3(0, 0, 0));
-	nodes[1].SetPosition(glm::vec3(0, 0, 0));
-	nodes[2].SetPosition(glm::vec3(0, 10, 0));
-	nodes[3].SetPosition(glm::vec3(0, 10, 0));
-	nodes[4].SetPosition(glm::vec3(0, 10, 0));
-
-	root_joint->AddNode(&nodes[0]);
-	wrist_joint->AddNode(&nodes[1]);
-	leftKnuckle_joint->AddNode(&nodes[2]);
-	middleKnuckle_joint->AddNode(&nodes[3]);
-	rightKnuckle_joint->AddNode(&nodes[4]);
-
-	hierarchy->InitialiseHierarchy();
-	*/
 	{
 		//Register key events
 		keyHandler.AddKeyEvent(GLFW_KEY_W, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
@@ -531,6 +511,7 @@ void CG_Implementation::initialise(){
 		keyHandler.AddKeyEvent(GLFW_KEY_INSERT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
 		keyHandler.AddKeyEvent(GLFW_KEY_DELETE, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
 		keyHandler.AddKeyEvent(GLFW_KEY_F1, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &WireframeEvent, (void*)nullptr);
+		keyHandler.AddKeyEvent(GLFW_KEY_T, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &DragonKeyEvent, (void*)nullptr);
 		/*
 		keyHandler.AddKeyEvent(GLFW_KEY_UP, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
 		keyHandler.AddKeyEvent(GLFW_KEY_DOWN, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());

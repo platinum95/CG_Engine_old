@@ -41,12 +41,12 @@ void main(){
 	}
 	PassTime = elapsed_time;
 
-	vec3 ePos = EmitterPosition;//vec3(10, 10, 0);
+	vec3 ePos = vec3(0, 0, 0);
 	vec3 Position = Velocity * elapsed_time;
 	vec3 GravityOffset = Gravity * elapsed_time * elapsed_time;
 	ePos = ePos + Position + GravityOffset;
 
-	vec4 WorldPosition =vec4(ePos, 1.0);// model * vec4(ePos, 1.0);
+	vec4 WorldPosition = model * vec4(ePos, 1.0);// model * vec4(ePos, 1.0);
 	gl_ClipDistance[0] = dot(WorldPosition, ClippingPlane);
 
 	gl_Position = PV_Matrix * WorldPosition;

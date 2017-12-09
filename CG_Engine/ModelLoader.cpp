@@ -150,7 +150,7 @@ namespace GL_Engine {
 	
 	void LoadAnimations(std::map<std::string, std::shared_ptr<SceneNode>> &NodeList, const aiScene *_Scene) {
 		aiAnimation* anim = _Scene->mAnimations[0];
-		for (int i = 0; i < anim->mNumChannels; i++) {
+		for (unsigned int i = 0; i < anim->mNumChannels; i++) {
 			aiNodeAnim *animNode = anim->mChannels[i];
 			NodeList[animNode->mNodeName.data]->Animation = std::make_shared<NodeAnimation>(animNode, anim->mDuration);
 		}
@@ -192,33 +192,13 @@ namespace GL_Engine {
 		for (int vi = 0; vi < vbd.size(); vi++) {
 			auto data = vbd.at(vi);
 			float sum = data.Weights[0] + data.Weights[1] + data.Weights[2] + data.Weights[3];
-	//		if (sum < 0.001f && sum > -0.001f) {
-	//			data.IDs[0] = 55;
-	//			data.Weights[0] = 1.0f;
-	//			for (int i = 1; i < 4; i++) {
-	//				data.Weights[i] = 0.0f;
-	//			}
-	//			vbd[vi] = data;
-	//			continue;
-	//		}
 			for (int i = 0; i < 4; i++) {
 				data.Weights[i] = data.Weights[i] / sum;
 				vbd[vi] = data;
 			}
 		}
 	}
-	void sanityW(std::vector<VertexBoneData> &vbd) {
-		for (auto data : vbd) {
-			float sum = data.Weights[0] + data.Weights[1] + data.Weights[2] + data.Weights[3];
-			sum = sum - 1.0;
-			if (abs(sum) < 0.000000001)
-				return;// std::cout << "Its ok2" << std::endl;
-			else if (sum > 0)
-				std::cout << "WHITEY SCUM" << std::endl;
-			else
-				std::cout << "Its ok" << std::endl;
-		}
-	}
+
 	std::unique_ptr<RiggedModel> ModelLoader::LoadRiggedModel(std::string &_PathBase, std::string &_ModelFile, unsigned int _Flags) {
 		const aiScene* _Scene = aImporter.ReadFile(_PathBase + _ModelFile, _Flags);
 		if (!_Scene) {
@@ -248,8 +228,7 @@ namespace GL_Engine {
 				if (SceneBoneMap.count(mBone->mName.data) == 0) {
 					sceneBone = std::make_shared<SceneBone>(mBone);
 					SceneBoneMap[mBone->mName.data] = sceneBone;
-				//	std::cout << mBone->mName.data << std::endl;
-					Nodes[mBone->mName.data]->SceneBones.push_back(sceneBone);
+					Nodes[mBone->mName.data]->sceneBone = sceneBone;
 				}
 				else {
 					sceneBone = SceneBoneMap[mBone->mName.data];
@@ -257,7 +236,7 @@ namespace GL_Engine {
 				sceneBone->AddMeshBone(newMeshBone);
 
 				newAttrib->meshBones.push_back(newMeshBone);
-				BoneIndex = newAttrib->meshBones.size() - 1;
+				BoneIndex = (unsigned int)newAttrib->meshBones.size() - 1;
 				newAttrib->BoneIndex[mBone->mName.data] = BoneIndex;
 
 				for (unsigned int bwi = 0; bwi < mBone->mNumWeights; bwi++) {
@@ -269,7 +248,6 @@ namespace GL_Engine {
 			}
 			
 			normaliseVertexData(WeightVBOData);
-			sanityW(WeightVBOData);
 			std::vector<float> Weights;
 			std::vector<GLuint> IDs;
 			for (auto data : WeightVBOData) {
