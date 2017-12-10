@@ -1,9 +1,18 @@
-﻿  Generating code
-x:\cg\cg_engine\cg_engine\postprocessing.h(38): warning C4715: 'GL_Engine::PostProcessing::AddAttachment': not all control paths return a value
-  755 of 4558 functions (16.6%) were compiled, the rest were copied from previous compilation.
-    1 functions were new in current compilation
-    13 functions had inline decision re-evaluated but remain unchanged
+﻿  CG_Implementation.cpp
+D:\Projects\c++\VS2015\CG_Engine\CG_Engine\Terrain.h(57): warning C4018: '<': signed/unsigned mismatch
+D:\Projects\c++\VS2015\CG_Engine\CG_Engine\Terrain.h(59): warning C4018: '<': signed/unsigned mismatch
+D:\Projects\c++\VS2015\CG_Engine\CG_Engine\Terrain.h(77): warning C4018: '<': signed/unsigned mismatch
+D:\Projects\c++\VS2015\CG_Engine\CG_Engine\Terrain.h(79): warning C4018: '<': signed/unsigned mismatch
+  main.cpp
+D:\Projects\c++\VS2015\CG_Engine\CG_Engine\Terrain.h(57): warning C4018: '<': signed/unsigned mismatch
+D:\Projects\c++\VS2015\CG_Engine\CG_Engine\Terrain.h(59): warning C4018: '<': signed/unsigned mismatch
+D:\Projects\c++\VS2015\CG_Engine\CG_Engine\Terrain.h(77): warning C4018: '<': signed/unsigned mismatch
+D:\Projects\c++\VS2015\CG_Engine\CG_Engine\Terrain.h(79): warning C4018: '<': signed/unsigned mismatch
+  Generating code
+  62 of 4796 functions ( 1.3%) were compiled, the rest were copied from previous compilation.
+    0 functions were new in current compilation
+    14 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
-main.obj : warning LNK4020: a type record in 'x:\cg\cg_engine\cg_implementation\x64\release\vc141.pdb' is corrupted; some symbols and types may not be accessible from the debugger
-  CG_Implementation.vcxproj -> X:\CG\CG_Engine\x64\Release\CG_Implementation.exe
-  CG_Implementation.vcxproj -> X:\CG\CG_Engine\x64\Release\CG_Implementation.pdb (Full PDB)
+main.obj : warning LNK4020: a type record in 'd:\projects\c++\vs2015\cg_engine\cg_implementation\x64\release\vc141.pdb' is corrupted; some symbols and types may not be accessible from the debugger
+  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Release\CG_Implementation.exe
+  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Release\CG_Implementation.pdb (Full PDB)

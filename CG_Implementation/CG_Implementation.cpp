@@ -96,7 +96,6 @@ void DragonKeyEvent(GLuint Key, void* Parameter) {
 static bool wireframe = false;
 void WireframeEvent(GLuint Key, void *Parameter) {
 	wireframe = !wireframe;
-	glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
 }
 
 CG_Implementation::CG_Implementation(){
@@ -139,7 +138,7 @@ int CG_Implementation::run(){
 		time += (float)second_diff;
 
 		
-		
+		glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
 		//Water reflection render pass
 		glEnable(GL_CLIP_DISTANCE0);
 		camera_ubo_data.ClippingPlane[3] = 0;
@@ -174,6 +173,7 @@ int CG_Implementation::run(){
 		renderer->Render();
 		ppFBO->Unbind();
 
+		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 		//Process the FBO
 		postprocessPipeline.Process();
 
@@ -255,6 +255,8 @@ void CG_Implementation::initialise(){
 	groundShader.RegisterShaderStageFromFile(groundFLoc.c_str(), GL_FRAGMENT_SHADER);
 	groundShader.RegisterAttribute("MeshXZ", 0);
 	groundShader.RegisterAttribute("Height", 1);
+	groundShader.RegisterAttribute("TexCoords", 2);
+	groundShader.RegisterAttribute("Normals", 3);
 	groundShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
 	groundShader.RegisterUBO(std::string("LightData"), light_ubo);
 	auto ground_translation_uni = groundShader.RegisterUniform("GroundTranslation");
@@ -486,6 +488,8 @@ void CG_Implementation::initialise(){
 	guiRenderPass->AddBatchUnit(&gui);
 
 	terrain = std::make_unique<Terrain>(256, 256);
+	terrain->GenerateChunk(0, 0);
+	terrain->GenerateChunk(1, 0);
 	auto tRenderPass = terrain->GetRenderPass(&groundShader);
 	renderer->AddRenderPass(std::move(tRenderPass));
 	

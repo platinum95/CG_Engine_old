@@ -1,2 +1,6 @@
 ﻿  Terrain.cpp
-  CG_Engine.vcxproj -> X:\CG\CG_Engine\CG_Engine\../libs/CG_Engine_x64.lib
+d:\projects\c++\vs2015\cg_engine\cg_engine\Terrain.h(57): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Terrain.h(59): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Terrain.h(77): warning C4018: '<': signed/unsigned mismatch
+d:\projects\c++\vs2015\cg_engine\cg_engine\Terrain.h(79): warning C4018: '<': signed/unsigned mismatch
+  CG_Engine.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\CG_Engine\../libs/CG_Engine_x64.lib

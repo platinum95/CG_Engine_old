@@ -18,15 +18,27 @@ layout (std140) uniform LightData
 
 in vec2 MeshXZ;
 in float Height;
+in vec3 Normals;
+in vec2 TexCoords;
 
-uniform float GroundTranslation;
+uniform mat4 GroundTranslation;
+
+out mat3 models;
+out vec3 norms;
+out vec2 PassTexCoord;
+varying vec3 Pos_ViewSpace;
+varying vec4 LightPosition_Viewspace;
 
 
 void main(){
 	vec4 vPos = vec4(MeshXZ.x, Height, MeshXZ.y, 1.0);
 
+	models = mat3(transpose(inverse( ViewMatrix * GroundTranslation)));
+	norms = Normals;
+	PassTexCoord = TexCoords;
 	vec4 WorldPosition = GroundTranslation * vPos;
 	gl_ClipDistance[0] = dot(WorldPosition, ClippingPlane);
-
-	gl_Position = PV_Matrix * WorldPosition;
+	Pos_ViewSpace = vec3(ViewMatrix * WorldPosition);
+	LightPosition_Viewspace = ViewMatrix * LightPosition;
+    gl_Position =  PV_Matrix * WorldPosition;
 }

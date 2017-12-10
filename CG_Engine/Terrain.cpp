@@ -10,10 +10,9 @@ namespace GL_Engine {
 		for (auto tex : Pass.Textures) {
 			tex->Bind();
 		}
-		auto c = chunks->TerrainChunks[0];
 		for (auto chunk : chunks->TerrainChunks) {
-			glUniformMatrix4fv(chunks->translationUniformLocation, 1, GL_FALSE, glm::value_ptr(c->Translation));
-			c->BindVAO();
+			glUniformMatrix4fv(chunks->translationUniformLocation, 1, GL_FALSE, glm::value_ptr(chunk->Translation));
+			chunk->BindVAO();
 			Pass.DrawFunction();
 		}
 	}

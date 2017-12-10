@@ -1,7 +1,42 @@
 #version 330 core
 
-out vec4 fragColour;
+layout (std140) uniform LightData
+{ 
+	vec4 LightPosition;
+	vec3 LightColour;
+	float Brightness;
+};
+
+out vec4 FragColour;
+in mat3 models;
+in vec3 norms;
+in vec2 PassTexCoord;
+varying vec3 Pos_ViewSpace;
+varying vec4 LightPosition_Viewspace;
 
 void main(){
-	fragColour = vec4(0.5, 0.6, 0.1, 1.0);
+	// ambient
+    float ambientStrength = 0.1;
+    vec3 ambient = ambientStrength * LightColour; 
+
+	//Diffuse
+	vec3 norm = normalize(norms);   
+	norm = normalize(models * norm); 
+
+	vec3 lightDir = vec3(normalize(LightPosition_Viewspace.xyz - Pos_ViewSpace));
+	float diff = max(dot(norm, lightDir), 0.0);
+	vec3 diffuse = diff * LightColour;
+	diffuse = diffuse * Brightness;
+
+	//Specular
+	vec3 CamDir = normalize(vec3(0,0,0) - Pos_ViewSpace);
+	vec3 ReflectDir = reflect(-lightDir, norm);
+	float SpecAmount = pow(max(dot(CamDir, ReflectDir), 0.0), 16);
+	vec3 SpecularComponent = 0.99 * SpecAmount * LightColour;  
+
+
+
+	//Output
+	vec3 result = (ambient + diffuse + SpecularComponent) * vec3(0.6, 0.1, 0.4);
+	FragColour = vec4(result, 1.0);
 }
