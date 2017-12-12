@@ -3,9 +3,23 @@
 
 namespace GL_Engine {
 
+	struct ChunkData {
+		std::vector<float> Heights;
+		std::vector<glm::vec3> Normals, Tangents, Bitangents;
+	};
+	struct MeshData {
+		std::vector<unsigned int> Indices;
+		std::vector<glm::vec2> Mesh, TexCoords;
+		unsigned int MeshSize, DivisionCount;
+	};
+	struct MeshBaseVBOs {
+		std::shared_ptr<CG_Data::VBO> MeshVBO, IndexVBO, TexVBO;
+	};
 	class TerrainGenerator {
 	public:
-		static std::tuple<std::vector<unsigned int>, std::vector<glm::vec2>, std::vector<glm::vec2>> CreateMesh(uint32_t MeshSize, uint32_t Divisions) {
+		
+
+		static MeshData CreateMesh(uint32_t MeshSize, uint32_t Divisions) {
 			std::vector<glm::vec2> Mesh;
 			Mesh.reserve(Divisions * Divisions);
 			//Create the mesh
@@ -28,11 +42,12 @@ namespace GL_Engine {
 					unsigned int CurrIndexBelow = CurrIndex + Divisions;
 					//need to add 2 triangles here.
 					Indices.push_back(CurrIndex);
-					Indices.push_back(CurrIndex + 1);
 					Indices.push_back(CurrIndexBelow + 1);
+					Indices.push_back(CurrIndex + 1);
+
 					Indices.push_back(CurrIndex);
 					Indices.push_back(CurrIndexBelow);
-					Indices.push_back(CurrIndexBelow + 1);
+					Indices.push_back(CurrIndexBelow+1);
 				}
 			}
 			std::vector<glm::vec2> texcoord;
@@ -46,12 +61,12 @@ namespace GL_Engine {
 					texcoord.push_back(glm::vec2(xRatio, zRatio));
 				}
 			}
-			return std::make_tuple(Indices, Mesh, texcoord);
+			return MeshData{ Indices, Mesh, texcoord };
 		}
 
 		static std::vector<float> GenerateHeights(int MeshSize, int DivisionCount, int GridX, int GridZ) {
-			int startingX = GridX * DivisionCount;
-			int startingZ = GridZ * DivisionCount;
+			int startingX = GridX * (DivisionCount-1);
+			int startingZ = GridZ * (DivisionCount-1);
 			std::vector<float> heights;
 			heights.reserve(DivisionCount * DivisionCount);
 			for (unsigned int z = 0; z < DivisionCount; z++) {
@@ -63,6 +78,56 @@ namespace GL_Engine {
 			}
 			return heights;
 		}
+		static void sanity(glm::vec3 norm) {
+			if (glm::length(norm) < 0.3) {
+				std::cout << "AGHH" << std::endl;
+			}
+		}
+		static std::vector<glm::vec3> GetSmoothNormals(const MeshData &meshData, const std::vector<float> Heights) {
+			auto Indices = meshData.Indices;
+			auto Vertices = meshData.Mesh;
+			std::vector<glm::vec3> FaceNormals;
+			FaceNormals.reserve(Indices.size()/3);
+			std::vector<std::vector<glm::vec3>> VertexNormalList;
+			VertexNormalList.resize(Vertices.size());
+			for (auto fi = 0; fi < Indices.size(); fi += 3) {
+				unsigned int Face[3] = { Indices[fi], Indices[fi + 1], Indices[fi + 2] };
+				glm::vec3 p1(Vertices[Face[0]].x, Heights[Face[0]], Vertices[Face[0]].y);
+				glm::vec3 p2(Vertices[Face[1]].x, Heights[Face[1]], Vertices[Face[1]].y);
+				glm::vec3 p3(Vertices[Face[2]].x, Heights[Face[2]], Vertices[Face[2]].y);
+				glm::vec3 A = p3 - p2;
+				glm::vec3 B = p1 - p2;
+				glm::vec3 faceNorm = glm::cross(A, B);
+				faceNorm = glm::normalize(faceNorm);
+				FaceNormals.push_back(faceNorm);
+				VertexNormalList[Face[0]].push_back(faceNorm);
+				VertexNormalList[Face[1]].push_back(faceNorm);
+				VertexNormalList[Face[2]].push_back(faceNorm);
+			}
+			std::vector<glm::vec3> VertexNormals;
+			VertexNormals.resize(Vertices.size());
+			for (unsigned int vli = 0; vli < VertexNormalList.size(); vli++) {
+				glm::vec3 nSum(0.0f, 0.0f, 0.0f);
+				for (auto fn : VertexNormalList[vli]) {
+					nSum += fn;
+				}
+				//nSum = nSum / (float)VertexNormalList[vli].size();
+				VertexNormals[vli] = glm::normalize(nSum);
+			}
+		
+			
+			return VertexNormals;
+		}
+		
+		static ChunkData GenerateChunk(int GridX, int GridZ, const MeshData &meshData) {
+			auto Heights = GenerateHeights(meshData.MeshSize, meshData.DivisionCount, GridX, GridZ);
+			auto Normals = GetSmoothNormals(meshData, Heights);
+			for (auto n : Normals) {
+				sanity(n);
+			}
+			ChunkData data = { Heights, Normals };
+			return data;
+		}
 		static float getHeight(int x, int z) {
 			float total = getInterpolatedNoise(x / 32.0f, z / 32.0f);
 			total += getInterpolatedNoise(x / 16.0f, z / 16.0f) / 2.0f;
@@ -70,28 +135,7 @@ namespace GL_Engine {
 
 			return total;
 		}
-		static std::vector<std::vector<glm::vec3>> GetTBN(std::vector<float> Heights, std::vector<glm::vec2> UVs, int Divisions) {
-			std::vector <glm::vec3> Normals, Tangents, Bitangents;
-			std::vector<std::vector<glm::vec3>> TBN;
-			Normals.resize(Heights.size(), glm::vec3(1, 1, 0));
-			for (unsigned int z = 1; z < Divisions - 1; z++) {
-				unsigned int zIndex = z * Divisions;
-				for (unsigned int x = 1; x < Divisions - 1; x++) {
-					unsigned int CurrIndex = zIndex + x;
-					unsigned int CurrIndexBelow = CurrIndex + Divisions;
-					unsigned int CurrIndexAbove = CurrIndex - Divisions;
-					float hL = Heights[CurrIndex - 1];
-					float hR = Heights[CurrIndex + 1];
-					float hD = Heights[CurrIndexBelow];
-					float hU = Heights[CurrIndexAbove];
-					glm::vec3 N(hL - hR, 2.0, hD - hU);
-					N = normalize(N);
-					Normals[CurrIndex] = N;
-				}
-			}
-			TBN.push_back(Normals);
-			return TBN;
-		}
+	
 		//static float getHeight(int x, int z, float mag1, float mag2, float mag3);
 
 	private:
@@ -138,26 +182,31 @@ namespace GL_Engine {
 	};
 	class TerrainChunk : public CG_Data::VAO {
 	public:
-		TerrainChunk(std::shared_ptr<CG_Data::VBO> MeshVBO, std::shared_ptr<CG_Data::VBO> IndexVBO, std::shared_ptr<CG_Data::VBO> TexVBO, std::vector<float> Heights, std::vector<glm::vec3> Normals, glm::vec2 _GridPos, unsigned int MeshSize) {
+		TerrainChunk(const MeshBaseVBOs &baseVBOs, const MeshData &meshData, int GridX, int GridZ) {
+			auto chunkData = TerrainGenerator::GenerateChunk(GridX, GridZ, meshData);
 			this->BindVAO();
-			IndexVBO->BindVBO();
-			MeshVBO->BindVBO();
+			baseVBOs.IndexVBO->BindVBO();
+			baseVBOs.MeshVBO->BindVBO();
 			glEnableVertexAttribArray(0);	//Mesh always at index 0
 			glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+			baseVBOs.TexVBO->BindVBO();
+			glEnableVertexAttribArray(2);	//UV always at index 2
+			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+			auto Heights = chunkData.Heights;
 			auto HeightVBO = std::make_unique<CG_Data::VBO>(&Heights[0], Heights.size() * sizeof(float), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(1);	//Heights always at index 1
 			glVertexAttribPointer(1, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
 			this->AddVBO(std::move(HeightVBO));
-			TexVBO->BindVBO();
-			glEnableVertexAttribArray(2);	//UV always at index 2
-			glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 0, nullptr);
+
+			auto Normals = chunkData.Normals;
 			auto NormalVBO = std::make_unique<CG_Data::VBO>(&Normals[0], Normals.size() * sizeof(glm::vec3), GL_STATIC_DRAW);
 			glEnableVertexAttribArray(3);	//Normals always at index 3
 			glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 0, nullptr);
 			this->AddVBO(std::move(NormalVBO));
 			
-			this->WorldGridPosition = _GridPos;
-			this->WorldPos = _GridPos * ((float)MeshSize) ;
+			this->WorldGridPosition = glm::vec2(GridX, GridZ);
+			this->WorldPos = WorldGridPosition * ((float)meshData.MeshSize) ;
 			this->Translation = glm::translate(glm::mat4(1.0f), glm::vec3(this->WorldPos.x, 0, this->WorldPos.y));
 		}
 		glm::vec2 WorldPos;
@@ -177,19 +226,17 @@ namespace GL_Engine {
 		Terrain(uint32_t _MeshSize, uint32_t _DivisionCount){
 			this->MeshSize = _MeshSize;
 			this->DivisionCount = _DivisionCount;
-			std::tie(Indices, Mesh, UVCoords)= TerrainGenerator::CreateMesh(this->MeshSize, this->DivisionCount);
-			auto meshVec = Mesh;
-			auto indexVec = Indices;
+			this->meshData = TerrainGenerator::CreateMesh(this->MeshSize, this->DivisionCount);
+			meshData.DivisionCount = this->DivisionCount;
+			meshData.MeshSize = this->MeshSize;
 			glBindVertexArray(0);
-			MeshVBO = std::make_shared<CG_Data::VBO>(&meshVec[0], meshVec.size() * sizeof(glm::vec2), GL_STATIC_DRAW);
-			TexcoordVBO = std::make_shared<CG_Data::VBO>(&UVCoords[0], UVCoords.size() * sizeof(glm::vec2), GL_STATIC_DRAW);
-			IndexVBO = std::make_shared<CG_Data::VBO>(&indexVec[0], indexVec.size() * sizeof(unsigned int), GL_STATIC_DRAW, GL_ELEMENT_ARRAY_BUFFER);
+			baseVBOs.MeshVBO = std::make_shared<CG_Data::VBO>(&meshData.Mesh[0], meshData.Mesh.size() * sizeof(glm::vec2), GL_STATIC_DRAW);
+			baseVBOs.TexVBO = std::make_shared<CG_Data::VBO>(&meshData.TexCoords[0], meshData.TexCoords.size() * sizeof(glm::vec2), GL_STATIC_DRAW);
+			baseVBOs.IndexVBO = std::make_shared<CG_Data::VBO>(&meshData.Indices[0], meshData.Indices.size() * sizeof(unsigned int), GL_STATIC_DRAW, GL_ELEMENT_ARRAY_BUFFER);
 		}
 		std::shared_ptr<TerrainChunk> GenerateChunk(int xGrid, int zGrid) {
-			auto heightCount = this->DivisionCount * this->DivisionCount;
-			std::vector<float> heights = TerrainGenerator::GenerateHeights(this->MeshSize, this->DivisionCount, xGrid, zGrid);
-			auto Normals = TerrainGenerator::GetTBN(heights, this->UVCoords, this->DivisionCount);
-			auto newChunk = std::make_shared<TerrainChunk>(MeshVBO, IndexVBO, TexcoordVBO, heights, Normals[0], glm::vec2(xGrid, zGrid), this->MeshSize);
+
+			auto newChunk = std::make_shared<TerrainChunk>(this->baseVBOs, meshData, xGrid, zGrid);
 			this->tPack.TerrainChunks.push_back(newChunk);
 			return newChunk;
 		}
@@ -198,7 +245,7 @@ namespace GL_Engine {
 			auto renderPass = std::make_unique<RenderPass>();
 			renderPass->Data = static_cast<TerrainPack*>(&tPack);
 			renderPass->renderFunction = &TerrainRenderer;
-			GLsizei nCount =(GLsizei) Indices.size();
+			GLsizei nCount =(GLsizei) meshData.Indices.size();
 			auto drawFunct = [nCount]() {glDrawElements(GL_TRIANGLES, nCount, GL_UNSIGNED_INT, nullptr); };
 			renderPass->SetDrawFunction(drawFunct);
 			renderPass->shader = _GroundShader;
@@ -210,10 +257,9 @@ namespace GL_Engine {
 
 		}
 		TerrainPack tPack;
-		std::vector<unsigned int> Indices;
-		std::vector<glm::vec2 > Mesh;
-		std::vector<glm::vec2> UVCoords;
 		std::shared_ptr<CG_Data::VBO> MeshVBO, IndexVBO, TexcoordVBO;
+		MeshData meshData;
+		MeshBaseVBOs baseVBOs;
 		uint32_t MeshSize, DivisionCount;
 	private:
 		static void TerrainRenderer(RenderPass &Pass, void* _Data);

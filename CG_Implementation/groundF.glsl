@@ -14,6 +14,8 @@ in vec2 PassTexCoord;
 varying vec3 Pos_ViewSpace;
 varying vec4 LightPosition_Viewspace;
 
+uniform sampler2D GrassTexture; 
+
 void main(){
 	// ambient
     float ambientStrength = 0.1;
@@ -37,6 +39,6 @@ void main(){
 
 
 	//Output
-	vec3 result = (ambient + diffuse + SpecularComponent) * vec3(0.6, 0.1, 0.4);
+	vec3 result = (ambient + diffuse + SpecularComponent) * texture(GrassTexture, PassTexCoord).xyz;//(0.6, 0.1, 0.4);
 	FragColour = vec4(result, 1.0);
 }

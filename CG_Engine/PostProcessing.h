@@ -3,6 +3,7 @@
 #include "CG_Data.h"
 #include "Shader.h"
 #include <sstream>
+#include <glm\vec2.hpp>
 namespace GL_Engine {
 	class PostProcessing{
 	public:
@@ -39,6 +40,7 @@ namespace GL_Engine {
 
 		std::shared_ptr<CG_Data::Texture> Compile(std::shared_ptr<CG_Data::Texture> _TextureInput, uint16_t _Width, uint16_t _Height){
 
+			this->Resolution = glm::vec2(_Width, _Height);
 			InputTexture = _TextureInput;
 			//std::string FragmentShader;
 			std::stringstream FragmentStream(FragmentShader);
@@ -56,7 +58,7 @@ namespace GL_Engine {
 			shader.RegisterTextureUnit("InputImage", 0);
 			auto resoUni = shader.RegisterUniform("resolution");
 			shader.CompileShader();
-
+			shader.UseShader();
 			glUniform2f(resoUni->GetID(), (float)_Width, (float)_Height);
 
 			ScreenVAO = std::make_unique<CG_Data::VAO>();
@@ -94,6 +96,8 @@ namespace GL_Engine {
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 			shader.UseShader();
+			auto loc = glGetUniformLocation(shader.GetShaderID(), "resolution");
+			glUniform2f(loc, Resolution.x, Resolution.y);
 
 			for (auto u : Uniforms)
 				u->Update();
@@ -118,7 +122,7 @@ namespace GL_Engine {
 		std::vector<CG_Data::Uniform*> Uniforms;
 		std::string AttachmentStringComponents[2];
 		std::map<PostprocessingAttachment, std::string> uniforms;
-
+		glm::vec2 Resolution;
 		std::string VertexShader = {
 				#include "PostprocessingV.glsl" 
 		};

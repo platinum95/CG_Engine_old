@@ -1,4 +1,6 @@
-﻿  ModelLoader.cpp
-d:\projects\c++\vs2015\cg_engine\cg_engine\modelloader.cpp(241): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
-d:\projects\c++\vs2015\cg_engine\cg_engine\modelloader.cpp(288): warning C4267: '=': conversion from 'size_t' to 'unsigned int', possible loss of data
-  CG_Engine.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\CG_Engine\../libs/CG_Engined_x64.lib
+﻿  Terrain.cpp
+x:\cg\cg_engine\cg_engine\terrain.h(71): warning C4018: '<': signed/unsigned mismatch
+x:\cg\cg_engine\cg_engine\terrain.h(73): warning C4018: '<': signed/unsigned mismatch
+x:\cg\cg_engine\cg_engine\terrain.h(140): warning C4018: '<': signed/unsigned mismatch
+x:\cg\cg_engine\cg_engine\terrain.h(142): warning C4018: '<': signed/unsigned mismatch
+  CG_Engine.vcxproj -> X:\CG\CG_Engine\CG_Engine\../libs/CG_Engined_x64.lib

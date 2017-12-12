@@ -45,7 +45,9 @@ public:
 
 private:
 	void initialise();
+	void SetupShaders();
 	void LoadModels();
+	void SetupModels();
 	void UpdateCameraUBO();
 	Shader basicShader, SkyboxShader, kitchenShader, nanosuitShader, guiShader, waterShader, RiggedDragonShader, groundShader;
 	CG_Engine engine;
@@ -77,6 +79,7 @@ private:
 	std::string sun_base = ModelBase + "sun/";
 	std::string sun_model = "sun.obj";
 	std::string waterDUDV_loc = ModelBase + "water/waterDUDV.png";
+	std::string GrassLoc = ModelBase + "textures/grass.png";
 	std::string dragon_base = "assets/models/dragon/";
 	std::string dragon_model = "dragon_blender2.dae";
 
@@ -99,7 +102,7 @@ private:
 	std::unique_ptr<ParticleSystem> particleSystem;
 
 	std::shared_ptr<CG_Data::Texture> waterDUDVTexture;
-
+	std::shared_ptr<CG_Data::Texture> GrassTexture;
 	PostProcessing postprocessPipeline;
 };
 	

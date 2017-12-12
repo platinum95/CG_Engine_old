@@ -105,8 +105,6 @@ CG_Implementation::CG_Implementation(){
 int CG_Implementation::run(){
 	
 	initialise();
-	auto nodeT = DragonRiggedModel->GetRig()->NodeMap["R_Shoulder"]->NodeTransform;
-	glm::mat4 ParticleMat(1.0f);
 
 
 	while (!glfwWindowShouldClose(windowProperties.window)){
@@ -257,6 +255,7 @@ void CG_Implementation::initialise(){
 	groundShader.RegisterAttribute("Height", 1);
 	groundShader.RegisterAttribute("TexCoords", 2);
 	groundShader.RegisterAttribute("Normals", 3);
+	groundShader.RegisterTextureUnit("GrassTexture", 0);
 	groundShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
 	groundShader.RegisterUBO(std::string("LightData"), light_ubo);
 	auto ground_translation_uni = groundShader.RegisterUniform("GroundTranslation");
@@ -339,7 +338,7 @@ void CG_Implementation::initialise(){
 	
 	//Initialise camera
 	camera.SetCameraPosition(glm::vec4(0, 10, -3, 1.0));
-	camera.SetProjectionMatrix(0.01f, 1000.0f, 70.0f, (float)windowProperties.width / (float)windowProperties.height);
+	camera.SetProjectionMatrix(0.01f, 10000.0f, 75.0f, (float)windowProperties.width / (float)windowProperties.height);
 
 	
 
@@ -440,6 +439,19 @@ void CG_Implementation::initialise(){
 	waterRenderPass->AddDataLink(waterTimeUniform, waterTimeIndex);
 	waterRenderPass->AddBatchUnit(&water);
 
+	GrassTexture = ModelLoader::LoadTexture(GrassLoc, GL_TEXTURE0);
+
+	terrain = std::make_unique<Terrain>(256, 256);
+	terrain->GenerateChunk(0, 0);
+	terrain->GenerateChunk(1, 0);
+	terrain->GenerateChunk(1, 1);
+	terrain->GenerateChunk(-1, 0);
+	terrain->GenerateChunk(-1, -1);
+	terrain->GenerateChunk(0, -1);
+	auto tRenderPass = terrain->GetRenderPass(&groundShader);
+	tRenderPass->Textures.push_back(GrassTexture);
+	renderer->AddRenderPass(std::move(tRenderPass));
+
 	ParticleSystem::ParticleStats pStats;
 	pStats.BaseDirection = glm::vec3(0.0, 20.0, 80.0);
 	pStats.Position = glm::vec3(0.2f, -6.4f, 4.3f);
@@ -459,8 +471,7 @@ void CG_Implementation::initialise(){
 	ppFBO->AddAttachment(CG_Data::FBO::AttachmentType::DepthAttachment, windowProperties.width, windowProperties.height);
 	auto FragTexture = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(FragColAttach)->GetTexture();
 	auto BrightTexture = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(BrightColAttach)->GetTexture();
-	FragTexture->SetUnit(GL_TEXTURE0);
-	BrightTexture->SetUnit(GL_TEXTURE1);
+	BrightTexture->SetUnit(GL_TEXTURE0);
 
 	CG_Data::Uniform *uni = postprocessPipeline.AddAttachment(PostProcessing::GaussianBlur);
 	auto Tex = postprocessPipeline.Compile(BrightTexture, windowProperties.width, windowProperties.height);
@@ -486,12 +497,6 @@ void CG_Implementation::initialise(){
 	guiRenderPass->Textures.push_back(Tex);
 	guiRenderPass->BatchVao = guiVAO;
 	guiRenderPass->AddBatchUnit(&gui);
-
-	terrain = std::make_unique<Terrain>(256, 256);
-	terrain->GenerateChunk(0, 0);
-	terrain->GenerateChunk(1, 0);
-	auto tRenderPass = terrain->GetRenderPass(&groundShader);
-	renderer->AddRenderPass(std::move(tRenderPass));
 	
 	glEnable(GL_DEPTH_TEST);
 

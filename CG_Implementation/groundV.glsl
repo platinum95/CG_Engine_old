@@ -28,14 +28,14 @@ out vec3 norms;
 out vec2 PassTexCoord;
 varying vec3 Pos_ViewSpace;
 varying vec4 LightPosition_Viewspace;
-
+#define tex_multiplier 16
 
 void main(){
 	vec4 vPos = vec4(MeshXZ.x, Height, MeshXZ.y, 1.0);
 
 	models = mat3(transpose(inverse( ViewMatrix * GroundTranslation)));
 	norms = Normals;
-	PassTexCoord = TexCoords;
+	PassTexCoord = TexCoords * tex_multiplier;
 	vec4 WorldPosition = GroundTranslation * vPos;
 	gl_ClipDistance[0] = dot(WorldPosition, ClippingPlane);
 	Pos_ViewSpace = vec3(ViewMatrix * WorldPosition);

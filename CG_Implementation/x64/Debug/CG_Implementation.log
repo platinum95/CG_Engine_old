@@ -1,2 +1,10 @@
-﻿  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Debug\CG_Implementation.exe
-  CG_Implementation.vcxproj -> D:\Projects\c++\VS2015\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)
+﻿  main.cpp
+u:\cg\cg_engine\cg_engine\terrain.h(72): warning C4018: '<': signed/unsigned mismatch
+u:\cg\cg_engine\cg_engine\terrain.h(74): warning C4018: '<': signed/unsigned mismatch
+  CG_Implementation.cpp
+u:\cg\cg_engine\cg_engine\terrain.h(72): warning C4018: '<': signed/unsigned mismatch
+u:\cg\cg_engine\cg_engine\terrain.h(74): warning C4018: '<': signed/unsigned mismatch
+  Generating Code...
+u:\cg\cg_engine\cg_engine\postprocessing.h(38): warning C4715: 'GL_Engine::PostProcessing::AddAttachment': not all control paths return a value
+  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.exe
+  CG_Implementation.vcxproj -> U:\CG\CG_Engine\x64\Debug\CG_Implementation.pdb (Partial PDB)
