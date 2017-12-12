@@ -94,6 +94,9 @@ namespace GL_Engine {
 
 		}
 	}
+	void ModelAttribute::AddTexture(std::shared_ptr<CG_Data::Texture> _Texture) {
+		this->ModelTextures.push_back(_Texture);
+	}
 
 	VBO* ModelAttribute::GetVBO(int index) {
 		return this->VBOs[index].get();

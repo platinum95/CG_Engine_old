@@ -145,8 +145,6 @@ int CG_Implementation::run(){
 		UpdateCameraUBO();
 		water.Deactivate();
 		WaterFBO->Bind(0);
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		renderer->Render();
 
 		//Water refraction render pass
@@ -155,16 +153,13 @@ int CG_Implementation::run(){
 		UpdateCameraUBO();
 		water.Deactivate();
 		WaterFBO->Bind(1);
-		glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		renderer->Render();
 		WaterFBO->Unbind();
 
 		//Main render pass to post processing FBO
 		const GLenum CAttachments[2] = { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
 		ppFBO->Bind(2, CAttachments);
-		glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+
 		glDisable(GL_CLIP_DISTANCE0);
 		camera_ubo_data.ClippingPlane[3] = 1000;
 		water.Activate();
@@ -554,6 +549,14 @@ void CG_Implementation::initialise(){
 
 	CameraStopwatch.Initialise();
 	
+}
+
+void SetupShaders() {
+
+}
+
+void SetupModels() {
+
 }
 
 void CG_Implementation::LoadModels() {

@@ -16,7 +16,6 @@ namespace GL_Engine {
 			auto diff = std::chrono::duration_cast<TimeResolution>(std::chrono::system_clock::now() - LastTime);
 			LastTime = std::chrono::system_clock::now();
 			return diff;
-			
 		}
 	private:
 		TimeStamp LastTime;

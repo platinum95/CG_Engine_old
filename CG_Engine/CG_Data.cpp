@@ -76,6 +76,9 @@ namespace GL_Engine{
 		void VAO::BindVAO() const{
 			glBindVertexArray(this->VAOId);
 		}
+		void VAO::AddVBO(std::unique_ptr<VBO> _VBO) {
+			this->VBOs.push_back(std::move(_VBO));
+		}
 
 #pragma region Texture
 		Texture::Texture(void* _Data, GLint width, GLint height, GLuint _Unit, GLuint _ImageFormat, std::function<void()> _Parameters, GLenum _Target) {
@@ -252,6 +255,8 @@ namespace GL_Engine{
 				glBindTexture(GL_TEXTURE_2D, 0);
 				glBindFramebuffer(GL_FRAMEBUFFER, this->ID);
 				glDrawBuffer(GL_COLOR_ATTACHMENT0 + _ColourAttachment);
+				glClearColor(0.0, 0.0, 0.0, 1.0);
+				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 				glViewport(0, 0, 1280, 720);
 			}
 
@@ -260,6 +265,11 @@ namespace GL_Engine{
 					throw std::runtime_error("Attempting to bind incomplete framebuffer!\n");
 				glBindTexture(GL_TEXTURE_2D, 0);
 				glBindFramebuffer(GL_FRAMEBUFFER, this->ID);
+				glClearColor(0.0, 0.0, 0.0, 1.0);
+				for (int i = 0; i < _Count; i++) {
+					glDrawBuffer(_ColourAttachments[i]);
+					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+				}
 				glDrawBuffers(_Count, _ColourAttachments);
 				glViewport(0, 0, 1280, 720);
 			}

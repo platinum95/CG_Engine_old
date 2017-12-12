@@ -11,7 +11,8 @@ uniform sampler2D dudvMap;
 uniform float Time;
 
 in vec2 TexCoord;
-out vec4 frag_Colour;
+layout (location = 0) out vec4 FragColour;
+layout (location = 1) out vec4 BrightColour;
 
 void main(){
 	vec2 ndc = ClipspaceCoord.xy/ClipspaceCoord.w;
@@ -29,6 +30,7 @@ void main(){
 
 	vec4 reflectionColour = texture(reflectionTexture, reflectionCoord);
 	vec4 refractionColour = texture(refractionTexture, refractionCoord);
-	frag_Colour = mix(reflectionColour, refractionColour, 0.5);
+	FragColour = mix(reflectionColour, refractionColour, 0.5);
+	BrightColour = vec4(0.0, 0.0, 0.0, 1.0);
 }
 

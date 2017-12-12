@@ -152,6 +152,35 @@ namespace GL_Engine{
 		return stage->ID;
 	}
 
+	//Register a shader attribute, to be bound at _Location
+	void Shader::RegisterTextureUnit(std::string _AttributeName, GLuint _Location) {
+		this->TextureLocations[_AttributeName] = _Location;
+	}
+
+	void Shader::RegisterUBO(std::string &_UBO_Name, CG_Data::UBO *_ubo) {
+		UBO_Struct ubo_struct;
+		ubo_struct.ubo = _ubo;
+		UBO_BlockIndices[_UBO_Name] = ubo_struct;
+	}
+
+	CG_Data::Uniform* Shader::GetUniform(uint8_t index) const {
+		return Uniforms[index]->UniformObject;
+	}
+	CG_Data::Uniform* Shader::GetUniform(std::string _uName) {
+		return UniformMap[_uName];
+	}
+
+
+	void Shader::UpdateUniforms() {
+		for (auto u : this->Uniforms) {
+			u->UniformObject->Update();
+		}
+	}
+
+	bool Shader::Initialised() const { 
+		return this->initialised; 
+	}
+
 	
 
 

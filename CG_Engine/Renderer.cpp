@@ -53,6 +53,10 @@ void GL_Engine::Renderer::Render() const {
 	
 }
 
+void GL_Engine::Renderer::AddUBO(CG_Data::UBO* _ubo) {
+	this->UBO_List.push_back(_ubo);
+}
+
 
 void Renderer::DefaultRenderer(RenderPass& _Pass, void* _Data) {
 	_Pass.shader->UseShader();

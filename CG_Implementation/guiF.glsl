@@ -13,4 +13,5 @@ void main(){
 		FragColour = texture(brightness,tex);
 	else
 		FragColour = texture(image, tex);
+
 }

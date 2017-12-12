@@ -26,45 +26,27 @@ namespace GL_Engine {
 		void RotateBy(float _Degrees, glm::vec3 _Axis);
 		void SetScale(glm::vec3 _Scale);
 		void ScaleBy(glm::vec3 _ScaleBy);
-		void SetOrientation(glm::quat _Orientation){ this->Orientation = _Orientation; this->MatrixNeedsUpdating = true; }
-		void Rotate(glm::quat _Rotation) { 
-			this->Orientation = _Rotation * Orientation;
-			this->Forward = _Rotation * Forward;
-			this->Up = _Rotation * Up;
-			this->Right = _Rotation * Right;
-			this->MatrixNeedsUpdating = true;
-		}
+		void SetOrientation(glm::quat _Orientation);
+		void Rotate(glm::quat _Rotation);
 
 		const glm::mat4 GetTransformMatrix();
 		const glm::quat GetOrientation() const;
-		const glm::vec4 GetPosition() const { return this->Position; }
+		const glm::vec4 GetPosition() const;
 
-		const glm::mat4 TransformBy(glm::mat4 _Transform){
-			return this->TransformMatrix = _Transform * this->TransformMatrix;
-		}
+		const glm::mat4 TransformBy(glm::mat4 _Transform);
 
-		const uint16_t AddData(void* _Data) {
-			eData.push_back(_Data);
-			return (uint16_t) eData.size() - 1;
-		}
+		const uint16_t AddData(void* _Data);
 
-		void SetData(int index, void* data) {
-			eData[index] = data;
-		}
+		void SetData(int index, void* data);
 
-		void SetActive(bool _State) {
-			this->Active = _State;
-		}
+		void SetActive(bool _State);
 
-		void* GetData(int index) {
-			return eData[index];
-		}
+		void* GetData(int index);
+		bool isActive() const;
+		void Activate();
+		void Deactivate();
 
-		bool isActive() const { return Active; }
-		void Activate() { Active = true; }
-		void Deactivate() { Active = false; }
-
-		const std::vector<void*> GeteDataList() const { return this->eData; };
+		const std::vector<void*> GeteDataList() const;
 
 		void UpdateUniforms() const;
 		glm::mat4 TransformMatrix;
@@ -89,6 +71,7 @@ namespace GL_Engine {
 		CG_Data::Uniform *uniform;
 		uint16_t eDataIndex;
 	};
+
 	struct RenderPass {
 		~RenderPass();
 		BatchUnit* AddBatchUnit(Entity* _Entity);
@@ -108,20 +91,6 @@ namespace GL_Engine {
 		std::vector<std::shared_ptr<CG_Data::Texture>> Textures;
 	};
 
-
-
-	static glm::mat4 AiToGLMMat4(const aiMatrix4x4& in_mat){
-		glm::mat4 tmp;
-		tmp[0][0] = in_mat.a1;	tmp[1][0] = in_mat.b1;
-		tmp[2][0] = in_mat.c1;	tmp[3][0] = in_mat.d1;
-		tmp[0][1] = in_mat.a2;	tmp[1][1] = in_mat.b2;
-		tmp[2][1] = in_mat.c2;	tmp[3][1] = in_mat.d2;
-		tmp[0][2] = in_mat.a3;	tmp[1][2] = in_mat.b3;
-		tmp[2][2] = in_mat.c3;	tmp[3][2] = in_mat.d3;
-		tmp[0][3] = in_mat.a4;	tmp[1][3] = in_mat.b4;
-		tmp[2][3] = in_mat.c4;	tmp[3][3] = in_mat.d4;
-		return glm::transpose(tmp);
-	}
 
 
 	class MeshBone {
@@ -196,9 +165,7 @@ namespace GL_Engine {
 		CG_Data::VBO* GetVBO(int index);
 		int MeshIndex, NormalIndex, TexCoordIndex, IndicesIndex;
 		const uint64_t GetVertexCount() const;
-		void AddTexture(std::shared_ptr<CG_Data::Texture> _Texture) {
-			this->ModelTextures.push_back(_Texture);
-		}
+		void AddTexture(std::shared_ptr<CG_Data::Texture> _Texture);
 		std::vector<std::shared_ptr<CG_Data::Texture>> ModelTextures;
 		std::vector<std::string> BoneNames;
 		std::vector<std::shared_ptr<MeshBone>> meshBones;

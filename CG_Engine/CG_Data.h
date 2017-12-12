@@ -62,9 +62,7 @@ namespace GL_Engine{
 			const GLuint GetID() const;
 			void BindVAO() const;
 			void Cleanup();
-			void AddVBO(std::unique_ptr<VBO> _VBO) {
-				this->VBOs.push_back(std::move(_VBO));
-			}
+			void AddVBO(std::unique_ptr<VBO> _VBO);
 		protected:
 			std::vector<std::unique_ptr<VBO>> VBOs;
 		private:
@@ -110,7 +108,6 @@ namespace GL_Engine{
 			const GLint GetID() const;
 			void SetData(const void* _Data);
 			void SetID(GLint _ID);
-
 			const void* GetData() const;
 
 		private:
@@ -186,9 +183,7 @@ namespace GL_Engine{
 			
 		private:
 			bool Initialised{ false }, complete{ false };
-			uint8_t TextureAttachmentCount{ 0 };
-			//attachments below classes
-			
+			uint8_t TextureAttachmentCount{ 0 };	
 			std::vector<std::shared_ptr<AttachmentBufferObject>> Attachments;
 		};
 		

@@ -27,9 +27,7 @@ namespace GL_Engine{
 		void RegisterAttribute(const char* _AttributeName, GLuint _Location);
 
 		//Register a shader attribute, to be bound at _Location
-		void RegisterTextureUnit(std::string _AttributeName, GLuint _Location){
-			this->TextureLocations[_AttributeName] = _Location;
-		}
+		void RegisterTextureUnit(std::string _AttributeName, GLuint _Location);
 
 		//Activate the program
 		void UseShader() const;
@@ -40,27 +38,14 @@ namespace GL_Engine{
 
 		CG_Data::Uniform* RegisterUniform(const char* _UniformName, std::function<void(const CG_Data::Uniform&)> _CallbackFunction);
 
-		void RegisterUBO(std::string &_UBO_Name, CG_Data::UBO *_ubo) {
-			UBO_Struct ubo_struct;
-			ubo_struct.ubo = _ubo;
-			UBO_BlockIndices[_UBO_Name] = ubo_struct;
-		}
-
-		CG_Data::Uniform* GetUniform(uint8_t index) const {
-			return Uniforms[index]->UniformObject;
-		}
-		CG_Data::Uniform* GetUniform(std::string _uName) {
-			return UniformMap[_uName];
-		}
+		void RegisterUBO(std::string &_UBO_Name, CG_Data::UBO *_ubo);
+		CG_Data::Uniform* GetUniform(uint8_t index) const;
+		CG_Data::Uniform* GetUniform(std::string _uName);
 
 
-		void UpdateUniforms() {
-			for (auto u : this->Uniforms) {
-				u->UniformObject->Update();
-			}
-		}
+		void UpdateUniforms();
 
-		bool Initialised() const { return this->initialised; }
+		bool Initialised() const;
 
 	private:
 		struct ShaderStage {

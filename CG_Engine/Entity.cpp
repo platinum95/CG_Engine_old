@@ -6,6 +6,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtx/matrix_decompose.hpp>
+#include "Utilities.h"
 
 namespace GL_Engine {
 #pragma region ENTITY
@@ -87,7 +88,18 @@ namespace GL_Engine {
 		}
 	}
 
+	void Entity::Rotate(glm::quat _Rotation) {
+		this->Orientation = _Rotation * Orientation;
+		this->Forward = _Rotation * Forward;
+		this->Up = _Rotation * Up;
+		this->Right = _Rotation * Right;
+		this->MatrixNeedsUpdating = true;
+	}
 
+	void Entity::SetOrientation(glm::quat _Orientation) {
+		this->Orientation = _Orientation; 
+		this->MatrixNeedsUpdating = true; 
+	}
 
 	const glm::mat4 Entity::GetTransformMatrix() {
 		//Check if the local values have changed
@@ -120,13 +132,53 @@ namespace GL_Engine {
 		this->TransformMatrix = T * glm::inverse(R) * S;
 
 	}
+
+	const glm::vec4 Entity::GetPosition() const { 
+		return this->Position; 
+	}
+
+	const glm::mat4 Entity::TransformBy(glm::mat4 _Transform) {
+		return this->TransformMatrix = _Transform * this->TransformMatrix;
+	}
+
+	const uint16_t Entity::AddData(void* _Data) {
+		eData.push_back(_Data);
+		return (uint16_t)eData.size() - 1;
+	}
+
+	void Entity::SetData(int index, void* data) {
+		eData[index] = data;
+	}
+
+	void Entity::SetActive(bool _State) {
+		this->Active = _State;
+	}
+
+	void* Entity::GetData(int index) {
+		return eData[index];
+	}
+
+	bool Entity::isActive() const { 
+		return Active;
+	}
+	void Entity::Activate() { 
+		Active = true;
+	}
+	void Entity::Deactivate() { 
+		Active = false;
+	}
+
+	const std::vector<void*> Entity::GeteDataList() const { 
+		return this->eData; 
+	};
+
 #pragma endregion
 
 #pragma region RiggedModel
 #pragma region MeshBone
 
 	MeshBone::MeshBone(const aiBone* _Bone) {
-		this->OffsetMatrix = AiToGLMMat4(_Bone->mOffsetMatrix);
+		this->OffsetMatrix = Utilities::AiToGLMMat4(_Bone->mOffsetMatrix);
 		this->Name = _Bone->mName.data;
 	}
 	const glm::mat4 &MeshBone::GetFinalTransform(const glm::mat4 &_GlobalInverse, const glm::mat4& nodeGlobalTransform) {
@@ -179,7 +231,7 @@ namespace GL_Engine {
 
 #pragma region SceneNode
 	SceneNode::SceneNode(const aiNode* _node) {
-		this->NodeTransform = AiToGLMMat4(_node->mTransformation);
+		this->NodeTransform = Utilities::AiToGLMMat4(_node->mTransformation);
 		this->Name = _node->mName.data;
 	}
 	void SceneNode::AddChild(std::shared_ptr<SceneNode> _node) {

@@ -7,7 +7,9 @@ layout (std140) uniform LightData
 	float Brightness;
 };
 
-out vec4 FragColour;
+layout (location = 0) out vec4 FragColour;
+layout (location = 1) out vec4 BrightColour;
+
 in mat3 models;
 in vec3 norms;
 in vec2 PassTexCoord;
@@ -41,4 +43,5 @@ void main(){
 	//Output
 	vec3 result = (ambient + diffuse + SpecularComponent) * texture(GrassTexture, PassTexCoord).xyz;//(0.6, 0.1, 0.4);
 	FragColour = vec4(result, 1.0);
+	BrightColour = vec4(0.0);
 }

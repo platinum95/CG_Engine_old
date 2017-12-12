@@ -15,9 +15,7 @@ namespace GL_Engine {
 		RenderPass* AddRenderPass(Shader* _Shader);
 		RenderPass* AddRenderPass(Shader* _Shader, std::function<void(RenderPass&, void*)> _RenderFunction, void* _Data);
 		RenderPass* AddRenderPass(std::unique_ptr<RenderPass> _RPass);
-		void AddUBO(CG_Data::UBO* _ubo) {
-			this->UBO_List.push_back(_ubo);
-		}
+		void AddUBO(CG_Data::UBO* _ubo);
 
 		void Render() const;
 
