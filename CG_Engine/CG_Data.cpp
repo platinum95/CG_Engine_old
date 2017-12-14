@@ -1,6 +1,7 @@
 #include "CG_Data.h"
 #include <stdexcept>
 #include <glm/vec3.hpp>
+#include "CG_Engine.h"
 
 namespace GL_Engine{
 	namespace CG_Data{
@@ -26,6 +27,13 @@ namespace GL_Engine{
 			}
 		}
 
+		void VBO::Cleanup() {
+			if (initialised) {
+				glDeleteBuffers(1, &this->ID);
+				initialised = false;
+			}
+		}
+
 		const GLuint VBO::GetID() const{
 			return this->ID;
 		}
@@ -37,6 +45,7 @@ namespace GL_Engine{
 			glBindBuffer(Target, this->ID);
 			glBufferData(Target, _DataSize, _Data, Usage);
 		}
+#pragma endregion
 
 #pragma region VAO
 
@@ -79,6 +88,7 @@ namespace GL_Engine{
 		void VAO::AddVBO(std::unique_ptr<VBO> _VBO) {
 			this->VBOs.push_back(std::move(_VBO));
 		}
+#pragma endregion
 
 #pragma region Texture
 		Texture::Texture(void* _Data, GLint width, GLint height, GLuint _Unit, GLuint _ImageFormat, std::function<void()> _Parameters, GLenum _Target) {
@@ -91,11 +101,25 @@ namespace GL_Engine{
 
 			glTexImage2D(this->Target, 0, GL_RGBA, width, height, 0, _ImageFormat, GL_UNSIGNED_BYTE, _Data);
 			glGenerateMipmap(this->Target);
+			Initialised = true;
 		}
 		Texture::Texture(GLuint _Unit, GLenum _Target) {
 			glGenTextures(1, &this->ID);
 			this->Target = _Target;
 			this->Unit = _Unit;
+			Initialised = true;
+		}
+		Texture::~Texture() {
+			if (Initialised) {
+				glDeleteTextures(1, &this->ID);
+				Initialised = false;
+			}
+		}
+		void Texture::Cleanup() {
+			if (Initialised) {
+				glDeleteTextures(1, &this->ID);
+				Initialised = false;
+			}
 		}
 
 		void Texture::SetUnit(const GLuint _Unit) {
@@ -123,7 +147,14 @@ namespace GL_Engine{
 			this->Initialised = false;
 		}
 		Uniform::~Uniform() {
-
+			if (Initialised) {
+				Initialised = false;
+			}
+		}
+		void Uniform::Cleanup() {
+			if (Initialised) {
+				Initialised = false;
+			}
 		}
 		const GLint Uniform::GetID() const {
 			return this->ID;
@@ -151,6 +182,7 @@ namespace GL_Engine{
 			this->UpdateCallback = _callback;
 			this->Initialised = true;
 		}
+#pragma endregion
 
 #pragma region UBO
 		GLuint UBO::UBO_Count = 0;
@@ -164,6 +196,10 @@ namespace GL_Engine{
 			this->BindingPost = UBO_Count++;
 			glBindBufferBase(GL_UNIFORM_BUFFER, this->BindingPost, this->ID);
 		}
+		UBO::~UBO() {
+			this->Cleanup();
+		}
+
 		void UBO::UpdateUBO() const {
 			glBindBuffer(GL_UNIFORM_BUFFER, this->ID);
 			GLvoid* UBO_Pointer = glMapBuffer(GL_UNIFORM_BUFFER, GL_WRITE_ONLY);
@@ -174,6 +210,7 @@ namespace GL_Engine{
 			return this->BindingPost;
 		}
 
+#pragma endregion
 
 #pragma region FBO
 			FBO::RenderbufferObject::RenderbufferObject(uint16_t _Width, uint16_t _Height, GLenum _Type) {
@@ -202,17 +239,19 @@ namespace GL_Engine{
 			}
 		
 	
-			FBO::FBO() {
+			FBO::FBO(uint16_t _Width, uint16_t _Height) {
 				glGenFramebuffers(1, &this->ID);
+				this->Width = _Width;
+				this->Height = _Height;
 				Initialised = true;
 			}
 			FBO::~FBO() {
 				if (Initialised) {
-					this->CleanUp();
+					this->Cleanup();
 					Initialised = false;
 				}
 			}
-			void FBO::CleanUp() {
+			void FBO::Cleanup() {
 				if (Initialised) {
 					glDeleteFramebuffers(1, &this->ID);
 					Initialised = false;
@@ -257,7 +296,7 @@ namespace GL_Engine{
 				glDrawBuffer(GL_COLOR_ATTACHMENT0 + _ColourAttachment);
 				glClearColor(0.0, 0.0, 0.0, 1.0);
 				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
-				glViewport(0, 0, 1280, 720);
+				glViewport(0, 0, Width, Height);
 			}
 
 			void FBO::Bind(uint16_t _Count, const GLenum* _ColourAttachments) const {
@@ -271,13 +310,14 @@ namespace GL_Engine{
 					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 				}
 				glDrawBuffers(_Count, _ColourAttachments);
-				glViewport(0, 0, 1280, 720);
+				glViewport(0, 0, Width, Height);
 			}
 			const GLuint FBO::GetID() const {
 				return this->ID;
 			}
 			void FBO::Unbind() const {
 				glBindFramebuffer(GL_FRAMEBUFFER, 0);
+				glViewport(0, 0, CG_Engine::ViewportWidth, CG_Engine::ViewportHeight);
 			}
 
 	}

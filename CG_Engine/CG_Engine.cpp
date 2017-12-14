@@ -9,14 +9,10 @@ namespace GL_Engine{
 
 
 	CG_Engine::~CG_Engine(){
+		
 	}
-
-	static void framebuffer_size_callback(GLFWwindow* window, int width, int height){
-		// make sure the viewport matches the new window dimensions; note that width and 
-		// height will be significantly larger than specified on retina displays.
-		glViewport(0, 0, width, height);
-	}
-	
+	uint16_t CG_Engine::ViewportWidth = 0;
+	uint16_t CG_Engine::ViewportHeight = 0;
 
 	bool CG_Engine::CG_CreateWindow(Properties::GLFWproperties *_DisplayProperties){
 
@@ -36,8 +32,8 @@ namespace GL_Engine{
 			return false;
 
 		glfwMakeContextCurrent(_DisplayProperties->window);
-		//Constants::DisplayProps = props;
-		//Constants::GLFWProps = glfwProperties;
+		ViewportHeight = _DisplayProperties->height;
+		ViewportWidth = _DisplayProperties->width;
 		return true;
 	}
 

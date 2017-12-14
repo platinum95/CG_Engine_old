@@ -8,11 +8,13 @@ Renderer::Renderer() {
 
 
 Renderer::~Renderer() {
-	renderPasses.clear();
+	for (auto &rp : renderPasses) {
+		rp.reset();
+	}
 }
 
-RenderPass::~RenderPass(){
-	
+void Cleanup() {
+
 }
 
 RenderPass * GL_Engine::Renderer::AddRenderPass(Shader* _Shader) {

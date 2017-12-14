@@ -5,10 +5,18 @@
 namespace GL_Engine{
 
 	Shader::Shader(){
+		this->UBO_BlockIndices = std::map<std::string, UBO_Struct>();
 	}
 
 
 	Shader::~Shader(){
+		if (initialised) {
+			glDeleteProgram(this->ShaderID);
+			initialised = false;
+		}
+	}
+
+	void Shader::Cleanup() {
 		if (initialised) {
 			glDeleteProgram(this->ShaderID);
 			initialised = false;
@@ -108,8 +116,10 @@ namespace GL_Engine{
 	}
 
 	void Shader::UseShader() const {
-		for (auto ubo : UBO_BlockIndices) {
-			glUniformBlockBinding(this->ShaderID, ubo.second.BlockIndex, ubo.second.ubo->GetBindingPost());
+		if (UBO_BlockIndices.size() > 0) {
+			for (auto ubo : UBO_BlockIndices) {
+				glUniformBlockBinding(this->ShaderID, ubo.second.BlockIndex, ubo.second.ubo->GetBindingPost());
+			}
 		}
 		glUseProgram(this->ShaderID);
 	}

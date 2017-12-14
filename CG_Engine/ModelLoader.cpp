@@ -152,10 +152,24 @@ namespace GL_Engine {
 	}
 	
 	void LoadAnimations(std::map<std::string, std::shared_ptr<SceneNode>> &NodeList, const aiScene *_Scene) {
-		aiAnimation* anim = _Scene->mAnimations[0];
-		for (unsigned int i = 0; i < anim->mNumChannels; i++) {
-			aiNodeAnim *animNode = anim->mChannels[i];
-			NodeList[animNode->mNodeName.data]->Animation = std::make_shared<NodeAnimation>(animNode, anim->mDuration);
+		for (unsigned int animID = 0; animID < _Scene->mNumAnimations; animID++) {
+			aiAnimation* anim = _Scene->mAnimations[animID];
+			for (unsigned int i = 0; i < anim->mNumChannels; i++) {
+				aiNodeAnim *animNode = anim->mChannels[i];
+				auto node = NodeList[animNode->mNodeName.data];
+				if (node->Animations.size() <= animID) {
+					node->Animations.push_back(std::make_shared<NodeAnimation>(animNode, anim->mDuration));
+				}
+				else {
+					node->Animations[animID] = std::make_shared<NodeAnimation>(animNode, anim->mDuration);
+				}
+			}
+		}
+		for (auto n : NodeList) {
+			auto Animations = n.second->Animations;
+			if (0 < Animations.size()) {
+				auto t = fmod(10, Animations[0]->AnimationLength);
+			}
 		}
 
 	}
@@ -288,7 +302,7 @@ namespace GL_Engine {
 		return std::make_unique<RiggedModel>(std::make_unique<Skeleton>(rootNode, Nodes), std::move(attributes));
 	}
 
-	void ModelLoader::CleanUp() {
+	void ModelLoader::Cleanup() {
 		aImporter.FreeScene();
 		CachedTextures.clear();
 	}

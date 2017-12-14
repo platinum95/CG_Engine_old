@@ -1,4 +1,6 @@
 #include "PostProcessing.h"
+#include "CG_Engine.h"
+
 namespace GL_Engine {
 
 	float PostProcessing::VertexPositions[]{
@@ -24,9 +26,19 @@ namespace GL_Engine {
 		AttachmentStringComponents[1] = "void main(){\n";
 	}
 	PostProcessing::~PostProcessing() {
-
+		ProcessingFBO.reset();
+		OutputColourBuffer.reset();
+		InputTexture.reset();
+		ScreenVAO.reset();
+		shader.Cleanup();
 	}
-
+	void PostProcessing::Cleanup() {
+		ProcessingFBO.reset();
+		OutputColourBuffer.reset();
+		InputTexture.reset();
+		ScreenVAO.reset();
+		shader.Cleanup();
+	}
 	CG_Data::Uniform* PostProcessing::AddAttachment(PostprocessingAttachment _Attachment) {
 		switch (_Attachment)
 		{
@@ -84,7 +96,7 @@ namespace GL_Engine {
 		ScreenVAO->AddVBO(std::move(TexVBO));
 		ScreenVAO->AddVBO(std::move(IndexVBO));
 
-		ProcessingFBO = std::make_unique<CG_Data::FBO>();
+		ProcessingFBO = std::make_unique<CG_Data::FBO>(_Width, _Height);
 		auto FragColAttach = ProcessingFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, _Width, _Height);
 		ProcessingFBO->AddAttachment(CG_Data::FBO::AttachmentType::DepthAttachment, _Width, _Height);
 		this->OutputColourBuffer = std::static_pointer_cast<CG_Data::FBO::TexturebufferObject>(FragColAttach)->GetTexture();

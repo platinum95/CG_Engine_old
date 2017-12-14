@@ -73,14 +73,25 @@ namespace GL_Engine {
 	};
 
 	struct RenderPass {
-		~RenderPass();
+		
 		BatchUnit* AddBatchUnit(Entity* _Entity);
 		void SetDrawFunction(std::function<void(void)> _dFunc);
 		void AddDataLink(CG_Data::Uniform *_Uniform, uint16_t _DataIndex) {
 			eDataUniLink link = { _Uniform, _DataIndex };
 			this->dataLink.push_back(link);
 		}
-
+		~RenderPass() {
+			BatchVao.reset();
+			for (auto &t : Textures) {
+				t.reset();
+			}
+		}
+		void Cleanup() {
+			BatchVao.reset();
+			for (auto &t : Textures) {
+				t.reset();
+			}
+		}
 		std::vector<eDataUniLink> dataLink;
 		void* Data;
 		Shader* shader;
@@ -129,7 +140,7 @@ namespace GL_Engine {
 			void Update(const glm::mat4 &ParentTransform, const glm::mat4 &GlobalInverse);
 			std::shared_ptr<SceneBone> sceneBone;
 			std::vector<std::shared_ptr<SceneNode>> ChildNodes;
-			std::shared_ptr<NodeAnimation> Animation{ nullptr };
+			std::vector<std::shared_ptr<NodeAnimation>> Animations{ nullptr };
 			glm::mat4 NodeTransform, GlobalTransform;
 			std::string Name;
 	private:

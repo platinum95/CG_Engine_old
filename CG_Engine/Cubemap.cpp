@@ -27,14 +27,16 @@ namespace GL_Engine {
 
 
 	Cubemap::Cubemap(const std::vector<std::string> &_TextureFiles, Shader *_CubemapShader, Renderer *_Renderer) {
-			GenerateCubemap(_TextureFiles);
-			SetupArrayObjects();
-			SetupRenderPass(_Renderer);
-			CreateShader(_CubemapShader);
-		}
+		GenerateCubemap(_TextureFiles);
+		SetupArrayObjects();
+		SetupRenderPass(_Renderer);
+		CubemapShader = _CubemapShader;
+		CubeRenderPass->shader = this->CubemapShader;
+		CreateShader(_CubemapShader);
+	}
 	Cubemap::~Cubemap() {
 
-		}
+	}
 
 	void Cubemap::GenerateCubemap(const std::vector<std::string> &_TextureFiles) {
 		MapTexture = std::make_shared<CG_Data::Texture>(GL_TEXTURE0, GL_TEXTURE_CUBE_MAP);
@@ -58,10 +60,7 @@ namespace GL_Engine {
 	}
 
 	void Cubemap::CreateShader(Shader *_Shader) {
-		if (CubemapShader)
-			return;
-		CubemapShader = _Shader;
-		CubeRenderPass->shader = this->CubemapShader;
+		
 	}
 	void Cubemap::SetupRenderPass(Renderer *_Renderer) {
 		this->CubeRenderPass = _Renderer->AddRenderPass(this->CubemapShader, std::function<void(RenderPass &, void*)>(Cubemap::CubemapRenderer), nullptr);

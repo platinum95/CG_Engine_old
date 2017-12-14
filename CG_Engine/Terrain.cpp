@@ -54,9 +54,9 @@ namespace GL_Engine {
 		int startingZ = GridZ * (DivisionCount - 1);
 		std::vector<float> heights;
 		heights.reserve(DivisionCount * DivisionCount);
-		for (unsigned int z = 0; z < DivisionCount; z++) {
+		for (int z = 0; z < DivisionCount; z++) {
 			unsigned int zIndex = z * DivisionCount;
-			for (unsigned int x = 0; x < DivisionCount; x++) {
+			for (int x = 0; x < DivisionCount; x++) {
 				unsigned int CurrIndex = zIndex + x;
 				heights.push_back(getHeight(startingX + x, startingZ + z));
 			}

@@ -1,7 +1,6 @@
 #include "CG_Implementation.h"
 #include <glm/gtc/type_ptr.hpp>
 #include <time.h>
-
 #include <thread>
 
 float guiVertices[]{
@@ -64,26 +63,29 @@ void CameraKeyEvent(GLuint Key, void* Parameter) {
 
 void CubeKeyEvent(GLuint Key, void* Parameter) {
 	LightUBO_Data *data = (LightUBO_Data*)Parameter;
+	auto speed = 20.0f;// metres per second
+	auto time_diff_sec = time_millis_camera / (float) 1e6;
+	auto amount = speed * time_diff_sec;
 
 	switch (Key) {
 	
 	case GLFW_KEY_LEFT :
-		data->LightPosition[0] += 0.1f;
+		data->LightPosition[0] += amount;
 		break;
 	case GLFW_KEY_RIGHT:
-		data->LightPosition[0] -= 0.1f;
+		data->LightPosition[0] -= amount;
 		break;
 	case GLFW_KEY_UP:
-		data->LightPosition[1] += 0.1f;
+		data->LightPosition[1] += amount;
 		break;
 	case GLFW_KEY_DOWN:
-		data->LightPosition[1] -= 0.1f;
+		data->LightPosition[1] -= amount;
 		break;
 	case GLFW_KEY_INSERT:
-		data->LightPosition[2] += 0.1f;
+		data->LightPosition[2] += amount;
 		break;
 	case GLFW_KEY_DELETE:
-		data->LightPosition[2] -= 0.1f;
+		data->LightPosition[2] -= amount;
 		break;
 	}
 }
@@ -103,11 +105,11 @@ CG_Implementation::CG_Implementation(){
 
 
 int CG_Implementation::run(){
-	
 	initialise();
 
 
 	while (!glfwWindowShouldClose(windowProperties.window)){
+		//Get the framerate and show it as the window's title
 		uint64_t time_diff = FramerateStopwatch.MeasureTime().count();
 		double second_diff = time_diff / 1.0e6;
 		double fps = 1.0 / second_diff;
@@ -115,32 +117,36 @@ int CG_Implementation::run(){
 		sprintf_s(title, "FPS: %f", fps);
 		glfwSetWindowTitle(windowProperties.window, title);
 		
+		//Lap the camera stopwatch for the camera key callback
 		time_millis_camera = CameraStopwatch.MeasureTime().count();
+		//Check for key events
 		keyHandler.Update(windowProperties.window);
+
+		//Update the matrices of all the entities
 		barrel.GetTransformMatrix();
 		kitchen.GetTransformMatrix();
 		nanosuit.GetTransformMatrix();
 		sun.GetTransformMatrix();
 
-
-		DragonRiggedModel->GetTransformMatrix();
-		DragonRiggedModel->Update(1, time);
+		time += (float)second_diff;
+		DragonRiggedModel->Update(0, time);	//Update the dragon's animation
+		//Make the dragon fly around in a circle
 		float circleRadius = 250;
 		float xPos = circleRadius * cos(time);
 		float zPos = circleRadius * sin(time);
 		DragonRiggedModel->SetPosition(glm::vec3(xPos, 25, zPos));
 		DragonRiggedModel->YawBy(glm::degrees((float)second_diff));
-		pTransform = DragonRiggedModel->GetTransformMatrix() * particleSystem->GetTransformMatrix();
+		//Move the particle system to the mouth of the dragon
+		particleTransform = DragonRiggedModel->GetTransformMatrix() * particleSystem->GetTransformMatrix();
 		particleSystem->UpdateTime((float)second_diff);
 		particleSystem->SetActive(FlameOn);
-		time += (float)second_diff;
 
 		
 		glPolygonMode(GL_FRONT_AND_BACK, wireframe ? GL_LINE : GL_FILL);
 		//Water reflection render pass
 		glEnable(GL_CLIP_DISTANCE0);
-		camera_ubo_data.ClippingPlane[3] = 0;
-		camera_ubo_data.ClippingPlane[1] = 1;
+		CameraUBOData.ClippingPlane[3] = 0;
+		CameraUBOData.ClippingPlane[1] = 1;
 		camera.ReflectCamera();
 		UpdateCameraUBO();
 		water.Deactivate();
@@ -148,7 +154,7 @@ int CG_Implementation::run(){
 		renderer->Render();
 
 		//Water refraction render pass
-		camera_ubo_data.ClippingPlane[1] = -1;
+		CameraUBOData.ClippingPlane[1] = -1;
 		camera.ReflectCamera();
 		UpdateCameraUBO();
 		water.Deactivate();
@@ -161,7 +167,7 @@ int CG_Implementation::run(){
 		ppFBO->Bind(2, CAttachments);
 
 		glDisable(GL_CLIP_DISTANCE0);
-		camera_ubo_data.ClippingPlane[3] = 1000;
+		CameraUBOData.ClippingPlane[3] = 1000;
 		water.Activate();
 		renderer->Render();
 		ppFBO->Unbind();
@@ -185,26 +191,20 @@ int CG_Implementation::run(){
 }
 
 void CG_Implementation::UpdateCameraUBO() {
-
-	memcpy(camera_ubo_data.ViewMatrix, glm::value_ptr(camera.GetViewMatrix()), sizeof(float) * 16);
-	memcpy(camera_ubo_data.ProjectionMatrix, glm::value_ptr(camera.GetProjectionMatrix()), sizeof(float) * 16);
+	memcpy(CameraUBOData.ViewMatrix, glm::value_ptr(camera.GetViewMatrix()), sizeof(float) * 16);
+	memcpy(CameraUBOData.ProjectionMatrix, glm::value_ptr(camera.GetProjectionMatrix()), sizeof(float) * 16);
 	glm::mat4 PV = camera.GetProjectionMatrix() * camera.GetViewMatrix();
-	memcpy(camera_ubo_data.PV_Matrix, glm::value_ptr(PV), sizeof(float) * 16);
-	memcpy(camera_ubo_data.CameraOrientation, glm::value_ptr(glm::vec4(camera.GetForwardVector(), 0.0)), sizeof(float) * 4);
-	memcpy(camera_ubo_data.CameraPosition, glm::value_ptr(camera.GetCameraPosition()), sizeof(float) * 4);
+	memcpy(CameraUBOData.PV_Matrix, glm::value_ptr(PV), sizeof(float) * 16);
+	memcpy(CameraUBOData.CameraOrientation, glm::value_ptr(glm::vec4(camera.GetForwardVector(), 0.0)), sizeof(float) * 4);
+	memcpy(CameraUBOData.CameraPosition, glm::value_ptr(camera.GetCameraPosition()), sizeof(float) * 4);
 	
-//	memcpy(light_ubo_data.LightPosition, glm::value_ptr(camera.GetCameraPosition()), sizeof(float) * 4);
-//	memcpy(light_ubo_data.LightPosition, glm::value_ptr(glm::vec4(0, 50, -50, 1.0)), sizeof(float) * 4);
-	//memcpy(light_ubo_data.LightColour, glm::value_ptr(glm::vec3(1, 1, 1)), sizeof(float) * 3);
-	light_ubo_data.LightBrightness = 1;
-	sun.SetPosition(glm::vec3(light_ubo_data.LightPosition[0], light_ubo_data.LightPosition[1], light_ubo_data.LightPosition[2]));
+	LightUBOData.LightBrightness = 1;
+	sun.SetPosition(glm::vec3(LightUBOData.LightPosition[0], LightUBOData.LightPosition[1], LightUBOData.LightPosition[2]));
 
 }
 
 void CG_Implementation::initialise(){
 	
-	memcpy(light_ubo_data.LightPosition, glm::value_ptr(glm::vec4(0, 20, -20, 1.0)), sizeof(float) * 4);
-
 	//Initialise window and Glad
 	if (!engine.CG_CreateWindow(&windowProperties)){
 		throw std::runtime_error("Error initialising GLFW!");
@@ -215,23 +215,43 @@ void CG_Implementation::initialise(){
 		throw std::runtime_error("Error initialising GLAD!");
 	}
 
-	camera_ubo_data.ClippingPlane[0] = 0;
-	camera_ubo_data.ClippingPlane[1] = 1;
-	camera_ubo_data.ClippingPlane[2] = 0;
-	camera_ubo_data.ClippingPlane[3] = 0;
+	//Initialise camera
+	camera.SetCameraPosition(glm::vec4(0, 10, -3, 1.0));		//Set initial camera position
+	camera.SetProjectionMatrix(0.01f, 10000.0f, 75.0f, 
+		(float)windowProperties.width / (float)windowProperties.height);	//Set the Projection Matrix
 
-	CG_Data::UBO *com_ubo = new CG_Data::UBO((void*)&camera_ubo_data, sizeof(camera_ubo_data));
-	CG_Data::UBO *light_ubo = new CG_Data::UBO((void*)&light_ubo_data, sizeof(light_ubo_data));
-	memcpy(light_ubo_data.LightColour, glm::value_ptr(glm::vec3(1, 1, 1)), sizeof(float) * 3);
+	//Set the light's initial position
+	memcpy(LightUBOData.LightPosition, glm::value_ptr(glm::vec4(0, 20, -20, 1.0)), sizeof(float) * 4);
+	//Set the clipping plane for the water
+	CameraUBOData.ClippingPlane[0] = 0;
+	CameraUBOData.ClippingPlane[1] = 1;
+	CameraUBOData.ClippingPlane[2] = 0;
+	CameraUBOData.ClippingPlane[3] = 0;
+
+	SetupShaders();
+	LoadModels();
+	SetupModels();
+	SetupKeyEvents();
+	glEnable(GL_DEPTH_TEST);
+
+	//Setup the camera stopwatch, used for timing the motion of the camera
+	CameraStopwatch.Initialise();
+	
+}
+
+void CG_Implementation::SetupShaders() {
+	CameraUBO = std::make_unique<CG_Data::UBO>((void*)&CameraUBOData, sizeof(CameraUBOData));
+	LightUBO = std::make_unique<CG_Data::UBO>((void*)&LightUBOData, sizeof(LightUBOData));
+	memcpy(LightUBOData.LightColour, glm::value_ptr(glm::vec3(1, 1, 1)), sizeof(float) * 3);
 
 	renderer = std::make_unique<Renderer>();
 	DragonRenderer = std::make_unique<Renderer>();
 	guiRenderer = std::make_unique<Renderer>();
-	renderer->AddUBO(com_ubo);
-	renderer->AddUBO(light_ubo);
-	//Set up shader using a Shader object
-	basicShader.RegisterShaderStageFromFile(vertexLoc, GL_VERTEX_SHADER);
-	basicShader.RegisterShaderStageFromFile(fragLoc, GL_FRAGMENT_SHADER);
+	renderer->AddUBO(CameraUBO.get());
+	renderer->AddUBO(LightUBO.get());
+
+	basicShader.RegisterShaderStageFromFile(basicVLoc.c_str(), GL_VERTEX_SHADER);
+	basicShader.RegisterShaderStageFromFile(basicFLoc.c_str(), GL_FRAGMENT_SHADER);
 	basicShader.RegisterAttribute("vPosition", 0);
 	basicShader.RegisterAttribute("vNormal", 2);
 	basicShader.RegisterAttribute("TexCoord", 1);
@@ -239,9 +259,9 @@ void CG_Implementation::initialise(){
 	basicShader.RegisterAttribute("vBitangeant", 4);
 	basicShader.RegisterTextureUnit("diffuseTexture", 0);
 	basicShader.RegisterTextureUnit("normalTexture", 1);
-	basicShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
-	basicShader.RegisterUBO(std::string("LightData"), light_ubo);
-	auto translate_uboBasic = basicShader.RegisterUniform("model");
+	basicShader.RegisterUBO(std::string("CameraProjectionData"), CameraUBO.get());
+	basicShader.RegisterUBO(std::string("LightData"), LightUBO.get());
+	basicShader.RegisterUniform("model");
 	basicShader.CompileShader();
 
 	groundShader.RegisterShaderStageFromFile(groundVLoc.c_str(), GL_VERTEX_SHADER);
@@ -251,9 +271,9 @@ void CG_Implementation::initialise(){
 	groundShader.RegisterAttribute("TexCoords", 2);
 	groundShader.RegisterAttribute("Normals", 3);
 	groundShader.RegisterTextureUnit("GrassTexture", 0);
-	groundShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
-	groundShader.RegisterUBO(std::string("LightData"), light_ubo);
-	auto ground_translation_uni = groundShader.RegisterUniform("GroundTranslation");
+	groundShader.RegisterUBO(std::string("CameraProjectionData"), CameraUBO.get());
+	groundShader.RegisterUBO(std::string("LightData"), LightUBO.get());
+	groundShader.RegisterUniform("GroundTranslation");
 	groundShader.CompileShader();
 
 	waterShader.RegisterShaderStageFromFile(waterVLoc.c_str(), GL_VERTEX_SHADER);
@@ -261,10 +281,9 @@ void CG_Implementation::initialise(){
 	waterShader.RegisterAttribute("vPosition", 0);
 	waterShader.RegisterTextureUnit("reflectionTexture", 0);
 	waterShader.RegisterTextureUnit("refractionTexture", 1);
-	waterShader.RegisterTextureUnit("dudvMap", 2); 
-	waterShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
-//	waterShader.RegisterUBO(std::string("LightData"), light_ubo);
-	auto waterTimeUniform = waterShader.RegisterUniform("Time");
+	waterShader.RegisterTextureUnit("dudvMap", 2);
+	waterShader.RegisterUBO(std::string("CameraProjectionData"), CameraUBO.get());
+	waterShader.RegisterUniform("Time");
 	waterShader.CompileShader();
 
 	nanosuitShader.RegisterShaderStageFromFile(nanosuitVShader.c_str(), GL_VERTEX_SHADER);
@@ -277,9 +296,9 @@ void CG_Implementation::initialise(){
 	nanosuitShader.RegisterTextureUnit("diffuseTexture", 0);
 	nanosuitShader.RegisterTextureUnit("normalTexture", 1);
 	nanosuitShader.RegisterTextureUnit("specularTexture", 2);
-	nanosuitShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
-	nanosuitShader.RegisterUBO(std::string("LightData"), light_ubo);
-	translate_ubo = nanosuitShader.RegisterUniform("model");
+	nanosuitShader.RegisterUBO(std::string("CameraProjectionData"), CameraUBO.get());
+	nanosuitShader.RegisterUBO(std::string("LightData"), LightUBO.get());
+	nanosuitShader.RegisterUniform("model");
 	nanosuitShader.CompileShader();
 
 	RiggedDragonShader.RegisterShaderStageFromFile(RiggedDragonVShader.c_str(), GL_VERTEX_SHADER);
@@ -294,12 +313,12 @@ void CG_Implementation::initialise(){
 	RiggedDragonShader.RegisterTextureUnit("diffuseTexture", 0);
 	RiggedDragonShader.RegisterTextureUnit("normalTexture", 1);
 	RiggedDragonShader.RegisterTextureUnit("specularTexture", 2);
-	RiggedDragonShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
-	RiggedDragonShader.RegisterUBO(std::string("LightData"), light_ubo);
+	RiggedDragonShader.RegisterUBO(std::string("CameraProjectionData"), CameraUBO.get());
+	RiggedDragonShader.RegisterUBO(std::string("LightData"), LightUBO.get());
 	RiggedDragonShader.RegisterUniform("model");
 	RiggedDragonShader.RegisterUniform("BoneMatrices");
 	RiggedDragonShader.CompileShader();
-	
+
 
 	kitchenShader.RegisterShaderStageFromFile(kitchenVLoc.c_str(), GL_VERTEX_SHADER);
 	kitchenShader.RegisterShaderStageFromFile(kitchenFLoc.c_str(), GL_FRAGMENT_SHADER);
@@ -307,16 +326,16 @@ void CG_Implementation::initialise(){
 	kitchenShader.RegisterAttribute("TexCoord", 1);
 	kitchenShader.RegisterAttribute("vNormal", 2);
 	kitchenShader.RegisterTextureUnit("diffuseTexture", 0);
-	kitchenShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
-	kitchenShader.RegisterUBO(std::string("LightData"), light_ubo);
-	translate_ubo = kitchenShader.RegisterUniform("model");
+	kitchenShader.RegisterUBO(std::string("CameraProjectionData"), CameraUBO.get());
+	kitchenShader.RegisterUBO(std::string("LightData"), LightUBO.get());
+	kitchenShader.RegisterUniform("model");
 	kitchenShader.CompileShader();
 
 	SkyboxShader.RegisterShaderStageFromFile(skyboxVLoc.c_str(), GL_VERTEX_SHADER);
 	SkyboxShader.RegisterShaderStageFromFile(skyboxFLoc.c_str(), GL_FRAGMENT_SHADER);
 	SkyboxShader.RegisterAttribute("vPosition", 1);
 	SkyboxShader.RegisterTextureUnit("BoxTexture", 0);
-	SkyboxShader.RegisterUBO(std::string("CameraProjectionData"), com_ubo);
+	SkyboxShader.RegisterUBO(std::string("CameraProjectionData"), CameraUBO.get());
 	SkyboxShader.CompileShader();
 	int loc = glGetAttribLocation(SkyboxShader.GetShaderID(), "vPosition");
 	Skybox = std::make_unique<Cubemap>(SkyboxTexLoc, &SkyboxShader, renderer.get());
@@ -329,23 +348,23 @@ void CG_Implementation::initialise(){
 	guiShader.RegisterTextureUnit("brightness", 1);
 	guiShader.CompileShader();
 
-	LoadModels();
-	
-	//Initialise camera
-	camera.SetCameraPosition(glm::vec4(0, 10, -3, 1.0));
-	camera.SetProjectionMatrix(0.01f, 10000.0f, 75.0f, (float)windowProperties.width / (float)windowProperties.height);
+}
 
-	
-
+void CG_Implementation::SetupModels() {
 	//Set the update callbacks for the various uniforms using Lambda functions
 	auto FloatLambda = [](const CG_Data::Uniform &u) {glUniform1fv(u.GetID(), 1, static_cast<const GLfloat*>(u.GetData())); };
 	auto MatrixLambda = [](const CG_Data::Uniform &u) {glUniformMatrix4fv(u.GetID(), 1, GL_FALSE, static_cast<const GLfloat*>(u.GetData())); };
-	translate_ubo->SetUpdateCallback(MatrixLambda);
-	translate_uboBasic->SetUpdateCallback(MatrixLambda);
-	waterTimeUniform->SetUpdateCallback(FloatLambda);
 
 	const auto width = windowProperties.width, height = windowProperties.height;
 
+	auto BasicModelUniform = basicShader.GetUniform("model");
+	BasicModelUniform->SetUpdateCallback(MatrixLambda);
+	auto KitchenModelUniform = kitchenShader.GetUniform("model");
+	KitchenModelUniform->SetUpdateCallback(MatrixLambda);
+	auto NanosuitModelUniform = nanosuitShader.GetUniform("model");
+	NanosuitModelUniform->SetUpdateCallback(MatrixLambda);
+	auto WaterTimeUniform = waterShader.GetUniform("Time");
+	WaterTimeUniform->SetUpdateCallback(FloatLambda);
 
 	GLsizei bCount;
 	auto nodeModelIndex = barrel.AddData((void*)glm::value_ptr(barrel.TransformMatrix));
@@ -356,8 +375,8 @@ void CG_Implementation::initialise(){
 	barrelPass->BatchVao = barrelAttributes[0];
 	std::move(barrelAttributes[0]->ModelTextures.begin(), barrelAttributes[0]->ModelTextures.end(), std::back_inserter(barrelPass->Textures));
 	barrelPass->AddBatchUnit(&barrel);
-	barrelPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
-	barrel.Translate(glm::vec3(3, 4,8));
+	barrelPass->AddDataLink(BasicModelUniform, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+	barrel.Translate(glm::vec3(3, 4, 8));
 
 	nodeModelIndex = kitchen.AddData((void*)glm::value_ptr(kitchen.TransformMatrix));
 	kitchen.SetPosition(glm::vec3(0, 0, 0));
@@ -368,7 +387,7 @@ void CG_Implementation::initialise(){
 		kitchenPass->BatchVao = a;
 		std::move(a->ModelTextures.begin(), a->ModelTextures.end(), std::back_inserter(kitchenPass->Textures));
 		kitchenPass->AddBatchUnit(&kitchen);
-		kitchenPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+		kitchenPass->AddDataLink(KitchenModelUniform, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
 	kitchen.ScaleBy(glm::vec3(0.3, 0.3, 0.3));
 	kitchen.Translate(glm::vec3(0, -2, 0));
@@ -382,7 +401,7 @@ void CG_Implementation::initialise(){
 		nanosuitPass->BatchVao = a;
 		std::move(a->ModelTextures.begin(), a->ModelTextures.end(), std::back_inserter(nanosuitPass->Textures));
 		nanosuitPass->AddBatchUnit(&nanosuit);
-		nanosuitPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+		nanosuitPass->AddDataLink(NanosuitModelUniform, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
 
 
@@ -400,12 +419,12 @@ void CG_Implementation::initialise(){
 		sunPass->BatchVao = a;
 		std::move(a->ModelTextures.begin(), a->ModelTextures.end(), std::back_inserter(sunPass->Textures));
 		sunPass->AddBatchUnit(&sun);
-		sunPass->AddDataLink(translate_ubo, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
+		sunPass->AddDataLink(KitchenModelUniform, nodeModelIndex);	//Link the translate uniform to the transformation matrix of the entities
 	}
 
 
-	
-	WaterFBO = std::make_unique<CG_Data::FBO>();
+
+	WaterFBO = std::make_unique<CG_Data::FBO>(CG_Engine::ViewportWidth, CG_Engine::ViewportHeight);
 	auto reflectColAttach = WaterFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
 	auto refractColAttach = WaterFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
 	WaterFBO->AddAttachment(CG_Data::FBO::AttachmentType::DepthAttachment, windowProperties.width, windowProperties.height);
@@ -431,7 +450,7 @@ void CG_Implementation::initialise(){
 	waterRenderPass->Textures.push_back(refractionTexture);
 	waterRenderPass->Textures.push_back(waterDUDVTexture);
 	waterRenderPass->BatchVao = waterVAO;
-	waterRenderPass->AddDataLink(waterTimeUniform, waterTimeIndex);
+	waterRenderPass->AddDataLink(WaterTimeUniform, waterTimeIndex);
 	waterRenderPass->AddBatchUnit(&water);
 
 	GrassTexture = ModelLoader::LoadTexture(GrassLoc, GL_TEXTURE0);
@@ -455,12 +474,12 @@ void CG_Implementation::initialise(){
 	pStats.ColourRange[1] = glm::vec3(1.0f, 0.6498f, 0.37);
 
 	particleSystem = std::make_unique<ParticleSystem>();
-	auto pRenderer = particleSystem->GenerateParticleSystem(pStats, com_ubo);
-	particleSystem->SetData(0, static_cast<void*>(glm::value_ptr(pTransform)));
+	auto pRenderer = particleSystem->GenerateParticleSystem(pStats, CameraUBO.get());
+	particleSystem->SetData(0, static_cast<void*>(glm::value_ptr(particleTransform)));
 	renderer->AddRenderPass(std::move(pRenderer));
 	particleSystem->PitchBy(-90.0f);
 
-	ppFBO = std::make_unique<CG_Data::FBO>();
+	ppFBO = std::make_unique<CG_Data::FBO>(CG_Engine::ViewportWidth, CG_Engine::ViewportHeight);
 	auto FragColAttach = ppFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
 	auto BrightColAttach = ppFBO->AddAttachment(CG_Data::FBO::AttachmentType::TextureAttachment, windowProperties.width, windowProperties.height);
 	ppFBO->AddAttachment(CG_Data::FBO::AttachmentType::DepthAttachment, windowProperties.width, windowProperties.height);
@@ -492,71 +511,6 @@ void CG_Implementation::initialise(){
 	guiRenderPass->Textures.push_back(Tex);
 	guiRenderPass->BatchVao = guiVAO;
 	guiRenderPass->AddBatchUnit(&gui);
-	
-	glEnable(GL_DEPTH_TEST);
-
-	
-	{
-		//Register key events
-		keyHandler.AddKeyEvent(GLFW_KEY_W, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
-		keyHandler.AddKeyEvent(GLFW_KEY_A, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
-		keyHandler.AddKeyEvent(GLFW_KEY_S, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
-		keyHandler.AddKeyEvent(GLFW_KEY_D, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
-		keyHandler.AddKeyEvent(GLFW_KEY_LEFT_SHIFT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
-		keyHandler.AddKeyEvent(GLFW_KEY_LEFT_CONTROL, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
-		keyHandler.AddKeyEvent(GLFW_KEY_Q, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
-		keyHandler.AddKeyEvent(GLFW_KEY_E, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
-		keyHandler.AddKeyEvent(GLFW_KEY_Z, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
-		keyHandler.AddKeyEvent(GLFW_KEY_X, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
-		keyHandler.AddKeyEvent(GLFW_KEY_UP, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
-		keyHandler.AddKeyEvent(GLFW_KEY_DOWN, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
-		keyHandler.AddKeyEvent(GLFW_KEY_LEFT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
-		keyHandler.AddKeyEvent(GLFW_KEY_RIGHT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
-		keyHandler.AddKeyEvent(GLFW_KEY_INSERT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
-		keyHandler.AddKeyEvent(GLFW_KEY_DELETE, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&light_ubo_data);
-		keyHandler.AddKeyEvent(GLFW_KEY_F1, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &WireframeEvent, (void*)nullptr);
-		keyHandler.AddKeyEvent(GLFW_KEY_T, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &DragonKeyEvent, (void*)nullptr);
-		/*
-		keyHandler.AddKeyEvent(GLFW_KEY_UP, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_DOWN, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_LEFT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_RIGHT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_INSERT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_DELETE, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_O, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_P, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_K, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_L, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_M, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_COMMA, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_Y, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_U, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_H, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_J, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_B, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_N, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_KP_7, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_KP_9, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_KP_8, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_KP_2, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_KP_5, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_1, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_2, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_3, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		keyHandler.AddKeyEvent(GLFW_KEY_4, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-		*/
-	}
-
-	CameraStopwatch.Initialise();
-	
-}
-
-void SetupShaders() {
-
-}
-
-void SetupModels() {
-
 }
 
 void CG_Implementation::LoadModels() {
@@ -581,38 +535,115 @@ void CG_Implementation::LoadModels() {
 
 
 
-		nanosuitAttributes = mLoader.LoadModel(nanosuit_base, nanosuit_model, aiProcess_CalcTangentSpace |
-			aiProcess_Triangulate |
-			aiProcess_JoinIdenticalVertices |
-			aiProcess_SortByPType |
-			aiProcess_GenSmoothNormals);
+	nanosuitAttributes = mLoader.LoadModel(nanosuit_base, nanosuit_model, aiProcess_CalcTangentSpace |
+		aiProcess_Triangulate |
+		aiProcess_JoinIdenticalVertices |
+		aiProcess_SortByPType |
+		aiProcess_GenSmoothNormals);
 
-		sunAttributes = mLoader.LoadModel(sun_base, sun_model, aiProcess_CalcTangentSpace |
-																aiProcess_Triangulate |
-																aiProcess_JoinIdenticalVertices |
-																aiProcess_SortByPType |
-																aiProcess_GenSmoothNormals);
-		dragonAttributes = mLoader.LoadModel(dragon_base, dragon_model, aiProcess_CalcTangentSpace |
-																aiProcess_Triangulate |
-																aiProcess_JoinIdenticalVertices |
-																aiProcess_SortByPType |
-																aiProcess_GenSmoothNormals);
-//		dragonHierarchy = mLoader.LoadHierarchyModel(dragon_base, dragon_model, aiProcess_CalcTangentSpace |
-	//															aiProcess_Triangulate |
-		//														aiProcess_JoinIdenticalVertices |
-			//													aiProcess_SortByPType |
-				//												aiProcess_GenSmoothNormals);
-		DragonRiggedModel = mLoader.LoadRiggedModel(dragon_base, dragon_model, aiProcess_CalcTangentSpace |
-																aiProcess_Triangulate |
-																aiProcess_JoinIdenticalVertices |
-																aiProcess_SortByPType |
-																aiProcess_GenSmoothNormals);
-		mLoader.CleanUp();
+	sunAttributes = mLoader.LoadModel(sun_base, sun_model, aiProcess_CalcTangentSpace |
+															aiProcess_Triangulate |
+															aiProcess_JoinIdenticalVertices |
+															aiProcess_SortByPType |
+															aiProcess_GenSmoothNormals);
+	DragonRiggedModel = mLoader.LoadRiggedModel(dragon_base, dragon_model, aiProcess_CalcTangentSpace |
+															aiProcess_Triangulate |
+															aiProcess_JoinIdenticalVertices |
+															aiProcess_SortByPType |
+															aiProcess_GenSmoothNormals);
+		mLoader.Cleanup();
 
+}
+
+
+void CG_Implementation::SetupKeyEvents() {
+	//Register key events
+	keyHandler.AddKeyEvent(GLFW_KEY_W, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_A, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_S, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_D, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_LEFT_SHIFT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_LEFT_CONTROL, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_Q, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_E, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_Z, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_X, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CameraKeyEvent, (void*)&camera);
+	keyHandler.AddKeyEvent(GLFW_KEY_UP, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&LightUBOData);
+	keyHandler.AddKeyEvent(GLFW_KEY_DOWN, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&LightUBOData);
+	keyHandler.AddKeyEvent(GLFW_KEY_LEFT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&LightUBOData);
+	keyHandler.AddKeyEvent(GLFW_KEY_RIGHT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&LightUBOData);
+	keyHandler.AddKeyEvent(GLFW_KEY_INSERT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&LightUBOData);
+	keyHandler.AddKeyEvent(GLFW_KEY_DELETE, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&LightUBOData);
+	keyHandler.AddKeyEvent(GLFW_KEY_F1, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &WireframeEvent, (void*)nullptr);
+	keyHandler.AddKeyEvent(GLFW_KEY_T, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &DragonKeyEvent, (void*)nullptr);
+	/*
+	keyHandler.AddKeyEvent(GLFW_KEY_UP, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_DOWN, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_LEFT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_RIGHT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_INSERT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_DELETE, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_O, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_P, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_K, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_L, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_M, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_COMMA, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_Y, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_U, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_H, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_J, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_B, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_N, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_KP_7, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_KP_9, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_KP_8, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_KP_2, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_KP_5, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_1, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_2, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_3, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	keyHandler.AddKeyEvent(GLFW_KEY_4, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
+	*/
+}
+
+
+//Need to clean up gl objects before terminating GLFW
+void CG_Implementation::Cleanup() {
+	postprocessPipeline.Cleanup();
+	basicShader.Cleanup();
+	SkyboxShader.Cleanup();
+	kitchenShader.Cleanup();
+	nanosuitShader.Cleanup();
+	guiShader.Cleanup();
+	waterShader.Cleanup();
+	RiggedDragonShader.Cleanup();
+	groundShader.Cleanup();
+	guiVAO.reset();
+	waterVAO.reset();
+	mLoader.Cleanup();
+	WaterFBO.reset();
+	ppFBO.reset();
+	renderer.reset();
+	guiRenderer.reset();
+	DragonRenderer.reset();
+	DragonRiggedModel.reset();
+	barrelAttributes.clear();
+	kitchenAttributes.clear();
+	nanosuitAttributes.clear();
+	sunAttributes.clear();
+	terrain.reset();
+	Skybox.reset();
+	particleSystem.reset();
+	waterDUDVTexture.reset();
+	GrassTexture.reset();
+	CameraUBO.reset();
+	LightUBO.reset();
 }
 
 //Cleanup
 CG_Implementation::~CG_Implementation(){
+	Cleanup();
 	glfwTerminate();
 }
 

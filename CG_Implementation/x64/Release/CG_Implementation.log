@@ -1,8 +1,8 @@
-﻿  CG_Implementation.cpp
-  Generating code
-  19 of 4774 functions ( 0.4%) were compiled, the rest were copied from previous compilation.
-    0 functions were new in current compilation
-    7 functions had inline decision re-evaluated but remain unchanged
+﻿  Generating code
+x:\cg\cg_engine\cg_engine\postprocessing.cpp(61): warning C4715: 'GL_Engine::PostProcessing::AddAttachment': not all control paths return a value
+  855 of 4921 functions (17.4%) were compiled, the rest were copied from previous compilation.
+    20 functions were new in current compilation
+    74 functions had inline decision re-evaluated but remain unchanged
   Finished generating code
   CG_Implementation.vcxproj -> X:\CG\CG_Engine\x64\Release\CG_Implementation.exe
   CG_Implementation.vcxproj -> X:\CG\CG_Engine\x64\Release\CG_Implementation.pdb (Full PDB)

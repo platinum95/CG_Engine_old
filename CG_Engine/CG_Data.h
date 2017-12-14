@@ -27,6 +27,8 @@ namespace GL_Engine{
 
 			~VBO();
 			
+			void Cleanup();
+
 			//Returns the ID of the VBO
 			const GLuint GetID() const;
 
@@ -59,9 +61,9 @@ namespace GL_Engine{
 		public:
 			VAO();
 			~VAO();
+			void Cleanup();
 			const GLuint GetID() const;
 			void BindVAO() const;
-			void Cleanup();
 			void AddVBO(std::unique_ptr<VBO> _VBO);
 		protected:
 			std::vector<std::unique_ptr<VBO>> VBOs;
@@ -79,6 +81,8 @@ namespace GL_Engine{
 		public:
 			Texture(void* _Data, GLint width, GLint height, GLuint _Unit, GLuint _ImageFormat, std::function<void()> _Parameters, GLenum _Target = GL_TEXTURE_2D);
 			Texture(GLuint _Unit, GLenum _Target);
+			~Texture();
+			void Cleanup();
 
 			void SetUnit(const GLuint _Unit);
 
@@ -89,6 +93,8 @@ namespace GL_Engine{
 		protected:
 			GLenum Target;
 			GLuint Unit;
+		private:
+			bool Initialised{ false };
 		};
 
 		
@@ -102,6 +108,7 @@ namespace GL_Engine{
 			Uniform(GLint _Location, void* _Data, std::function<void(const CG_Data::Uniform&)> _Callback);
 			Uniform();
 			~Uniform();
+			void Cleanup();
 
 			void Update() const;
 			void SetUpdateCallback(std::function<void(const CG_Data::Uniform&)> _callback);
@@ -126,9 +133,11 @@ namespace GL_Engine{
 		public:
 			UBO();
 			UBO(void* _Data, size_t _DataSize);
+			~UBO();
 			void UpdateUBO() const;
 			const GLuint GetBindingPost()const;
 		private:
+			bool Initialised{ false };
 			void* Data;
 			size_t DataSize;
 			GLuint BindingPost;
@@ -167,15 +176,18 @@ namespace GL_Engine{
 				TextureAttachment, StencilAttachment, DepthAttachment
 			};
 
-			FBO();
+			FBO(uint16_t _Width, uint16_t _Height);
 			~FBO();
-			void CleanUp();
+			void Cleanup();
 			std::shared_ptr<AttachmentBufferObject> AddAttachment(AttachmentType _Attachment, uint16_t _Width, uint16_t _Height);
 			void Bind(uint8_t _ColourAttachment = 0) const;
 
 			void Bind(uint16_t _Count, const GLenum* _ColourAttachments) const;
 			const GLuint GetID() const;
 			void Unbind() const;
+
+		private:
+			uint16_t Width, Height;
 			
 
 		protected:

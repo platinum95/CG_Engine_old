@@ -13,12 +13,11 @@ namespace GL_Engine {
 
 		PostProcessing();
 		~PostProcessing();
-
+		void Cleanup();
 		CG_Data::Uniform* AddAttachment(PostprocessingAttachment _Attachment);
 
 		std::shared_ptr<CG_Data::Texture> Compile(std::shared_ptr<CG_Data::Texture> _TextureInput, uint16_t _Width, uint16_t _Height);
 		const std::shared_ptr<CG_Data::Texture> GetOutputTexture() const;
-
 		void Process();
 		const CG_Data::FBO *GetFBO() const;
 

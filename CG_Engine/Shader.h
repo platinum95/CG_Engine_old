@@ -11,6 +11,7 @@ namespace GL_Engine{
 
 		Shader();
 		~Shader();
+		void Cleanup();
 		
 		const GLuint GetShaderID() const;
 
