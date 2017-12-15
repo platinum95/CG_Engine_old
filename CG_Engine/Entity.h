@@ -140,7 +140,7 @@ namespace GL_Engine {
 			void Update(const glm::mat4 &ParentTransform, const glm::mat4 &GlobalInverse);
 			std::shared_ptr<SceneBone> sceneBone;
 			std::vector<std::shared_ptr<SceneNode>> ChildNodes;
-			std::vector<std::shared_ptr<NodeAnimation>> Animations{ nullptr };
+			std::shared_ptr<NodeAnimation> Animation{ nullptr };
 			glm::mat4 NodeTransform, GlobalTransform;
 			std::string Name;
 	private:

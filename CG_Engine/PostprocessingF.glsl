@@ -31,11 +31,7 @@ vec4 blur(sampler2D image, vec2 uv, vec2 resolution, vec2 direction) {
 }
 
 void BloomEffect(){
-	float brightness = (outFrag.r * 0.2) + (outFrag.g * 0.7) + (outFrag.b * 0.7);
 
-	if(brightness < 0.9){
-	;//	return;
-	} 
 
 	vec2 iResolution = resolution;
 	vec2 uv = vec2(gl_FragCoord.xy / iResolution.xy);

@@ -91,7 +91,8 @@ namespace GL_Engine{
 #pragma endregion
 
 #pragma region Texture
-		Texture::Texture(void* _Data, GLint width, GLint height, GLuint _Unit, GLuint _ImageFormat, std::function<void()> _Parameters, GLenum _Target) {
+		Texture::Texture(void* _Data, GLint width, GLint height, GLuint _Unit, GLuint _ImageFormat, 
+							std::function<void()> _Parameters, GLenum _Target) {
 			glGenTextures(1, &this->ID);
 			this->Target = _Target;
 			this->Unit = _Unit;
@@ -103,6 +104,7 @@ namespace GL_Engine{
 			glGenerateMipmap(this->Target);
 			Initialised = true;
 		}
+
 		Texture::Texture(GLuint _Unit, GLenum _Target) {
 			glGenTextures(1, &this->ID);
 			this->Target = _Target;

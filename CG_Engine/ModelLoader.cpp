@@ -106,29 +106,7 @@ namespace GL_Engine {
 		return this->VertexCount;
 	}
 
-	glm::mat4 aMatToGMat(const aiMatrix4x4 &m)
-	{
-		glm::mat4 gMat;
 
-		gMat[0][0] = m.a1;
-		gMat[0][1] = m.b1;
-		gMat[0][2] = m.c1;
-		gMat[0][3] = m.d1;
-		gMat[1][0] = m.a2;
-		gMat[1][1] = m.b2;
-		gMat[1][2] = m.c2;
-		gMat[1][3] = m.d2;
-		gMat[2][0] = m.a3;
-		gMat[2][1] = m.b3;
-		gMat[2][2] = m.c3;
-		gMat[2][3] = m.d3;
-		gMat[3][0] = m.a4;
-		gMat[3][1] = m.b4;
-		gMat[3][2] = m.c4;
-		gMat[3][3] = m.d4;
-
-		return gMat;
-	}
 #pragma region ModelLoader
 	std::map <std::string, std::shared_ptr<Texture>> ModelLoader::CachedTextures;
 
@@ -157,21 +135,9 @@ namespace GL_Engine {
 			for (unsigned int i = 0; i < anim->mNumChannels; i++) {
 				aiNodeAnim *animNode = anim->mChannels[i];
 				auto node = NodeList[animNode->mNodeName.data];
-				//if (node->Animations.size() <= animID) {
-					node->Animations.push_back(std::make_shared<NodeAnimation>(animNode, anim->mDuration));
-				//}
-				//else {
-				//	node->Animations[animID] = std::make_shared<NodeAnimation>(animNode, anim->mDuration);
-				//}
+				node->Animation =std::make_shared<NodeAnimation>(animNode, anim->mDuration);
 			}
 		}
-		for (auto n : NodeList) {
-			auto Animations = n.second->Animations;
-			if (0 < Animations.size()) {
-				auto t = fmod(10, Animations[0]->AnimationLength);
-			}
-		}
-
 	}
 
 	std::shared_ptr<SceneNode> LoadNodes(std::map<std::string, std::shared_ptr<SceneNode>> &NodeList, aiNode* node) {
@@ -306,8 +272,8 @@ namespace GL_Engine {
 		aImporter.FreeScene();
 		CachedTextures.clear();
 	}
-	std::vector<std::shared_ptr<Texture>> ModelLoader::LoadMaterial(const aiMaterial *material, const aiTextureType _Type, std::string &_PathBase,
-		std::vector<std::shared_ptr<Texture>> &_Textures) {
+	std::vector<std::shared_ptr<Texture>> ModelLoader::LoadMaterial(const aiMaterial *material, const aiTextureType _Type, 
+						std::string &_PathBase, std::vector<std::shared_ptr<Texture>> &_Textures) {
 		for (unsigned int i = 0; i < material->GetTextureCount(_Type); i++) {
 			aiString str;
 			material->GetTexture(_Type, i, &str);

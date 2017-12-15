@@ -329,6 +329,13 @@ void CG_Implementation::SetupShaders() {
 	kitchenShader.RegisterUniform("model");
 	kitchenShader.CompileShader();
 
+	sunShader.RegisterShaderStageFromFile(sunVLoc.c_str(), GL_VERTEX_SHADER);
+	sunShader.RegisterShaderStageFromFile(sunFLoc.c_str(), GL_FRAGMENT_SHADER);
+	sunShader.RegisterAttribute("vPosition", 0);
+	sunShader.RegisterUBO(std::string("CameraProjectionData"), CameraUBO.get());
+	sunShader.RegisterUniform("model");
+	sunShader.CompileShader();
+
 	SkyboxShader.RegisterShaderStageFromFile(skyboxVLoc.c_str(), GL_VERTEX_SHADER);
 	SkyboxShader.RegisterShaderStageFromFile(skyboxFLoc.c_str(), GL_FRAGMENT_SHADER);
 	SkyboxShader.RegisterAttribute("vPosition", 1);
@@ -412,7 +419,7 @@ void CG_Implementation::SetupModels() {
 	sun.SetPosition(glm::vec3(0, 0, 0));
 	for (auto &a : sunAttributes) {
 		GLsizei nCount = (GLsizei)a->GetVertexCount();
-		RenderPass *sunPass = renderer->AddRenderPass(&kitchenShader);
+		RenderPass *sunPass = renderer->AddRenderPass(&sunShader);
 		sunPass->SetDrawFunction([nCount]() {glDrawElements(GL_TRIANGLES, nCount, GL_UNSIGNED_INT, 0); });
 		sunPass->BatchVao = a;
 		std::move(a->ModelTextures.begin(), a->ModelTextures.end(), std::back_inserter(sunPass->Textures));
@@ -540,11 +547,9 @@ void CG_Implementation::LoadModels() {
 		aiProcess_SortByPType |
 		aiProcess_GenSmoothNormals);
 
-	sunAttributes = mLoader.LoadModel(sun_base, sun_model, aiProcess_CalcTangentSpace |
-															aiProcess_Triangulate |
-															aiProcess_JoinIdenticalVertices |
-															aiProcess_SortByPType |
-															aiProcess_GenSmoothNormals);
+	sunAttributes = mLoader.LoadModel(sun_base, sun_model, 	aiProcess_Triangulate |
+															aiProcess_JoinIdenticalVertices);
+
 	DragonRiggedModel = mLoader.LoadRiggedModel(dragon_base, dragon_model, aiProcess_CalcTangentSpace |
 															aiProcess_Triangulate |
 															aiProcess_JoinIdenticalVertices |
@@ -575,35 +580,7 @@ void CG_Implementation::SetupKeyEvents() {
 	keyHandler.AddKeyEvent(GLFW_KEY_DELETE, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)&LightUBOData);
 	keyHandler.AddKeyEvent(GLFW_KEY_F1, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &WireframeEvent, (void*)nullptr);
 	keyHandler.AddKeyEvent(GLFW_KEY_T, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &DragonKeyEvent, (void*)nullptr);
-	/*
-	keyHandler.AddKeyEvent(GLFW_KEY_UP, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_DOWN, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_LEFT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_RIGHT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_INSERT, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_DELETE, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_O, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_P, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_K, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_L, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_M, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_COMMA, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_Y, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_U, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_H, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_J, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_B, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_N, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_KP_7, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_KP_9, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_KP_8, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_KP_2, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_KP_5, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_1, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_2, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_3, KeyHandler::ClickType::GLFW_HOLD, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	keyHandler.AddKeyEvent(GLFW_KEY_4, KeyHandler::ClickType::GLFW_CLICK, KeyHandler::EventType::KEY_FUNCTION, &CubeKeyEvent, (void*)hierarchy.get());
-	*/
+
 }
 
 
@@ -616,6 +593,7 @@ void CG_Implementation::Cleanup() {
 	nanosuitShader.Cleanup();
 	guiShader.Cleanup();
 	waterShader.Cleanup();
+	sunShader.Cleanup();
 	RiggedDragonShader.Cleanup();
 	groundShader.Cleanup();
 	guiVAO.reset();

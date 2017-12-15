@@ -28,7 +28,7 @@ layout (std140) uniform LightData
 };
 
 void main(){
-/*		Phong lighting not implemented for water
+/*	Phong lighting not implemented for water
 	// ambient
     float ambientStrength = 0.1;
     vec3 ambient = ambientStrength * LightColour; 

@@ -60,7 +60,7 @@ private:
 	LightUBO_Data LightUBOData;
 
 	//Shaders and renderers used in the program
-	Shader basicShader, SkyboxShader, kitchenShader, nanosuitShader, guiShader, waterShader, RiggedDragonShader, groundShader;
+	Shader basicShader, SkyboxShader, kitchenShader, nanosuitShader, guiShader, waterShader, RiggedDragonShader, groundShader, sunShader;
 	std::unique_ptr<Renderer> renderer, guiRenderer, DragonRenderer;
 	
 	//Model stuff, such as the model loader, model data lists, and entity objects
@@ -112,6 +112,7 @@ private:
 	std::string dragon_model = "dragon_blender2.dae";
 
 	std::string basicVLoc = "v.glsl", basicFLoc = "f.glsl";
+	std::string sunVLoc = "sunV.glsl", sunFLoc = "sunF.glsl";
 	std::string skyboxVLoc = "skyboxV.glsl", skyboxFLoc = "skyboxF.glsl";
 	std::string groundVLoc = "groundV.glsl", groundFLoc = "groundF.glsl";
 	std::string waterVLoc = "waterV.glsl", waterFLoc = "waterF.glsl";
@@ -121,11 +122,6 @@ private:
 	std::string RiggedDragonVShader = "RiggedDragonV.glsl", RiggedDragonFShader = "RiggedDragonF.glsl";
 	std::vector<std::string> SkyboxTexLoc{ "./assets/skybox/right.png", "./assets/skybox/left.png", "./assets/skybox/top.jpg",
 		"./assets/skybox/bottom.png", "./assets/skybox/back.png", "./assets/skybox/front.png" };
-
-//	std::vector<std::string> SkyboxTexLoc{ "./assets/skybox/cright.tga", "./assets/skybox/cleft.tga", "./assets/skybox/cup.tga",
-//		"./assets/skybox/cdown.tga", "./assets/skybox/cback.tga", "./assets/skybox/cfront.tga" };
-	
-
 
 };
 	

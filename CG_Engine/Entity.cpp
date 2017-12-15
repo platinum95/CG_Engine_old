@@ -248,13 +248,13 @@ namespace GL_Engine {
 	}
 	void SceneNode::Update(const glm::mat4 &ParentTransform, const glm::mat4 &GlobalInverse, unsigned int AnimationID, double Time) {
 		auto LocalMatrix = this->NodeTransform;
-		if (AnimationID < Animations.size()) {
-			Time = fmod(Time, Animations[AnimationID]->AnimationLength);
+		if (Animation) {
+			Time = fmod(Time, Animation->AnimationLength);
 			glm::mat4 ScaleMatrix, RotateMatrix, TranslateMatrix;
 
-			ScaleMatrix = this->GetInterpolatedScale(Animations[AnimationID]->Scalings, Time);
-			TranslateMatrix = this->GetInterpolatedTranslate(Animations[AnimationID]->Positions, Time);
-			RotateMatrix = this->GetInterpolatedRotate(Animations[AnimationID]->Rotations, Time);
+			ScaleMatrix = this->GetInterpolatedScale(Animation->Scalings, Time);
+			TranslateMatrix = this->GetInterpolatedTranslate(Animation->Positions, Time);
+			RotateMatrix = this->GetInterpolatedRotate(Animation->Rotations, Time);
 
 			LocalMatrix = TranslateMatrix * RotateMatrix * ScaleMatrix;
 		}
