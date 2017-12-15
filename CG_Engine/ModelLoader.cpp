@@ -157,12 +157,12 @@ namespace GL_Engine {
 			for (unsigned int i = 0; i < anim->mNumChannels; i++) {
 				aiNodeAnim *animNode = anim->mChannels[i];
 				auto node = NodeList[animNode->mNodeName.data];
-				if (node->Animations.size() <= animID) {
+				//if (node->Animations.size() <= animID) {
 					node->Animations.push_back(std::make_shared<NodeAnimation>(animNode, anim->mDuration));
-				}
-				else {
-					node->Animations[animID] = std::make_shared<NodeAnimation>(animNode, anim->mDuration);
-				}
+				//}
+				//else {
+				//	node->Animations[animID] = std::make_shared<NodeAnimation>(animNode, anim->mDuration);
+				//}
 			}
 		}
 		for (auto n : NodeList) {

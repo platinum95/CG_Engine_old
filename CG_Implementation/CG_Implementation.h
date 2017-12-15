@@ -13,8 +13,8 @@
 #include "Terrain.h"
 
 static GL_Engine::Properties::GLFWproperties windowProperties = {
-	1680,			//Width
-	1050,			//Height
+	1280,			//Width
+	720,			//Height
 	"Test Window",	//Title
 	nullptr,
 	nullptr,
@@ -121,6 +121,9 @@ private:
 	std::string RiggedDragonVShader = "RiggedDragonV.glsl", RiggedDragonFShader = "RiggedDragonF.glsl";
 	std::vector<std::string> SkyboxTexLoc{ "./assets/skybox/right.png", "./assets/skybox/left.png", "./assets/skybox/top.jpg",
 		"./assets/skybox/bottom.png", "./assets/skybox/back.png", "./assets/skybox/front.png" };
+
+//	std::vector<std::string> SkyboxTexLoc{ "./assets/skybox/cright.tga", "./assets/skybox/cleft.tga", "./assets/skybox/cup.tga",
+//		"./assets/skybox/cdown.tga", "./assets/skybox/cback.tga", "./assets/skybox/cfront.tga" };
 	
 
 

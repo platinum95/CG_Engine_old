@@ -17,9 +17,9 @@ layout (std140) uniform CameraProjectionData
 
 
 mat4 scaler = mat4(
-		500, 0, 0, 0,
-		0, 500, 0, 0,
-		0, 0, 500, 0,
+		1000, 0, 0, 0,
+		0, 1000, 0, 0,
+		0, 0, 1000, 0,
 		0, 0, 0, 1);
 
 

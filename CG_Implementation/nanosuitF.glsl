@@ -45,8 +45,6 @@ void main(){
 	float SpecWeight = texture(specularTexture, fs_in.TexCoords).x;
 	vec3 SpecularComponent = SpecWeight * SpecAmount * LightColour;  
 
-
-
 	//Output
 	vec3 result = (ambient + diffuse + SpecularComponent) * texture(diffuseTexture, fs_in.TexCoords).xyz;
 	FragColour = vec4(result, 1.0);

@@ -107,7 +107,6 @@ CG_Implementation::CG_Implementation(){
 int CG_Implementation::run(){
 	initialise();
 
-
 	while (!glfwWindowShouldClose(windowProperties.window)){
 		//Get the framerate and show it as the window's title
 		uint64_t time_diff = FramerateStopwatch.MeasureTime().count();
@@ -129,7 +128,7 @@ int CG_Implementation::run(){
 		sun.GetTransformMatrix();
 
 		time += (float)second_diff;
-		DragonRiggedModel->Update(0, time);	//Update the dragon's animation
+		DragonRiggedModel->Update(1, time);	//Update the dragon's animation
 		//Make the dragon fly around in a circle
 		float circleRadius = 250;
 		float xPos = circleRadius * cos(time);
@@ -200,7 +199,6 @@ void CG_Implementation::UpdateCameraUBO() {
 	
 	LightUBOData.LightBrightness = 1;
 	sun.SetPosition(glm::vec3(LightUBOData.LightPosition[0], LightUBOData.LightPosition[1], LightUBOData.LightPosition[2]));
-
 }
 
 void CG_Implementation::initialise(){
@@ -462,6 +460,7 @@ void CG_Implementation::SetupModels() {
 	terrain->GenerateChunk(-1, 0);
 	terrain->GenerateChunk(-1, -1);
 	terrain->GenerateChunk(0, -1);
+
 	auto tRenderPass = terrain->GetRenderPass(&groundShader);
 	tRenderPass->Textures.push_back(GrassTexture);
 	renderer->AddRenderPass(std::move(tRenderPass));
