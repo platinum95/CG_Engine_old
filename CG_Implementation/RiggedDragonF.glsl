@@ -5,8 +5,8 @@ layout (location = 1) out vec4 BrightColour;
 
 in mat3 models;
 in vec4 col;
-varying vec3 Pos_ViewSpace;
-varying vec4 LightPosition_Viewspace;
+in vec3 Pos_ViewSpace;
+in vec4 LightPosition_Viewspace;
 
 uniform sampler2D diffuseTexture;
 uniform sampler2D normalTexture;

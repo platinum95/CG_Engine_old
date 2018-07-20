@@ -31,8 +31,8 @@ out VS_OUT {
 } vs_out;  
 
 uniform mat4 model;
-varying vec3 Pos_ViewSpace;
-varying vec4 LightPosition_Viewspace;
+out vec3 Pos_ViewSpace;
+out vec4 LightPosition_Viewspace;
 
 void main(){
 	models = mat3(transpose(inverse( ViewMatrix * model)));

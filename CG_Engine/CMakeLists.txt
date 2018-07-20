@@ -1,0 +1,22 @@
+cmake_minimum_required( VERSION 2.8.11 )
+project( CG_Engine )
+
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_FLAGS "-O3")
+find_package( glfw3 3.2 REQUIRED )
+find_package( OpenGL REQUIRED )
+find_package( assimp REQUIRED )
+find_package( glm REQUIRED )
+
+if (assimp_FOUND)
+    set(ASSIMP_LIBRARY "assimp")
+    add_library(${ASSIMP_LIBRARY} SHARED IMPORTED)
+    set_target_properties(${ASSIMP_LIBRARY} PROPERTIES IMPORTED_LOCATION "${ASSIMP_LIBRARY_DIRS}/libassimp.so")
+endif(assimp_FOUND)
+
+add_library( CG_Engine STATIC CG_Data.cpp CG_Engine.cpp Camera.cpp Cubemap.cpp Entity.cpp File_IO.cpp InputHandler.cpp ModelLoader.cpp ParticleSystem.cpp PostProcessing.cpp Renderer.cpp Shader.cpp Terrain.cpp CgTime.cpp Utilities.cpp glad.c )
+
+target_link_libraries( CG_Engine glfw assimp glm )
+include_directories(  "include"  )
+include_directories( "$(PROJECT_SOURCE_DIR)/CG_Engine" )

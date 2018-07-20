@@ -26,8 +26,8 @@ uniform mat4 GroundTranslation;
 out mat3 models;
 out vec3 norms;
 out vec2 PassTexCoord;
-varying vec3 Pos_ViewSpace;
-varying vec4 LightPosition_Viewspace;
+out vec3 Pos_ViewSpace;
+out vec4 LightPosition_Viewspace;
 #define tex_multiplier 16
 
 void main(){

@@ -112,9 +112,9 @@ int CG_Implementation::run(){
 		uint64_t time_diff = FramerateStopwatch.MeasureTime().count();
 		double second_diff = time_diff / 1.0e6;
 		double fps = 1.0 / second_diff;
-		char title[50];
-		sprintf_s(title, "FPS: %f", fps);
-		glfwSetWindowTitle(windowProperties.window, title);
+		
+		std::string title = "FPS: " + std::to_string( fps );
+		glfwSetWindowTitle(windowProperties.window, title.c_str());
 		
 		//Lap the camera stopwatch for the camera key callback
 		time_millis_camera = CameraStopwatch.MeasureTime().count();

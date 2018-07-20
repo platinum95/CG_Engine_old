@@ -4,3 +4,13 @@ x64/*/CG_Implementation.exe
 x64/*/CG_Implementation.ilk
 x64/*/CG_Implementation.pdb
 CG_Implementation/x64/
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+*.swp

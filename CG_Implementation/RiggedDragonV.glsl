@@ -35,8 +35,8 @@ out VS_OUT {
 
 uniform mat4 BoneMatrices[56];
 uniform mat4 model;
-varying vec3 Pos_ViewSpace;
-varying vec4 LightPosition_Viewspace;
+out vec3 Pos_ViewSpace;
+out vec4 LightPosition_Viewspace;
 //uniform mat4 BoneMatrices;
 
 #define VAL 5 

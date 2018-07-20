@@ -7,7 +7,7 @@
 #include "Renderer.h"
 #include "Cubemap.h"
 #include "ParticleSystem.h"
-#include "Time.h"
+#include "CgTime.h"
 #include "PostProcessing.h"
 #include "ModelLoader.h"
 #include "Terrain.h"
